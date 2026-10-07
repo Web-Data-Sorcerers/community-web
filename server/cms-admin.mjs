@@ -226,9 +226,12 @@ function sanitize(result) {
   if ('publication' in data) {
     if (
       !Array.isArray(data.publication) ||
-      data.publication.length !== 2 ||
-      !['testing', 'production'].every((t) =>
-        data.publication.some((p) => p.target === t),
+      ![1, 2].includes(data.publication.length) ||
+      !data.publication.some((p) => p.target === 'production') ||
+      new Set(data.publication.map((p) => p.target)).size !==
+        data.publication.length ||
+      data.publication.some(
+        (p) => !['testing', 'production'].includes(p.target),
       )
     )
       fail('SERVER_ERROR');
@@ -358,7 +361,6 @@ export function createAdminHandler({
 
     const callDeployHooks = async () => {
       const hooks = [
-        { target: 'testing', url: env.CMS_DEPLOY_HOOK_TESTING },
         { target: 'production', url: env.CMS_DEPLOY_HOOK_PRODUCTION },
       ];
       const results = [];
@@ -459,7 +461,6 @@ export function createAdminHandler({
 
     const callDeployHooks = async () => {
       const hooks = [
-        { target: 'testing', url: env.CMS_DEPLOY_HOOK_TESTING },
         { target: 'production', url: env.CMS_DEPLOY_HOOK_PRODUCTION },
       ];
       const results = [];

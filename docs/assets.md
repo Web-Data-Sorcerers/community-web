@@ -2901,3 +2901,11 @@ all-step validation, reduced-motion focus scroll and router teardown were added.
 Applicant storage is dedicated GAS/Sheets through server-only API; no applicant
 records are included in CMS export/build snapshot or logged to browser console.
 Acceptance/QA details: docs/recruitment-integration-plan.md.
+
+## Admin publication target — testing retirement preparation, 8 Oct 2026
+
+User approved preparation for production-only CMS publication after auth acceptance.
+Projects status copy tested first at4widths; Team status copy follows the same
+response target count. Custom admin surfaces have no Figma node. Existing logo,
+Bluu Next700/Manrope, palette,8pt spacing and editor layout remain. Public section
+geometry/reference/artwork/fullscreen unchanged. Master plan: cms-testing-retirement-plan.md.

@@ -37,7 +37,7 @@ const data = {
   secret: 'LEAK',
 };
 const request = (path, options = {}) => new Request(origin + path, options);
-function harness(teamData) {
+function harness(teamData, envOverrides = {}, hookStatus = 200) {
   let now = 100000;
   const calls = [];
   let owner = true,
@@ -45,12 +45,14 @@ function harness(teamData) {
     userOk = true,
     throws = false;
   const handle = createAdminHandler({
-    env,
+    env: { ...env, ...envOverrides },
     clock: () => now,
     fetchImpl: async (url, options) => {
       calls.push({ url, options });
       if (throws) throw new Error('PRIVATE upstream details LEAK');
       const u = String(url);
+      if (u.startsWith('https://hooks.example.test/'))
+        return new Response(null, { status: hookStatus });
       if (u.includes('/auth/v1/token'))
         return Response.json({
           access_token: 'PRIVATE-access-token',
@@ -637,4 +639,90 @@ test('retired callback redirects to a fixed internal path without upstream calls
   assert.equal(response.headers.get('cache-control'), 'no-store');
   assert.equal(response.headers.get('referrer-policy'), 'no-referrer');
   assert.equal(await response.text(), '');
+});
+
+test('CMS publication targets production only; failed or missing production hook stays pending', async () => {
+  for (const route of ['projects', 'team']) {
+    for (const mode of ['success', 'failure', 'missing']) {
+      const h = harness(
+        undefined,
+        {
+          CMS_DEPLOY_HOOK_TESTING: 'https://hooks.example.test/testing',
+          CMS_DEPLOY_HOOK_PRODUCTION:
+            mode === 'missing' ? '' : 'https://hooks.example.test/production',
+        },
+        mode === 'failure' ? 502 : 200,
+      );
+      const { cookie } = await login(h);
+      const read = await h.handle(
+        request('/api/admin/projects', { headers: { Cookie: cookie } }),
+        'projects',
+      );
+      const { csrf } = await read.json();
+      const response = await h.handle(
+        request('/api/admin/' + route, {
+          method: 'POST',
+          headers: {
+            Cookie: cookie,
+            Origin: origin,
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrf,
+          },
+          body: JSON.stringify({ operation: 'retry' }),
+        }),
+        route,
+      );
+      assert.equal(response.status, 200);
+      const result = await response.json();
+      assert.deepEqual(result.data.publication, [
+        { target: 'production', accepted: mode === 'success' },
+      ]);
+      assert.equal(
+        h.calls.some((c) => c.url === 'https://hooks.example.test/testing'),
+        false,
+      );
+      assert.equal(
+        h.calls.filter((c) => c.url === 'https://hooks.example.test/production')
+          .length,
+        mode === 'missing' ? 0 : 1,
+      );
+      assert.equal(
+        h.calls.some((c) => c.url.includes('/database/query')),
+        false,
+      );
+      if (route === 'projects') {
+        const saved = await h.handle(
+          request('/api/admin/projects', {
+            method: 'POST',
+            headers: {
+              Cookie: cookie,
+              Origin: origin,
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': csrf,
+            },
+            body: JSON.stringify({
+              operation: 'save',
+              payload: { revision: data.revision, project: data.projects[0] },
+            }),
+          }),
+          'projects',
+        );
+        assert.equal(saved.status, 200);
+        const result = await saved.json();
+        assert.equal(result.data.projects.length, 1);
+        assert.equal(result.data.publicationPending, mode !== 'success');
+        assert.deepEqual(result.data.publication, [
+          { target: 'production', accepted: mode === 'success' },
+        ]);
+        assert.equal(
+          h.calls.some((c) => c.url === 'https://hooks.example.test/testing'),
+          false,
+        );
+        assert.equal(
+          h.calls.filter((c) => c.url.includes('/database/query')).length,
+          1,
+        );
+      }
+    }
+  }
 });

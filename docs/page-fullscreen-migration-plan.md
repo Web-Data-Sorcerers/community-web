@@ -342,3 +342,11 @@ scrolling for four panels; no forced scaling or full-screen fieldsets. Existing
 Recruitment nine-section page, role CSS/geometries and shared Navbar/Footer are
 locked. Only six detail-role Apply Now destinations change. Plan/QA:
 docs/recruitment-integration-plan.md. This does not reopen full-screen migration.
+
+## Admin publication target — testing retirement preparation, 8 Oct 2026
+
+User approved preparation for production-only CMS publication after auth acceptance.
+Projects status copy tested first at4widths; Team status copy follows the same
+response target count. Custom admin surfaces have no Figma node. Existing logo,
+Bluu Next700/Manrope, palette,8pt spacing and editor layout remain. Public section
+geometry/reference/artwork/fullscreen unchanged. Master plan: cms-testing-retirement-plan.md.

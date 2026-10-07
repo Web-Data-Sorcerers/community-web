@@ -172,7 +172,7 @@
     message(
       accepted
         ? (saved ? 'Perubahan tersimpan. ' : '') +
-            'Penerbitan dimulai untuk testing dan production. Tunggu beberapa menit sebelum memeriksa situs.'
+            `Penerbitan dimulai untuk ${publication.length === 1 ? 'production' : 'testing dan production'}. Tunggu beberapa menit sebelum memeriksa situs.`
         : 'Perubahan tersimpan, tetapi penerbitan belum berhasil untuk semua situs. Klik Coba terbitkan lagi.',
       !accepted,
     );

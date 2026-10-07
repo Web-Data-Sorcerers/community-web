@@ -173,7 +173,7 @@
     el('retry').hidden = success;
     message(
       success
-        ? 'Perubahan tersimpan. Penerbitan dimulai untuk testing dan production. Periksa situs setelah kedua build selesai.'
+        ? `Perubahan tersimpan. Penerbitan dimulai untuk ${results.length === 1 ? 'production' : 'testing dan production'}. Periksa situs setelah ${results.length === 1 ? 'build' : 'kedua build'} selesai.`
         : 'Perubahan tersimpan, tetapi penerbitan belum berhasil untuk semua situs. Klik Coba terbitkan lagi.',
       !success,
     );

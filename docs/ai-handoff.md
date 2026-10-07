@@ -1,5 +1,36 @@
 # AI handoff — current context
 
+## Runtime645ec06 — E5 accepted, production-only preparation local
+
+Faiz approved push645ec06869dc3a157178d907d396d73a416d6fd2 (`ok`, then `gasss`).
+One origin push delivered both repos; origin/main and production/main now645ec06.
+Consent consumed. Both primary aliases READY exact SHA before fixture rerun.
+E5 synthetic32×32 upload/private owner preview390/1440 PASS both sites; add/save/
+delete200, three pairs of hooks accepted and every stage both aliases READY.
+Home+HoF ×390/1440 both domains showed fixture then edited description; after
+cleanup fixture absent, public19/19 HTML exact each domain. Exact fixture UID
+and Storage hash removed, bucket private retained; four Projects/Team/allowlist
+fingerprints unchanged, owner grant1active, applications0/media objects0.
+
+Real revoked refresh-session replay401 after CMS logout200 both sites. Fresh
+645ec06 owner refresh200/CSRF stable/read4Projects+25Team200; owner Team editor
+390/1440 no overflow/errors. Recruitment-only denies all CMS401, CMS-only denies
+recruitment401; CMS logout leaves recruitment stats/refresh/read200; recruitment
+own logout leaves401. Browser test sessions logged out. Only natural-expiry
+worker remains, due workspace18:24:42.845UTC 7Oct /01:24:42.845WIB8Oct; pending.
+**Auth not fully LIVE accepted until this actual expiry proof passes.**
+
+Faiz chose finish two-domain acceptance, then production-only publication,
+then retire Vercel testing project. Local implementation+QA prepared; see
+[cms-testing-retirement-plan.md](cms-testing-retirement-plan.md). No project
+removed or origin routing changed. Production-only work needs new exact SHA
+push approval; testing project must stay through pending expiry proof.
+Local QA Node22: CMS105PASS+10TeamliveSKIP, light87PASS+10SKIP, recruitment24PASS;
+focused native11PASS, seven gates+SEO,3adminmock4widths, snapshot/19HTML exact,
+47dist textfiles secret scan0matches. GAS validation/env/legacy admin stay;
+GAS removal separate. Proof ignored e5-rerun-*, e645-isolation,
+e-revoked-session, e-natural-expiry, retire-qa-summary/retire-parity-secrets.
+
 ## E5 findings — private media PASS, fixture cleaned, delete SQL repaired
 
 Dengan izin Faiz (`gasss`), bucket `cms-media` dibuat sekali: private,

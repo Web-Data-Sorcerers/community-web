@@ -61,10 +61,7 @@ try {
       maxMembers: 8,
       publicationPending: false,
     });
-    const publication = () => [
-      { target: 'testing', accepted: true },
-      { target: 'production', accepted: !partial },
-    ];
+    const publication = () => [{ target: 'production', accepted: !partial }];
     await page.route('http://team-admin.test/**', async (route) => {
       const request = route.request(),
         url = new URL(request.url());
@@ -157,6 +154,13 @@ try {
     await page.locator('#retry').click();
     await page.getByText('Penerbitan dimulai', { exact: false }).waitFor();
     assert.equal(retry, 1);
+    assert.equal(
+      await page
+        .locator('#status')
+        .textContent()
+        .then((t) => t.includes('untuk production.')),
+      true,
+    );
     assert.equal(saved, 1);
     await page.locator('#image-upload').setInputFiles({
       name: 'portrait.png',

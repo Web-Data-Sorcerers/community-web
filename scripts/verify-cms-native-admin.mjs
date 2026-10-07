@@ -133,7 +133,6 @@ try {
                                     ? records.at(-1).id
                                     : payload.project?.id,
                                 publication: [
-                                  { target: 'testing', accepted: true },
                                   {
                                     target: 'production',
                                     accepted: !window.adminMock.partial,
@@ -148,7 +147,6 @@ try {
                             ok: true,
                             data: {
                               publication: [
-                                { target: 'testing', accepted: true },
                                 { target: 'production', accepted: true },
                               ],
                             },
@@ -284,6 +282,14 @@ try {
       document
         .getElementById('status')
         .textContent.includes('Penerbitan dimulai'),
+    );
+    assert.equal(
+      await page.evaluate(() =>
+        document
+          .getElementById('status')
+          .textContent.includes('untuk production.'),
+      ),
+      true,
     );
     assert.equal(await page.evaluate(() => window.adminMock.saves), 1);
     assert.equal(await page.evaluate(() => window.adminMock.retries), 1);
