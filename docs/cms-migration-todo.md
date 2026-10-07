@@ -1,5 +1,43 @@
 # CMS → Supabase — TODO dan status penerimaan
 
+## Production-only LIVE a042b07 — testing siap dipensiunkan
+
+Dengan izin exact SHA Faiz (`oke gas`), origin fetch/push sekarang hanya
+https://github.com/Web-Data-Sorcerers/community-web.git. Satu push origin main
+mengirim a042b071e438a5fec59a644c938144158a007602 ke production saja; izin consumed.
+Remote production, repo GitHub testing dan project Vercel testing tetap ada.
+Main/origin/main/production/main sinkron a042b07 sebelum checkpoint lokal ini.
+Push SHA berikutnya termasuk docs tetap perlu izin baru.
+
+Production READY exact SHA + primary alias sesudah push, lalu tepat satu
+Projects retry publication tanpa content write menghasilkan HTTP200 dengan
+publication=[{target:production,accepted:true}]. Rebuild retry READY exact SHA,
+alias assigned dpl_EGG8a3RDz3mxB2BFsgL8hdNMTr2f, provider timestamp
+7 Oct 2026 18:38:42.353 UTC / 8 Oct 2026 01:38:42.353 WIB.
+Testing latest deployment/alias tetap dpl_6eNiRecrpWyriead5kzmYARLUdyH,
+SHA645ec06; tidak ada deployment testing baru dari push atau retry.
+
+Real owner production login/read4Projects+25Team200, explicit refresh200,
+CSRF stable/read200. Projects/Team editor390/1440 visible,4/25choices,
+no overflow, password field empty. CMS-only recruitment401; recruitment login/
+stats200; CMS logout200 → Projects/Team/media401, recruitment stats/refresh/
+stats tetap200; recruitment own logout → stats401. Semua sesi uji logout.
+Public19HTML exact kedua situs, anonymous CMS401, recruitment accepting:false.
+Projects/Team/recruitment allowlist fingerprints identik pre/post retry;
+Projects4, grant1active, applications0/media objects0. Tidak ada upload/content
+write/Team write/SQL/grant mutation sesi cutover.
+
+Project konkret yang siap dihapus owner: web-testing,
+prj_E5226JcOUGOMQtWT3rDTojwbZ2sB, web-testing-azure.vercel.app.
+Agent belum menghapus project; izin cutover/retry tidak mencakup delete project.
+Production data-sorcerers-community, Supabase web-community/bucket/data dan
+repo GitHub tetap. Full GAS export validation/legacy env tetap; GAS removal
+pass terpisah. Owner mengganti password sementara sendiri di dashboard.
+Auth A–E acceptance lengkap645ec06 tetap berlaku; production-only a042b07
+memiliki regression nyata di atas. Checkpoint ini commit lokal saja.
+Proof ignored artifacts/cms-auth/retire-{deployments-before,pushed,retry,
+browser,public-after,state-before,state-after,state-final,remotes-before}.json.
+
 ## Auth CMS LIVE accepted645ec06 — 8 Oct 2026
 
 Dengan izin Faiz, satu push origin mengirim645ec06869dc3a157178d907d396d73a416d6fd2
