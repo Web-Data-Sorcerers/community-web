@@ -1,5 +1,70 @@
 # CMS → Supabase — TODO dan status penerimaan
 
+## Auth CMS LIVE accepted645ec06 — 8 Oct 2026
+
+Dengan izin Faiz, satu push origin mengirim645ec06869dc3a157178d907d396d73a416d6fd2
+ke dua repo. Main remote origin/production sinkron645ec06; izin push consumed.
+Dua primary aliases READY exact SHA sebelum E5 rerun. Auth SQL pass7 dan grant
+owner sudah applied sekali pada checkpoint C3; jangan reapply. Patch delete
+20261015010000 sudah applied sekali dengan izin terpisah; catalog/ACL preserved.
+Bucket cms-media private/max262144/MIMEimage-webp sudah dibuat dengan izin;
+tidak ada public Storage policy baru atau perubahan recruitment allowlist.
+
+E5 rerun accepted: satu PNG sintetis32×32, satu Projects fixture, edit hanya
+fixture description, lalu delete exact UID. Upload/add/save/delete200; tiga
+pasang deploy hooks accepted dan setiap tahap kedua aliases READY exact645ec06.
+Home+HoF kedua domain ×390/1440 menunjukkan title/description/image fixture,
+lalu edit description, lalu fixture hilang. Public image decode32×32 dan
+cold-cache build private Storage berhasil. Editor owner private preview nyata
+390/1440 kedua situs decode32×32/hash exact; owner media200, anonymous401.
+Cleanup hanya hash Storage fixture setelah Projects/Team reference check0;
+object absent, bucket retained. Four Projects fingerprint8a7d4624d896842800dfd191892df7a8,
+Team fingerprintb867f2890c939b410e3e428259082883 dan recruitment allowlist
+fingerprint2a36dbfe696b9406baabd0cd4de9fb6f tetap. Applications0/media objects0,
+tepat1 CMS grant aktif. Revision/state timestamps normal berubah oleh CRUD;
+tidak mengklaim byte-identical DB state. Tidak ada Team/recruitment content write.
+
+Owner login/read4Projects+25Team200, explicit refresh200/CSRF stable/read200;
+Team editor390/1440 tanpa overflow/pageerrors. Approved non-owner login403 kedua
+situs dan cleanup Auth UID/rate-limit rows confirmed absent. Approved temporary
+owner grant revoke memberi Projects/Team/media403 kedua domain, lalu restore
+active=true/read200. Separate real sessions: CMS logout200 lalu refresh replay
+memakai cookie lama401 kedua situs. Residual access JWT lifetime tetap sesuai
+cms-auth-design; logout merevoke refresh sesi lokal, bukan instant global JWT.
+Non-owner/grant-revoke proof dilakukan pada7e17fc0; sembilan auth/admin handler
+files byte-identical antara7e17fc0 dan645ec06, auth SQL tidak berubah, grant aktif
+fresh verified. Refresh replay/recruitment isolation/E5 proof fresh645ec06.
+Natural access expiry **PASS** kedua situs: sesi real owner di memory dibiarkan
+3703/3701detik tanpa calls/refresh; GET Projects200/4, cookie rotated, logout200,
+anonymous401. Worker completed workspace18:24:55.689UTC7Oct /01:24:55.689WIB8Oct;
+seluruh sesi uji kini logout. Ini proof actual access expiry, bukan mock atau
+explicit refresh. Provider READY timestamps dan workspace probe clock tetap
+berbeda; jangan campur untuk urutan event.
+
+Fresh E4 runtime645ec06 PASS: CMS-only recruitment401; recruitment-only CMS
+Projects/Team/media401; CMS logout200 → CMS401 tetapi recruitment stats200,
+refresh200 dan stats200; recruitment own logout → stats401. Semua sesi browser
+uji logout, termasuk worker expiry yang sudah selesai. Recruitment accepting:false.
+Public19/19 HTML exact per domain sesudah cleanup dan anonymous CMS401.
+
+**Auth CMS A–E LIVE accepted** pada645ec06 kedua domain. Keenam content
+sources aktif Supabase buildRPC; full GAS export tetap divalidasi. GAS/tab/env/
+client/deployment/CMS_ADMIN_GOOGLE_* tidak dihapus. Seluruh backend belum bebas
+GAS; GAS removal pass terpisah. Credentials/cookies/tokens tidak dicatat.
+
+Faiz memilih pensiun testing setelah acceptance. Production-only publication
+implementation lokal b810dac, QA fullCMS105PASS+10SKIP, light87PASS+10SKIP,
+recruitment24PASS, native11PASS; tujuh gate+SEO,3adminmock4widths, snapshot/
+19HTML exact, dist secrets0matches. Belum push; origin masih dua push URLs dan
+project testing masih ada. NEXT: minta izin exact SHA + routing origin
+production-only, push sekali, production READY+read-only regression, baru owner dapat delete project testing.
+
+Proof ignored artifacts/cms-auth/: e5-rerun-progress.json,
+e5-rerun-{add,save,delete}-deployments.json, e5-rerun-final-state.json,
+e5-rerun-storage-cleanup.json, e5-public-{add,save,delete}.json,
+e645-isolation.json, e-revoked-session.json, e-natural-expiry.json,
+retire-qa-summary.json/retire-parity-secrets.json.
+
 ## E5 findings — private media PASS, fixture cleaned, delete SQL repaired
 
 Dengan izin Faiz (`gasss`), bucket `cms-media` dibuat sekali: private,

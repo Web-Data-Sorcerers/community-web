@@ -1,6 +1,6 @@
 # Auth CMS → Supabase — Design final (pass B1)
 
-Status: **local implementation, belum apply/deploy**. Keputusan user 7 Oct 2026:
+Status8Oct2026: **auth CMS LIVE accepted645ec06 kedua domain**. Keputusan user 7 Oct 2026:
 provider **password Supabase**, SDK **`@supabase/supabase-js` server-only**,
 allowlist CMS terpisah, cookie namespace terpisah + logout lokal, live action
 butuh izin konkret. Menggantikan asumsi Google/password plan awal: **tidak ada
