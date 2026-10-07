@@ -36,7 +36,7 @@ Vercel testing tetap ada selama E5 dan worker expiry alami belum selesai.
    hapus env GAS/CMS_ADMIN_GOOGLE_*; GAS removal tetap pass terpisah.
 
 Status: LIVE production-only a042b07; origin satu fetch/push production URL.
-Project testing belum dihapus; gate live dan retry publication accepted.
+Project testing kini absent404 di API; gate live dan retry publication accepted.
 
 ## Local implementation proof
 
@@ -92,3 +92,22 @@ Auth A–E acceptance lengkap645ec06 tetap berlaku; production-only a042b07
 memiliki regression nyata di atas. Checkpoint ini commit lokal saja.
 Proof ignored artifacts/cms-auth/retire-{deployments-before,pushed,retry,
 browser,public-after,state-before,state-after,state-final,remotes-before}.json.
+
+## Cleanup deployment Vercel — 8 Oct 2026
+
+Faiz mengizinkan tepat8 deployment dalam storage-cleanup-plan.json (`okk`).
+Agent menghapus8 exact IDs via Vercel API, semua HTTP200/stateDELETED; tidak
+menghapus project production, domain, env, repo GitHub atau data Supabase.
+Fresh inventory sebelumnya memastikan project web-testing sudah absent404;
+agent tidak menjalankan delete project testing pada sesi cleanup ini.
+
+Production tersisa3 READY: Current a042b07/dpl_EGG8a3RDz3mxB2BFsgL8hdNMTr2f,
+rollback645ec06/dpl_Ar1BpZdR6U3pQjJgExtoWD6NfQdQ dan
+rollback7e17fc0/dpl_5dAJ9HewxnwZKD3yroqCajnAuFiA. Current/alias/READY/sha
+protected diperiksa ulang sebelum setiap delete dan sesudah seluruh batch.
+Public19HTML exact pre/post, CMS anonymous401, recruitment accepting:false.
+Tidak ada content write, SQL, upload, hook atau perubahan retention policy.
+Storage usage dashboard sesudah cleanup belum diverifikasi; jangan klaim
+jumlah GB yang berhasil dibebaskan atau quota langsung turun. Proof ignored
+artifacts/cms-auth/storage-cleanup-{inventory,plan,results,public}.json.
+Checkpoint lokal saja; push SHA baru termasuk docs memerlukan izin terpisah.
