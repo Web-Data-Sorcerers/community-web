@@ -1,5 +1,27 @@
 # AGENTS.md — instructions for AI agents
 
+## Work order aktif — GAS retirement PLAN ONLY (8 Oct 2026)
+
+Faiz meminta plan rinci lalu pindah AI untuk eksekusi. Baca
+[Master Work Plan GAS retirement](docs/cms-gas-retirement-plan.md) seluruhnya
+(A–F, config/envelope/media, QA, izin, acceptance, backup, rollback dan prompt§15).
+Sesi ini docs saja; belum cutover/GAS removal/env mutation/push. Password rotation
+owner ditunda sesuai permintaan, bukan prasyarat planning.
+
+Auth CMS A–E sudah LIVE accepted. Production runtime a042b07; origin satu
+production fetch/push URL community-web. Testing project sudah absent404;
+cleanup8 deployments selesai, Current+rollback645ec06/7e17fc0 tetap READY.
+HEAD planning terbaru cek git log; docs e9079e3/255d190 dan planning lokal belum
+push. Izin push SHA lama consumed; exact SHA approval baru wajib.
+
+NEXT AI: audit read-only → implementasi lokal Supabase-only build setelah user
+meminta eksekusi → fullQA/parity → izin concrete config CMS_DATA_SOURCE → izin
+exactSHA push production → READY/read-only acceptance. Fixture/hook dan pensiun
+env/GAS/Sheet/Drive/resource butuh izin baru terpisah sesudah target/proof/backup
+jelas. Full GAS export masih dependency sampai cutover accepted; jangan hapus
+resource dari instruksi planning. No SQL/grant/provider/recruitment mutation.
+Plan/checkpoint terbaru mengalahkan arsip auth/OAuth/dua-domain/dua-pushURLs.
+
 ## Cleanup deployment Vercel — 8 Oct 2026
 
 Faiz mengizinkan tepat8 deployment dalam storage-cleanup-plan.json (`okk`).

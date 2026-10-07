@@ -1,5 +1,27 @@
 # CMS → Supabase — kickoff aktif untuk AI baru
 
+## Work order aktif — GAS retirement PLAN ONLY (8 Oct 2026)
+
+Faiz meminta plan rinci lalu pindah AI untuk eksekusi. Baca
+[Master Work Plan GAS retirement](cms-gas-retirement-plan.md) seluruhnya
+(A–F, config/envelope/media, QA, izin, acceptance, backup, rollback dan prompt§15).
+Sesi ini docs saja; belum cutover/GAS removal/env mutation/push. Password rotation
+owner ditunda sesuai permintaan, bukan prasyarat planning.
+
+Auth CMS A–E sudah LIVE accepted. Production runtime a042b07; origin satu
+production fetch/push URL community-web. Testing project sudah absent404;
+cleanup8 deployments selesai, Current+rollback645ec06/7e17fc0 tetap READY.
+HEAD planning terbaru cek git log; docs e9079e3/255d190 dan planning lokal belum
+push. Izin push SHA lama consumed; exact SHA approval baru wajib.
+
+NEXT AI: audit read-only → implementasi lokal Supabase-only build setelah user
+meminta eksekusi → fullQA/parity → izin concrete config CMS_DATA_SOURCE → izin
+exactSHA push production → READY/read-only acceptance. Fixture/hook dan pensiun
+env/GAS/Sheet/Drive/resource butuh izin baru terpisah sesudah target/proof/backup
+jelas. Full GAS export masih dependency sampai cutover accepted; jangan hapus
+resource dari instruksi planning. No SQL/grant/provider/recruitment mutation.
+Plan/checkpoint terbaru mengalahkan arsip auth/OAuth/dua-domain/dua-pushURLs.
+
 ## Acceptance resumed — akses pulih, E5 approved, media prerequisite missing
 
 Full access kembali aktif 8 Oct 2026; `.git` writable dan Management API bekerja.
@@ -349,7 +371,64 @@ live/push, dan menyelesaikan hasil reviewable dulu. Real mutation acceptance
 memerlukan fixture/cleanup konkret; jangan save/reseed Team sebagai probe. Push
 baru wajib konfirmasi; checkpoint docs setelah live tidak otomatis push.
 
-## 6. Prompt siap salin — eksekusi auth CMS C3–E di AI baru
+## 6. Prompt AKTIF — eksekusi GAS retirement di AI baru
+
+Salin prompt berikut saat pindah AI. Ini meminta implementasi lokal; gate live
+tetap approval konkret sesuai plan. Auth tidak dikerjakan ulang.
+
+```text
+Bro, lanjut EKSEKUSI docs/cms-gas-retirement-plan.md di
+/home/faiz/ds/ds5opencode. Panggil gw bro, bahasa Indonesia.
+Sesi sebelumnya hanya menyusun PLAN GAS retirement; auth CMS A–E SUDAH LIVE
+accepted, bukan tugas mengulang auth/SQL/grant. Password gw ganti nanti;
+jangan minta password di chat, set/rotate otomatis, atau simpan credential.
+
+Periksa status/log/refs/remotes/Node22 dulu. Runtime production a042b07;
+docs lokal e9079e3 + planning commit berikutnya cek log. Origin fetch/push
+HANYA https://github.com/Web-Data-Sorcerers/community-web.git (satu push URL).
+Testing project sudah absent404;8 deployment lama sudah dihapus, tersisa Current
++ rollback645ec06/7e17fc0. Jangan recreate testing/reset/stash foreign changes.
+
+Baca kickoff SELURUHNYA termasuk §6 → AGENTS → ai-handoff →
+docs/cms-gas-retirement-plan.md SELURUHNYA → TODO → master migration plan
+§5–9 → auth plan§11/design/execution checkpoint → CMS SOP. Checkpoint terbaru+
+plan GAS mengalahkan prompt auth/dua-domain/duaURL historis. UI terkunci.
+
+Eksekusi tahap A–B lokal: read-only audit/captured same-input baseline, direct
+schemaVersion1 envelope dari enam Supabase RPC; CMS_DATA_SOURCE mode fail closed,
+remote bukan dipicu env GAS, local offline QA; lepas gate env GAS pada private
+Storage cache. Strict Zod/order/blank slots/atomic write/revision/min-max/media/
+UI tetap. Anon publicRPC, service key Storage build/server-only, admin write
+Management API existing; no fallback GAS/stale snapshot; no SQL/grant/bucket/
+provider/recruitment change. Jangan hapus kode/env/Sheet/Drive/deployment GAS
+sebelum acceptance+backup+izin. Tidak perlu dependency baru.
+
+Full test:cms TANPA env server supaya10 Team live mutation SKIP; focused no-GAS
+mode/6RPC failures/Projects+Team cold media/secret redaction. Recruitment24
+baseline, tujuh gate+SEO,3admin mocks4widths selama legacy retained, snapshot
+SHA/19HTML exact, dist secrets0. Mock bukan owner proof. Jangan overwrite
+snapshot repo dari live capture atau reseed Team untuk menghapus drift.
+
+Sesudah diff+QA konkret, minta izin set CMS_DATA_SOURCE=supabase Production di
+prj_3KbX29t6DYN1RMTy88lKHXd0IUVE; retained GAS env jangan delete. Commit lokal,
+minta izin exact HEAD SHA sebelum satu push origin main. Izin lama consumed.
+Production READY exact SHA+alias, real owner/read/media bila available/refresh/
+logout390/1440, anon401, recruitment closed+isolation, public19parity dan DB
+fingerprints. Hook/Projects fixture/upload/cleanup butuh izin konkret baru§11E3;
+no arbitrary Team write. Auth unchanged tidak perlu ulang expiry satu jam/revoke
+fixtures yang sudah accepted. Credential hanya secure session; jangan di docs.
+
+Tahap F terpisah: exact resource/env inventory + secure backup + observasi
+terpilih + approval delete env/retire GAS deployment dahulu. Shared Sheet/Drive/
+GCP resources jangan delete generik. Cleanup code/tests commit terpisah + QA +
+exact SHA push approval. Simpan checkpoint aktual/proof limits tanpa secrets/
+PII; jangan klaim100%bebasGAS sebelum build/config/acceptance terverifikasi.
+Lanjutkan pekerjaan yang sudah diizinkan; minta approval hanya untuk action
+konkret yang belum diizinkan. Sesi ini meminta implementasi lokal plan tersebut,
+bukan izin otomatis untuk push/env/live mutation atau delete resource.
+```
+
+## 6a. Arsip prompt auth C3–E — JANGAN dipakai sebagai work order aktif
 
 ```text
 Bro, lanjut auth CMS → Supabase di /home/faiz/ds/ds5opencode.
