@@ -12,7 +12,8 @@ animasi, atau gambar identik sudah ada (Storage POST tanpa `x-upsert` → 502).
 Tanpa sesi owner/response aktual, exact cause tidak bisa dipin; usage API
 menunjukkan attempt kemungkinan berhenti **sebelum** Storage (domain 400).
 
-Fix lokal→LIVE `bd9a424eee0029a6748ac229d0175077324d9bf4`:
+Fix lokal→LIVE (deploy `6fc5085d20158b4a4e0d93d4c6e36ac92d9630a9`; kode fix
+`bd9a424eee0029a6748ac229d0175077324d9bf4`):
 
 - [`src/scripts/admin-image.js`](src/scripts/admin-image.js) baru: browser
   mengecilkan/kompres foto >16 MP atau >2 MB (`createImageBitmap` + canvas →
@@ -28,8 +29,12 @@ Fix lokal→LIVE `bd9a424eee0029a6748ac229d0175077324d9bf4`:
 QA Node22.23.0 `CMS_DATA_SOURCE=local`: build 0 error/23 pages; `test:cms` **94
 PASS + 10 Team SKIP / 0 FAIL**; mock Team + Projects PASS 320/390/768/1440
 termasuk kasus **20 MP → dikecilkan lalu berhasil**; snapshot `4345f1…4857` tetap;
-hanya HTML admin berubah (publik byte-identik); dist secrets 0. Owner live upload
-foto Team **belum diuji ulang** pasca-fix — minta acceptance/screenshot baru.
+hanya HTML admin berubah (publik byte-identik); dist secrets 0. Deployed
+`6fc5085` READY `dpl_73w3vHEaJfGVe3Np7RfT6opjG2UG`, alias
+`data-sorcerers-community-sigma.vercel.app`, provider READY **08 Oct 2026
+15:38:21.068 UTC / 22:38:21.068 WIB**; live bundle Team memuat string fix.
+Owner live upload foto Team **belum diuji ulang** pasca-fix — minta
+acceptance/screenshot baru.
 
 ## Dashboard performance/loading/feedback — LIVE + QA PASS (8 Oct 2026)
 

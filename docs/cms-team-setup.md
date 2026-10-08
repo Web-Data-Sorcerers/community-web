@@ -44,7 +44,7 @@ melayani foto Team/Projects yang aktif. Media hilang/corrupt/fetch gagal harus
 menggagalkan build, tidak memakai fallback stale. Penyebab redirect/fetch gagal
 sebelumnya belum terbukti; safeguards/retry bounded dipertahankan.
 
-Fix upload (`bd9a424`, lokal→live): foto >16 MP atau >2 MB dikecilkan/kompres di
-browser (`src/scripts/admin-image.js`) sebelum POST, server `x-upsert: true`, dan
+Fix upload (`bd9a424`, deploy `6fc5085` READY 8 Oct 2026): foto >16 MP atau >2 MB
+dikecilkan/kompres di browser (`src/scripts/admin-image.js`) sebelum POST, server `x-upsert: true`, dan
 pesan error spesifik. Batas server tetap <=2 MB/masukan, <=16 MP, raster saja.
 Owner live upload foto Team belum diuji ulang sesudah fix; minta acceptance baru.

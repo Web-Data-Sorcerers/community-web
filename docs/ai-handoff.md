@@ -8,7 +8,8 @@ regresi deploy perf: `server/cms-media.mjs` terakhir berubah `2a22d8a`; bucket
 (≤2 MB input, ≤16 MP, raster only, ≤256 KiB output); pesan klien menyamarkan
 penyebab. Usage API → attempt kemungkinan berhenti sebelum Storage (domain 400).
 
-Fix `bd9a424eee0029a6748ac229d0175077324d9bf4`:
+Fix (deploy `6fc5085d20158b4a4e0d93d4c6e36ac92d9630a9`, kode fix
+`bd9a424eee0029a6748ac229d0175077324d9bf4`):
 
 - `src/scripts/admin-image.js` (baru): kecilkan/kompres di browser (>16 MP atau
   > 2 MB) sebelum upload; dipakai Team + Projects editor.
@@ -19,8 +20,10 @@ Fix `bd9a424eee0029a6748ac229d0175077324d9bf4`:
 
 QA Node22 `CMS_DATA_SOURCE=local`: build0err/23pages; `test:cms` 94 PASS + 10 SKIP
 /0 FAIL; mock Team+Projects 320/390/768/1440 PASS termasuk 20 MP→berhasil;
-snapshot `4345f1…4857`; publik byte-identik; secrets 0. Live owner upload belum
-diuji ulang.
+snapshot `4345f1…4857`; publik byte-identik; secrets 0. Deployed `6fc5085` READY
+`dpl_73w3vHEaJfGVe3Np7RfT6opjG2UG`, provider READY 08 Oct 2026 15:38:21.068 UTC /
+22:38:21.068 WIB; live bundle Team memuat string fix. Owner live upload foto Team
+belum diuji ulang.
 
 ## Dashboard performance/loading/feedback — LIVE + QA PASS (8 Oct 2026)
 

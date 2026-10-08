@@ -815,5 +815,9 @@ upload (Team + Projects), pesan error spesifik, fallback resize tambahan
 tetap. QA: build0err/23pages; `test:cms` 94 PASS + 10 SKIP/0 FAIL; mock Team+
 Projects 320/390/768/1440 PASS termasuk 20 MP→berhasil; snapshot tetap; publik
 byte-identik; secrets 0. **Owner live upload foto Team belum diuji ulang** pasca
-fix; minta acceptance/screenshot baru. Detail [SOP §8](cms-sop.md), [Team
-setup](cms-team-setup.md), [Projects media plan](cms-projects-media-plan.md).
+fix; minta acceptance/screenshot baru. Deploy HEAD `6fc5085d20158b4a4e0d93d4c6e
+36ac92d9630a9` READY `dpl_73w3vHEaJfGVe3Np7RfT6opjG2UG`, alias
+`data-sorcerers-community-sigma.vercel.app`, provider READY 08 Oct 2026
+15:38:21.068 UTC / 22:38:21.068 WIB; live bundle Team memuat string fix. Detail
+[SOP §8](cms-sop.md), [Team setup](cms-team-setup.md), [Projects media
+plan](cms-projects-media-plan.md).
