@@ -134,3 +134,43 @@ Proof ignored `artifacts/cms-gas-retirement/f1/`:
 `usage-audit.json`, `restore-proof.json`, `no-gas-tests.json` + sanitized test log.
 Backup key/values tidak ada dalam artifacts. No resource/env mutation/push.
 F1 **partial backup complete; Google access required**, bukan retirement complete.
+
+## 7. Google browser fallback dan encrypted local collector
+
+Owner menunjukkan dashboard pribadi berisi CMS Admin, CMS Export dan Untitled
+project; indikator sharing pada Export terlihat, daftar collaborators/reuse belum
+verified. Screenshot berikutnya membuktikan6nama Export Properties: ADMIN_EMAILS,
+CMS_SCHEMA_VERSION, DRIVE_FOLDER_ID, EXPORT_TOKEN, OWNER_EMAIL, SPREADSHEET_ID.
+Nilai tidak dikirim lewat chat. Untitled project unrelated tetap retained.
+
+Login Google browser agent ditolak sebagai unsupported/unsafe browser. Jangan
+mengulang login dengan spoofing/menurunkan keamanan/copy cookie. Sesi normal
+owner terbuka; browser agent tetap tidak memiliki sesi itu. Google Drive connector
+masih belum connected; tidak menganggap normal-browser login sebagai agent access.
+
+Agent menyiapkan local-only collector http://127.0.0.1:4389, bind loopback. Owner
+memasukkan6Properties di password-type form lokal; body hanya diproses memory dan
+AES256GCM encrypted di folder backup luar repo/owner-google, unique IV per file.
+Source code collector sendiri ignored artifacts/cms-gas-retirement/f1/collector.mjs;
+bukan fitur CMS production, tidak dipush/deploy. Key existing disimpan terpisah.
+Tidak menerima password Google, menyalin browser session, atau mutate GAS.
+
+Origin+Host+HttpOnly SameSite session checks, fixed kind allowlist/body bound,
+Properties shape/schemaVersion1, archive ZIP integrity/path checks, Excel worksheet
+count, encrypt-decrypt equality dan file600 enforced. File uploads menerima full
+Sheet XLSX, Drive ZIP, export/admin source/manifests; metadata/count/hash saja
+pada response. UI clear form setelah successful backup. Endpoint tidak menampilkan
+values. Semua backup local disk saja; offsite/complete ownership belum verified.
+
+Focused collector QA **9checks PASS** menggunakan synthetic payload di isolated
+temporary directory: page/cookie, wrong origin, missing cookie, unknown kind,
+invalid Properties, invalid archive, failed requests create0files, encrypted values
+exact/file600, response without secret values. Synthetic files sudah dibersihkan;
+actual Google Properties belum diterima, archive/Sheet/Drive backup masih pending.
+
+NEXT owner save6Properties via local form → agent inspect private proof counts
+without values → exact Sheet/Drive identifiers dipakai hanya lewat normal Google
+owner browser → backup all tabs/Drive files/source/Properties dan ownership audit.
+Jangan screenshot form values; jangan delete/disable resource dari screenshot ini.
+Collector proses harus dihentikan setelah backup owner selesai; jangan mematikan
+preview/process lain. Restore/deletion live tetap approval exact target terpisah.

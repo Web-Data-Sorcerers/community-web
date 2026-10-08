@@ -1,5 +1,18 @@
 # CMS → Supabase — TODO dan status penerimaan
 
+## Google owner browser terbuka — local secure backup intake (8 Oct 2026)
+
+Login Google browser agent ditolak; owner normal browser menunjukkan CMS Admin/
+CMS Export/Untitled. Export sharing indicator terlihat, ownership/reuse pending.
+Owner screenshot6Export Property names confirmed; values tidak diberikan di chat.
+Collector localhost4389 bindloopback siap menerima Properties/file backup owner,
+AES256GCM ke luar repo dan clear form;9synthetic security/encryption checks PASS.
+Actual Google values/files belum diterima; jangan claim full backup/retirement.
+Detail/proof limits [F1 inventory§7](cms-gas-retirement-inventory.md#7-google-browser-fallback-dan-encrypted-local-collector).
+Tidak ada env/resource/content/SQL/grant mutation atau push; testing tidak dibuat
+ulang dan Untitled unrelated retained. NEXT owner masukkan6values via local form,
+lalu full Sheet/Drive/source/Properties + ownership audit; stop collector selesai.
+
 ## F1 inventory checkpoint pushed4313544 — 8 Oct 2026
 
 Faiz (`psuh`) approved checkpoint43135447343c3e00c1babf746d72999557063c99.
