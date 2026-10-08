@@ -1,5 +1,10 @@
 # Pemasangan GAS B1
 
+> Arsip GAS: kode/generator legacy sudah dihapus dari working tree atas instruksi
+> owner8Oct2026. Jangan jalankan setup/perintah GAS di bawah. Source historis ada
+> di Git history/tag lokal backup/gas-code-before-cleanup-20261008. Backend aktif
+> memakai Supabase; lihat AGENTS.md dan docs/cms-sop.md checkpoint terbaru.
+
 ## GAS retirement F1 — audit dan backup parsial (8 Oct 2026)
 
 Faiz mengaktifkan next retirement (`gassssss broooo`). Read-only actual inventory

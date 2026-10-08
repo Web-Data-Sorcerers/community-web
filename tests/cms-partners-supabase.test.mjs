@@ -18,8 +18,6 @@ const migration = await readFile(
   'utf8',
 );
 const env = {
-  CMS_API_URL: 'https://script.google.com/macros/s/test/exec',
-  CMS_API_TOKEN: 'test-export-secret',
   SUPABASE_URL: 'https://example.supabase.co',
   SUPABASE_ANON_KEY: 'test-anon',
 };
@@ -52,7 +50,6 @@ for (const failure of [
   'path',
   'empty',
   'metadata',
-  'gas-invalid',
 ]) {
   test(`Supabase-only Partners source and atomic failure: ${failure || 'success'}`, async () => {
     const dir = await mkdtemp(join(tmpdir(), 'ds-partners-'));
@@ -60,10 +57,6 @@ for (const failure of [
       const path = join(dir, 'snapshot.json');
       const original = JSON.stringify(baseline);
       await writeFile(path, original);
-      const gas = structuredClone(baseline);
-      gas.partners.partnerCategories[0].label = 'Old GAS content';
-      gas.partners.whyPartners[0].title = 'Old GAS why';
-      gas.partners.partnerLogo = '/images/partners/why-community.webp';
       const partners = structuredClone(baseline.partners);
       partners.partnerCategories[0].label = 'Supabase content';
       partners.whyPartners[0].title = 'Supabase why';
@@ -73,7 +66,6 @@ for (const failure of [
       if (failure === 'why-count') partners.whyPartners.pop();
       if (failure === 'path') partners.partnerLogo = '/images/../secret';
       if (failure === 'empty') partners.whyPartners[0].description = '';
-      if (failure === 'gas-invalid') gas.partners.partnerCategories = [];
       if (failure === 'metadata') partners.count = 20;
       let calls = 0;
       const rpcOrder = [];
@@ -85,7 +77,7 @@ for (const failure of [
           assert.equal(
             u.hostname,
             'example.supabase.co',
-            'GAS must never be called',
+            'Only Supabase may be called',
           );
           assert.equal(options.headers.apikey, env.SUPABASE_ANON_KEY);
           assert.equal(options.method, 'POST');
@@ -118,7 +110,7 @@ for (const failure of [
           );
         },
       });
-      if (failure && failure !== 'gas-invalid') {
+      if (failure) {
         await assert.rejects(run, (error) => {
           assert(!error.message.includes('PRIVATE'));
           return true;

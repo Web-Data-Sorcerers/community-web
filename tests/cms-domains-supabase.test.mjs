@@ -17,8 +17,6 @@ const migration = await readFile(
   'utf8',
 );
 const env = {
-  CMS_API_URL: 'https://script.google.com/macros/s/test/exec',
-  CMS_API_TOKEN: 'test-export-secret',
   SUPABASE_URL: 'https://example.supabase.co',
   SUPABASE_ANON_KEY: 'test-anon',
 };
@@ -55,8 +53,6 @@ for (const failure of [
       const path = join(dir, 'snapshot.json');
       const original = JSON.stringify(baseline);
       await writeFile(path, original);
-      const gas = structuredClone(baseline);
-      gas.domains[0].title = 'Old GAS content';
       const domains = structuredClone(baseline.domains);
       domains[0].title = 'Supabase content';
       if (failure === 'order') domains.reverse();
@@ -73,7 +69,7 @@ for (const failure of [
           assert.equal(
             u.hostname,
             'example.supabase.co',
-            'GAS must never be called',
+            'Only Supabase may be called',
           );
           assert.equal(options.headers.apikey, env.SUPABASE_ANON_KEY);
           assert.equal(options.method, 'POST');
@@ -101,7 +97,7 @@ for (const failure of [
           );
         },
       });
-      if (failure && failure !== 'gas-invalid') {
+      if (failure) {
         await assert.rejects(run, (error) => {
           assert(!error.message.includes('PRIVATE'));
           return true;

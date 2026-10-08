@@ -1,5 +1,10 @@
 # Native /admin — konfigurasi dan acceptance
 
+> Arsip GAS: kode/generator legacy sudah dihapus dari working tree atas instruksi
+> owner8Oct2026. Jangan jalankan setup/perintah GAS di bawah. Source historis ada
+> di Git history/tag lokal backup/gas-code-before-cleanup-20261008. Backend aktif
+> memakai Supabase; lihat AGENTS.md dan docs/cms-sop.md checkpoint terbaru.
+
 ## Status dokumen — arsip native OAuth/GAS
 
 Isi setup/flow di bawah merekam pass historis; jangan onboarding/config ulang.

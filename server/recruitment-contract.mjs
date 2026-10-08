@@ -78,7 +78,7 @@ export const APPLICATION_FIELDS = [
 ];
 export const DOMAINS = options.HODS_DIVISIONS;
 
-// Also emitted verbatim for GAS, so both boundaries use the same contract.
+// Canonical application validation shared by the server and intake tests.
 export function validateApplication(input) {
   const invalid = () => {
     throw new Error('INVALID_INPUT');
@@ -118,7 +118,6 @@ export function validateApplication(input) {
   )
     invalid();
   if (output.portfolio_link) {
-    // GAS does not expose the browser URL constructor.
     if (!/^https?:\/\/[^\s/?#]+(?:[/?#][^\s]*)?$/i.test(output.portfolio_link))
       invalid();
   }

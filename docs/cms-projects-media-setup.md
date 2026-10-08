@@ -1,5 +1,10 @@
 # Projects upload — update existing deployments
 
+> Arsip GAS: kode/generator legacy sudah dihapus dari working tree atas instruksi
+> owner8Oct2026. Jangan jalankan setup/perintah GAS di bawah. Source historis ada
+> di Git history/tag lokal backup/gas-code-before-cleanup-20261008. Backend aktif
+> memakai Supabase; lihat AGENTS.md dan docs/cms-sop.md checkpoint terbaru.
+
 Status: cd37446 sudah push; GAS Export/Admin existing diperbarui owner.
 Upload, preview dan save nyata project sementara “uji cms” berhasil. Production
 SUCCESS 21:25 WIB; testing retry SUCCESS 21:27 WIB setelah kegagalan fetch/validasi

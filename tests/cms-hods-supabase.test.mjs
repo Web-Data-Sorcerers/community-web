@@ -18,8 +18,6 @@ const migration = await readFile(
   'utf8',
 );
 const env = {
-  CMS_API_URL: 'https://script.google.com/macros/s/test/exec',
-  CMS_API_TOKEN: 'test-export-secret',
   SUPABASE_URL: 'https://example.supabase.co',
   SUPABASE_ANON_KEY: 'test-anon',
 };
@@ -52,7 +50,6 @@ for (const failure of [
   'bullets',
   'empty',
   'metadata',
-  'gas-invalid',
 ]) {
   test(`Supabase-only Hods source and atomic failure: ${failure || 'success'}`, async () => {
     const dir = await mkdtemp(join(tmpdir(), 'ds-hods-'));
@@ -60,8 +57,6 @@ for (const failure of [
       const path = join(dir, 'snapshot.json');
       const original = JSON.stringify(baseline);
       await writeFile(path, original);
-      const gas = structuredClone(baseline);
-      gas.hods[0].title = 'Old GAS content';
       const hods = structuredClone(baseline.hods);
       hods[0].title = 'Supabase content';
       if (failure === 'order') hods.reverse();
@@ -71,7 +66,6 @@ for (const failure of [
       if (failure === 'union') hods[0].tabs[0].sections[0].bullets = ['x'];
       if (failure === 'bullets') hods[0].tabs[0].sections[1].bullets.pop();
       if (failure === 'empty') hods[0].tabs[0].sections[0].text = '';
-      if (failure === 'gas-invalid') gas.hods[0].tabs = [];
       if (failure === 'metadata') hods[0].position = 1;
       let calls = 0;
       const run = syncCmsSnapshot({
@@ -82,7 +76,7 @@ for (const failure of [
           assert.equal(
             u.hostname,
             'example.supabase.co',
-            'GAS must never be called',
+            'Only Supabase may be called',
           );
           assert.equal(options.headers.apikey, env.SUPABASE_ANON_KEY);
           assert.equal(options.method, 'POST');
@@ -110,7 +104,7 @@ for (const failure of [
           );
         },
       });
-      if (failure && failure !== 'gas-invalid') {
+      if (failure) {
         await assert.rejects(run, (error) => {
           assert(!error.message.includes('PRIVATE'));
           return true;

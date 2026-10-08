@@ -6,9 +6,6 @@ const env = {
   NODE_ENV: 'production',
   CMS_ADMIN_ORIGIN: origin,
   CMS_ADMIN_SESSION_SECRET: Buffer.alloc(32, 7).toString('base64'),
-  CMS_ADMIN_GOOGLE_CLIENT_ID: 'private-client',
-  CMS_ADMIN_GOOGLE_CLIENT_SECRET: 'private-secret',
-  CMS_ADMIN_API_DEPLOYMENT_ID: 'private-deployment',
   SUPABASE_URL: 'https://placeholder.supabase.co',
   SUPABASE_ANON_KEY: 'placeholder-anon',
   SUPABASE_SERVICE_ROLE_KEY: 'placeholder',
@@ -113,21 +110,9 @@ function harness(teamData, envOverrides = {}, hookStatus = 200) {
         };
         return Response.json([{ cms_save_project: result }]);
       }
-      return Response.json({
-        done: true,
-        response: {
-          result: owner
-            ? {
-                ok: true,
-                data:
-                  teamData &&
-                  /Team|Member/.test(JSON.parse(options.body).function)
-                    ? teamData
-                    : data,
-              }
-            : { ok: false, error: { code: 'UNAUTHORIZED', detail: 'LEAK' } },
-        },
-      });
+      assert.fail(
+        'Unexpected request outside Supabase and production publication hook',
+      );
     },
   });
   return {
@@ -198,7 +183,7 @@ test('password login seals a private session, verifies permission and sanitizes 
   const loginBody = await response.clone().json();
   assert.equal(loginBody.ok, true);
   assert.equal(loginBody.csrf.length, 43);
-  // Password grant + verify RPC are called; no Google/GAS calls.
+  // Password grant + permission RPC authorize the shared session.
   assert(h.calls.some((c) => String(c.url).includes('/auth/v1/token')));
   assert(h.calls.some((c) => String(c.url).includes('cms_verify_admin')));
   assert(!h.calls.some((c) => String(c.url).includes('google')));
@@ -334,7 +319,7 @@ test('mutations require CSRF/origin/JSON and fixed RPC; input cap and no automat
       body: JSON.stringify(body),
     });
   const before = h.calls.length;
-  const gasCalls = () =>
+  const legacyCalls = () =>
     h.calls.filter((c) => {
       try {
         return JSON.parse(c.options?.body)?.function;
@@ -350,7 +335,7 @@ test('mutations require CSRF/origin/JSON and fixed RPC; input cap and no automat
           !String(c.url).includes('cms_verify_admin') &&
           !String(c.url).includes('cms_rate_limit')),
     ).length;
-  const gasBefore = gasCalls();
+  const legacyBefore = legacyCalls();
   const privilegedBefore = privilegedCalls();
   assert.equal(
     (
@@ -380,13 +365,20 @@ test('mutations require CSRF/origin/JSON and fixed RPC; input cap and no automat
     415,
   );
   for (const operation of [
+    'unknown',
+    'upload',
+    'media',
     'doGet',
     'adminSetup',
     '__proto__',
     'load',
     'constructor',
   ])
-    assert.equal((await h.handle(post({ operation }), 'projects')).status, 400);
+    for (const route of ['projects', 'team'])
+      assert.equal(
+        (await h.handle(post({ operation, payload: {} }), route)).status,
+        400,
+      );
   assert.equal(
     (
       await h.handle(
@@ -409,8 +401,8 @@ test('mutations require CSRF/origin/JSON and fixed RPC; input cap and no automat
       'projects',
     );
     assert.equal(result.status, 200);
-    // projects route pakai Supabase RPC + deploy hooks — tidak ada GAS calls baru
-    assert.equal(gasCalls(), gasBefore);
+    // Only Supabase and the production publication hook are used.
+    assert.equal(legacyCalls(), legacyBefore);
   }
   // Auth backend outage fails closed before any privileged call.
   h.throwFetch();
@@ -608,7 +600,7 @@ test('Team API uses existing session and CSRF, fixed Team RPC and sanitized cont
     ).status,
     400,
   );
-  // Supabase cutover authorizes via the encrypted owner session, not GAS RPC.
+  // Team operations authorize via the encrypted owner session.
   const tamperedCookie = cookie.replace(/=./, '=X');
   assert.equal(
     (

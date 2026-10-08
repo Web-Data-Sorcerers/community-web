@@ -1,4 +1,4 @@
-// Native static admin browser with mocked HTTP transport; real Google identity tested separately.
+// Native static admin browser with mocked HTTP transport; real Supabase identity is verified separately.
 import { chromium } from '@playwright/test';
 import assert from 'node:assert/strict';
 import sharp from 'sharp';

@@ -1,6 +1,5 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import vm from 'node:vm';
 import sharp from 'sharp';
 import { createHash } from 'node:crypto';
 import { readFile, writeFile, mkdtemp, rm } from 'node:fs/promises';
@@ -12,17 +11,9 @@ import {
   MEDIA_INPUT_LIMIT,
 } from '../server/cms-media.mjs';
 import { syncCmsSnapshot } from '../scripts/cms-client.mjs';
-import { createAdminHandler, SCOPES } from '../server/cms-admin.mjs';
+import { createAdminHandler } from '../server/cms-admin.mjs';
 const baseline = JSON.parse(
   await readFile(new URL('../src/data/cms-snapshot.json', import.meta.url)),
-);
-const source = await readFile(
-  new URL('../cms/gas/admin/server.js', import.meta.url),
-  'utf8',
-);
-const shared = await readFile(
-  new URL('../cms/gas/media.js', import.meta.url),
-  'utf8',
 );
 const raster = (format = 'png') =>
   sharp({
@@ -128,8 +119,6 @@ test('prebuild caches verified private media before atomic snapshot write, refet
       snapshotPath,
       mediaRoot: join(dir, 'public'),
       env: {
-        CMS_API_URL: 'https://script.google.com/macros/s/test/exec',
-        CMS_API_TOKEN: 'PRIVATE-test',
         SUPABASE_URL: 'https://placeholder.supabase.co',
         SUPABASE_ANON_KEY: 'placeholder',
         SUPABASE_SERVICE_ROLE_KEY: 'private-build-test',
@@ -210,172 +199,7 @@ test('prebuild caches verified private media before atomic snapshot write, refet
   }
 });
 
-function gasHarness() {
-  let identity = 'owner@example.test',
-    folderOwner = identity;
-  const files = new Map();
-  let writes = 0;
-  const props = new Map(
-    Object.entries({
-      OWNER_EMAIL: identity,
-      ADMIN_EMAILS: JSON.stringify([identity]),
-      DRIVE_FOLDER_ID: 'PRIVATE-folder',
-      EXPORT_TOKEN: 'PRIVATE-export',
-    }),
-  );
-  const folder = {
-    getOwner: () => ({ getEmail: () => folderOwner }),
-    getFilesByName: (name) => {
-      let done = false;
-      return {
-        hasNext: () => !done && files.has(name),
-        next: () => {
-          done = true;
-          return files.get(name);
-        },
-      };
-    },
-    createFile: (blob) => {
-      writes++;
-      files.set(blob.name, {
-        getMimeType: () => 'image/webp',
-        getSize: () => blob.bytes.length,
-        isTrashed: () => false,
-        getBlob: () => ({ getBytes: () => blob.bytes }),
-      });
-    },
-  };
-  const context = vm.createContext({
-    ADMIN_IMAGE_PRESETS: [...new Set(baseline.projects.map((p) => p.image))],
-    Session: {
-      getActiveUser: () => ({ getEmail: () => identity }),
-      getEffectiveUser: () => ({ getEmail: () => identity }),
-    },
-    PropertiesService: {
-      getScriptProperties: () => ({ getProperty: (key) => props.get(key) }),
-    },
-    DriveApp: { getFolderById: () => folder },
-    LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
-    Utilities: {
-      DigestAlgorithm: { SHA_256: 'sha256' },
-      Charset: { UTF_8: 'utf8' },
-      computeDigest: (_a, bytes) => [
-        ...createHash('sha256')
-          .update(
-            typeof bytes === 'string'
-              ? bytes
-              : Buffer.from(bytes.map((b) => (b + 256) % 256)),
-          )
-          .digest(),
-      ],
-      base64Decode: (value) => [...Buffer.from(value, 'base64')],
-      base64Encode: (bytes) =>
-        Buffer.from(bytes.map((b) => (b + 256) % 256)).toString('base64'),
-      newBlob: (bytes, _mime, name) => ({ bytes, name }),
-    },
-  });
-  vm.runInContext(source + '\n' + shared + '\n' + teamSource, context);
-  return {
-    context,
-    files,
-    props,
-    deny: () => {
-      identity = 'other@example.test';
-    },
-    wrongFolder: () => {
-      folderOwner = 'other@example.test';
-    },
-    writes: () => writes,
-  };
-}
-
-test('GAS upload/read are owner-only, folder-bound, hash-checked and deduplicated without Sheet/hooks', async () => {
-  const media = await normalizeProjectImage(await raster(), 'image/png');
-  const h = gasHarness();
-  assert.equal(h.context.adminUploadProjectImage(media).ok, true);
-  assert.equal(h.context.adminUploadProjectImage(media).ok, true);
-  assert.equal(h.writes(), 1);
-  assert.equal(
-    h.context.adminValidateProject_({
-      ...baseline.projects[0],
-      image: media.image,
-    }).image,
-    media.image,
-  );
-  assert(
-    h.context
-      .adminState_([{ ...baseline.projects[0], image: media.image }])
-      .imagePresets.includes(media.image),
-  );
-  assert.equal(
-    h.context.adminReadProjectImage({ image: media.image }).data.media.data,
-    media.data,
-  );
-  assert.equal(
-    h.context.adminUploadProjectImage({
-      ...media,
-      image: '/images/cms/projects/' + 'a'.repeat(64) + '.webp',
-    }).error.code,
-    'INVALID_INPUT',
-  );
-  assert.equal(
-    h.context.adminReadProjectImage({ image: '../PRIVATE-folder' }).error.code,
-    'INVALID_INPUT',
-  );
-  const bad = gasHarness();
-  bad.wrongFolder();
-  assert.equal(bad.context.adminUploadProjectImage(media).ok, false);
-  assert.equal(bad.writes(), 0);
-  h.deny();
-  assert.equal(
-    h.context.adminUploadProjectImage(media).error.code,
-    'UNAUTHORIZED',
-  );
-  assert.equal(
-    h.context.adminReadProjectImage({ image: media.image }).error.code,
-    'UNAUTHORIZED',
-  );
-  assert.equal(h.writes(), 1);
-});
-
-test('read-only export media requires token and a current project reference, never arbitrary Drive IDs', async () => {
-  const media = await normalizeProjectImage(await raster(), 'image/png');
-  const h = gasHarness();
-  h.context.adminUploadProjectImage(media);
-  vm.runInContext(
-    await readFile(new URL('../cms/gas/export.js', import.meta.url), 'utf8'),
-    h.context,
-  );
-  h.context.cmsJson_ = (value) => value;
-  h.context.cmsReadSnapshot_ = () => baseline;
-  assert.equal(
-    h.context.doGet({ parameter: { action: 'media', image: media.image } })
-      .error.code,
-    'UNAUTHORIZED',
-  );
-  const params = {
-    action: 'media',
-    token: 'PRIVATE-export',
-    image: media.image,
-  };
-  assert.equal(
-    h.context.doGet({ parameter: params }).error.code,
-    'UNKNOWN_MEDIA',
-  );
-  h.context.cmsReadSnapshot_ = () => ({
-    ...baseline,
-    projects: [{ ...baseline.projects[0], image: media.image }],
-  });
-  assert.equal(h.context.doGet({ parameter: params }).data, media.data);
-  assert.equal(
-    h.context.doGet({ parameter: { ...params, image: 'PRIVATE-file-id' } })
-      .error.code,
-    'UNKNOWN_MEDIA',
-  );
-  assert.equal(h.context.doPost().error.code, 'READ_ONLY');
-});
-
-test('native media route enforces session/CSRF, normalizes bytes before fixed owner RPC and serves verified private preview', async () => {
+test('native media route enforces session/CSRF, normalizes Storage uploads and serves private preview', async () => {
   const origin = 'https://admin.example.test';
   const png = await raster();
   const expected = await normalizeProjectImage(png, 'image/png');
@@ -383,9 +207,6 @@ test('native media route enforces session/CSRF, normalizes bytes before fixed ow
     NODE_ENV: 'production',
     CMS_ADMIN_ORIGIN: origin,
     CMS_ADMIN_SESSION_SECRET: Buffer.alloc(32).toString('base64'),
-    CMS_ADMIN_GOOGLE_CLIENT_ID: 'private-client',
-    CMS_ADMIN_GOOGLE_CLIENT_SECRET: 'private-secret',
-    CMS_ADMIN_API_DEPLOYMENT_ID: 'private-deployment',
     SUPABASE_URL: 'https://placeholder.supabase.co',
     SUPABASE_ANON_KEY: 'placeholder-anon',
     SUPABASE_SERVICE_ROLE_KEY: 'placeholder',
@@ -423,36 +244,19 @@ test('native media route enforces session/CSRF, normalizes bytes before fixed ow
         return Response.json({ ok: true, limited: false });
       if (typeof url === 'string' && url.includes('/rest/v1/rpc/'))
         return Response.json(data);
-      if (typeof url === 'string' && url.includes('/storage/v1/'))
+      if (typeof url === 'string' && url.includes('/storage/v1/')) {
+        if (options.method === 'POST') {
+          assert.deepEqual(
+            Buffer.from(options.body),
+            Buffer.from(expected.data, 'base64'),
+          );
+          calls.push({ storageUpload: url });
+        }
         return new Response(Buffer.from(expected.data, 'base64'), {
           headers: { 'Content-Type': 'image/webp' },
         });
-      if (url.endsWith('/token'))
-        return Response.json({
-          access_token: 'private-token',
-          token_type: 'Bearer',
-          expires_in: 3600,
-          scope: SCOPES.join(' '),
-        });
-      const rpc = JSON.parse(options.body);
-      calls.push(rpc);
-      let rpcData = {
-        projects: baseline.projects,
-        revision: 'a'.repeat(64),
-        imagePresets: [baseline.projects[0].image],
-        minProjects: 1,
-        maxProjects: 8,
-      };
-      if (rpc.function === 'adminUploadProjectImage') {
-        assert.deepEqual(rpc.parameters[0], expected);
-        rpcData = { image: expected.image };
       }
-      if (rpc.function === 'adminReadProjectImage')
-        rpcData = { media: expected };
-      return Response.json({
-        done: true,
-        response: { result: { ok: true, data: rpcData } },
-      });
+      assert.fail('Unexpected request outside Supabase');
     },
   });
   const req = (path, options) => new Request(origin + path, options);
@@ -523,56 +327,22 @@ test('native media route enforces session/CSRF, normalizes bytes before fixed ow
     Buffer.from(await preview.arrayBuffer()),
     Buffer.from(expected.data, 'base64'),
   );
-  // Upload projects sekarang ke Supabase Storage, bukan GAS RPC
   assert.equal(
-    calls.filter((c) => c.function === 'adminUploadProjectImage').length,
-    0,
+    calls.filter((c) => c.storageUpload?.includes('/cms-media/projects/'))
+      .length,
+    1,
   );
 });
 
-const teamSource = await readFile(
-  new URL('../cms/gas/admin/team.js', import.meta.url),
-  'utf8',
-);
-test('Team photos use separate namespace, private owner upload/read and active-reference export; cache before snapshot', async () => {
+test('Team private media uses its namespace and is cached before atomic snapshot write', async () => {
   const media = await normalizeProjectImage(
     await raster(),
     'image/png',
     'team',
   );
   assert.match(media.image, /^\/images\/cms\/team\/[a-f0-9]{64}\.webp$/);
-  const h = gasHarness();
-  assert.equal(h.context.adminUploadProjectImage(media).ok, false);
-  assert.equal(h.context.adminUploadTeamImage(media).ok, true);
-  assert.equal(h.context.adminUploadTeamImage(media).ok, true);
-  assert.equal(h.writes(), 1);
-  assert.equal(
-    h.context.adminReadProjectImage({ image: media.image }).ok,
-    false,
-  );
-  assert.equal(
-    h.context.adminReadTeamImage({ image: media.image }).data.media.data,
-    media.data,
-  );
-  vm.runInContext(
-    await readFile(new URL('../cms/gas/export.js', import.meta.url), 'utf8'),
-    h.context,
-  );
-  h.context.cmsJson_ = (v) => v;
-  h.context.cmsReadSnapshot_ = () => structuredClone(baseline);
-  const params = {
-    action: 'media',
-    token: h.props.get('EXPORT_TOKEN'),
-    image: media.image,
-  };
-  assert.equal(
-    h.context.doGet({ parameter: params }).error.code,
-    'UNKNOWN_MEDIA',
-  );
   const snapshot = structuredClone(baseline);
   snapshot.team.leaderTeam[0].photo = media.image;
-  h.context.cmsReadSnapshot_ = () => snapshot;
-  assert.equal(h.context.doGet({ parameter: params }).data, media.data);
   const dir = await mkdtemp(join(tmpdir(), 'ds-team-cache-'));
   try {
     const path = join(dir, 'snapshot.json');
@@ -614,11 +384,6 @@ test('Team photos use separate namespace, private owner upload/read and active-r
           });
         }
         assert.fail('Unexpected non-Supabase request');
-        return Response.json(
-          new URL(href).searchParams.get('action') === 'media'
-            ? media
-            : snapshot,
-        );
       },
     };
     await syncCmsSnapshot(options);
@@ -643,9 +408,7 @@ test('Team photos use separate namespace, private owner upload/read and active-r
         return Response.json({ roles: snapshot.roles });
       if (href.includes('/storage/v1/object/cms-media/'))
         return new Response(null, { status: 404 });
-      return Response.json(
-        new URL(href).searchParams.get('action') === 'media' ? {} : snapshot,
-      );
+      assert.fail('Unexpected non-Supabase request');
     };
     await assert.rejects(
       syncCmsSnapshot(options),
@@ -655,14 +418,9 @@ test('Team photos use separate namespace, private owner upload/read and active-r
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
-  h.deny();
-  assert.equal(
-    h.context.adminReadTeamImage({ image: media.image }).error.code,
-    'UNAUTHORIZED',
-  );
 });
 
-test('native Team media route enforces session/CSRF, normalizes bytes before fixed owner RPC and serves verified private preview', async () => {
+test('native Team media route enforces session/CSRF, normalizes Storage uploads and serves private preview', async () => {
   const origin = 'https://admin.example.test';
   const png = await raster();
   const expected = await normalizeProjectImage(png, 'image/png', 'team');
@@ -670,9 +428,6 @@ test('native Team media route enforces session/CSRF, normalizes bytes before fix
     NODE_ENV: 'production',
     CMS_ADMIN_ORIGIN: origin,
     CMS_ADMIN_SESSION_SECRET: Buffer.alloc(32).toString('base64'),
-    CMS_ADMIN_GOOGLE_CLIENT_ID: 'private-client',
-    CMS_ADMIN_GOOGLE_CLIENT_SECRET: 'private-secret',
-    CMS_ADMIN_API_DEPLOYMENT_ID: 'private-deployment',
     SUPABASE_URL: 'https://placeholder.supabase.co',
     SUPABASE_ANON_KEY: 'placeholder-anon',
     SUPABASE_SERVICE_ROLE_KEY: 'placeholder',
@@ -722,31 +477,7 @@ test('native Team media route enforces session/CSRF, normalizes bytes before fix
           headers: { 'Content-Type': 'image/webp' },
         });
       }
-      if (url.endsWith('/token'))
-        return Response.json({
-          access_token: 'private-token',
-          token_type: 'Bearer',
-          expires_in: 3600,
-          scope: SCOPES.join(' '),
-        });
-      const rpc = JSON.parse(options.body);
-      calls.push(rpc);
-      let rpcData = {
-        projects: baseline.projects,
-        revision: 'a'.repeat(64),
-        imagePresets: [baseline.projects[0].image],
-        minProjects: 1,
-        maxProjects: 8,
-      };
-      if (rpc.function === 'adminUploadTeamImage') {
-        assert.deepEqual(rpc.parameters[0], expected);
-        rpcData = { image: expected.image };
-      }
-      if (rpc.function === 'adminReadTeamImage') rpcData = { media: expected };
-      return Response.json({
-        done: true,
-        response: { result: { ok: true, data: rpcData } },
-      });
+      assert.fail('Unexpected request outside Supabase');
     },
   });
   const req = (path, options) => new Request(origin + path, options);

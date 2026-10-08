@@ -167,39 +167,12 @@ function parseSnapshot(text) {
   return validateCmsSnapshot(value);
 }
 
-function googleUrl(value, exportEndpoint = false) {
-  let url;
-  try {
-    url = new URL(value);
-  } catch {
-    throw new Error('Invalid CMS endpoint URL.');
-  }
-  if (
-    url.protocol !== 'https:' ||
-    url.username ||
-    url.password ||
-    url.port ||
-    url.hash ||
-    !['script.google.com', 'script.googleusercontent.com'].includes(
-      url.hostname,
-    ) ||
-    (exportEndpoint &&
-      (url.hostname !== 'script.google.com' ||
-        url.search ||
-        !/^\/macros\/s\/[a-zA-Z0-9_-]+\/exec$/.test(url.pathname)))
-  )
-    throw new Error(
-      'CMS endpoint must be a Google Apps Script HTTPS /exec URL.',
-    );
-  return url;
-}
-
 async function responseBytes(response, limit = CMS_MAX_BYTES) {
   if (Number(response.headers.get('content-length')) > limit) {
     await response.body?.cancel();
-    throw new Error('CMS export exceeds the size limit.');
+    throw new Error('CMS response exceeds the size limit.');
   }
-  if (!response.body) throw new Error('CMS export response is empty.');
+  if (!response.body) throw new Error('CMS response is empty.');
   const reader = response.body.getReader();
   const chunks = [];
   let bytes = 0;
@@ -208,7 +181,8 @@ async function responseBytes(response, limit = CMS_MAX_BYTES) {
       const { done, value } = await reader.read();
       if (done) break;
       bytes += value.byteLength;
-      if (bytes > limit) throw new Error('CMS export exceeds the size limit.');
+      if (bytes > limit)
+        throw new Error('CMS response exceeds the size limit.');
       chunks.push(value);
     }
   } finally {
@@ -220,102 +194,6 @@ async function responseBytes(response, limit = CMS_MAX_BYTES) {
 
 async function responseText(response) {
   return (await responseBytes(response)).toString('utf8');
-}
-
-async function fetchCmsSnapshotOnce({
-  apiUrl,
-  apiToken,
-  fetchImpl = fetch,
-  timeoutMs = CMS_TIMEOUT_MS,
-  action = 'export',
-  image,
-}) {
-  let url = googleUrl(apiUrl, true);
-  const endpointFingerprint = createHash('sha256')
-    .update(url.href)
-    .digest('hex')
-    .slice(0, 12);
-  const started = Date.now();
-  url.searchParams.set('action', action);
-  if (image) url.searchParams.set('image', image);
-  url.searchParams.set('token', apiToken);
-  // Request a fresh ContentService redirect on every attempt.
-  url.searchParams.set('cms_request', randomUUID());
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    let response;
-    let redirects = 0;
-    for (; redirects <= 3; redirects++) {
-      response = await fetchImpl(url, {
-        redirect: 'manual',
-        signal: controller.signal,
-        cache: 'no-store',
-        headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' },
-      });
-      if (![301, 302, 303, 307, 308].includes(response.status)) break;
-      const location = response.headers.get('location');
-      await response.body?.cancel();
-      if (!location || redirects === 3)
-        throw new Error('Invalid CMS export redirect.');
-      url = googleUrl(new URL(location, url));
-    }
-    if (!response.ok) {
-      await response.body?.cancel();
-      const error = new Error(
-        `CMS export HTTP status ${response.status} at ${url.hostname} (redirects=${redirects}, elapsed=${Math.round((Date.now() - started) / 1000)}s, endpoint=${endpointFingerprint}).`,
-      );
-      if (
-        response.status === 404 &&
-        redirects > 0 &&
-        url.hostname === 'script.googleusercontent.com'
-      )
-        error.code = 'CMS_REDIRECT_NOT_FOUND';
-      throw error;
-    }
-    if (
-      !/^application\/json(?:\s*;|$)/i.test(
-        response.headers.get('content-type') || '',
-      )
-    )
-      throw new Error(
-        'CMS export must return JSON; check the read API deployment access.',
-      );
-    const text = await responseText(response);
-    if (action === 'media') {
-      try {
-        return JSON.parse(text);
-      } catch {
-        throw new Error('CMS media JSON is malformed.');
-      }
-    }
-    return parseSnapshot(text);
-  } catch (error) {
-    if (controller.signal.aborted)
-      throw Object.assign(new Error('CMS export timed out.'), {
-        code: 'CMS_TIMEOUT',
-      });
-    // Fetch errors can contain the full URL and token: report a fixed message.
-    if (error instanceof TypeError)
-      throw new Error('CMS export network request failed.');
-    throw error;
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
-export async function fetchCmsSnapshot(options) {
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      return await fetchCmsSnapshotOnce(options);
-    } catch (error) {
-      if (
-        !['CMS_TIMEOUT', 'CMS_REDIRECT_NOT_FOUND'].includes(error.code) ||
-        attempt === 1
-      )
-        throw error;
-    }
-  }
 }
 
 export async function syncCmsSnapshot({

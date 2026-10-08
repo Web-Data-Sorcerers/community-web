@@ -1,5 +1,10 @@
 # B2 Team — update existing dan acceptance
 
+> Arsip GAS: kode/generator legacy sudah dihapus dari working tree atas instruksi
+> owner8Oct2026. Jangan jalankan setup/perintah GAS di bawah. Source historis ada
+> di Git history/tag lokal backup/gas-code-before-cleanup-20261008. Backend aktif
+> memakai Supabase; lihat AGENTS.md dan docs/cms-sop.md checkpoint terbaru.
+
 Kode Team + QA lokal PASS (36 tests, admin/fixture, 7 gate+SEO). Feature2a22d8a sudah push; Vercel testing22:04:31 WIB/production22:05:50 WIB SUCCESS. GAS Team/live acceptance belum. Projects existing
 sudah diterima live. Tidak membuat Sheet/folder/akun/OAuth/deployment awal baru,
 tidak menjalankan setupCms/setupAdmin, tidak seed ulang.

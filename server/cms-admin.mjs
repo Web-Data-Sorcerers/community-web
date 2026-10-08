@@ -1,31 +1,5 @@
 import { createCmsAuth } from './cms-auth.mjs';
 
-// Legacy scope list retained for compatibility with existing tests/tools only.
-// CMS auth no longer performs Google OAuth; see docs/cms-auth-design.md.
-export const SCOPES = [
-  'https://www.googleapis.com/auth/spreadsheets',
-  'https://www.googleapis.com/auth/drive',
-  'https://www.googleapis.com/auth/userinfo.email',
-  'https://www.googleapis.com/auth/script.external_request',
-];
-const RPC = {
-  load: 'adminLoadProjects',
-  save: 'adminSaveProject',
-  add: 'adminAddProject',
-  delete: 'adminDeleteProject',
-  retry: 'adminRetryPublication',
-  upload: 'adminUploadProjectImage',
-  media: 'adminReadProjectImage',
-};
-const TEAM_RPC = {
-  load: 'adminLoadTeam',
-  save: 'adminSaveMember',
-  add: 'adminAddMember',
-  delete: 'adminDeleteMember',
-  retry: 'adminRetryPublication',
-  upload: 'adminUploadTeamImage',
-  media: 'adminReadTeamImage',
-};
 const ERRORS = new Set([
   'UNAUTHORIZED',
   'CONFIGURATION',
@@ -89,7 +63,7 @@ async function boundedJson(response, limit = 1024 * 1024) {
     fail('SERVER_ERROR');
   }
 }
-// Rebuild a strict public contract: raw Google errors/properties never reach the browser.
+// Rebuild a strict public contract: raw upstream errors never reach the browser.
 function sanitize(result) {
   if (result?.ok !== true)
     return {
@@ -275,47 +249,10 @@ export function createAdminHandler({
   fetchImpl = fetch,
   clock = Date.now,
 } = {}) {
-  // Isolated CMS auth (Supabase password). See docs/cms-auth-design.md.
+  // Shared admin auth (Supabase password). See docs/cms-auth-design.md.
   const auth = createCmsAuth({ env, clock, fetchImpl });
 
-  async function gas(cfg, token, operation, payload, collection = 'projects') {
-    const response = await fetchImpl(
-      `https://script.googleapis.com/v1/scripts/${cfg.deployment}:run`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          function: (collection === 'team' ? TEAM_RPC : RPC)[operation],
-          parameters: payload === undefined ? [] : [payload],
-          devMode: false,
-        }),
-        signal: AbortSignal.timeout(65000),
-        redirect: 'error',
-      },
-    );
-    if (response.status === 401 || response.status === 403)
-      fail('UNAUTHORIZED');
-    if (!response.ok) fail('SERVER_ERROR');
-    const body = await boundedJson(response);
-    if (body.done !== true || body.error || !body.response)
-      fail('SERVER_ERROR');
-    const result = sanitize(body.response.result);
-    if (
-      result.ok &&
-      ['load', 'save', 'add', 'delete'].includes(operation) &&
-      !(collection === 'team' ? result.data.members : result.data.projects)
-    )
-      fail('SERVER_ERROR');
-    return result;
-  }
-
-  const wrapPayload = (p) =>
-    p && typeof p === 'object' ? JSON.stringify(p) : p;
-
-  async function teamOperation(cfg, env, token, operation, payload) {
+  async function teamOperation(operation, payload) {
     const supabaseUrl = env.SUPABASE_URL;
     const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY;
     const mgmtToken = env.SUPABASE_ACCESS_TOKEN;
@@ -415,7 +352,7 @@ export function createAdminHandler({
     fail('INVALID_INPUT');
   }
 
-  async function projectsOperation(cfg, env, token, operation, payload) {
+  async function projectsOperation(operation, payload) {
     const supabaseUrl = env.SUPABASE_URL;
     const supabaseKey = env.SUPABASE_SERVICE_ROLE_KEY;
     const mgmtToken = env.SUPABASE_ACCESS_TOKEN;
@@ -516,7 +453,7 @@ export function createAdminHandler({
   }
 
   return async function handle(request, route) {
-    // Auth routes delegate to the isolated CMS auth module.
+    // Auth routes delegate to the shared admin auth module.
     if (route === 'login') return auth.login(request);
     if (route === 'logout') return auth.logout(request);
     if (route === 'refresh') return auth.refresh(request);
@@ -557,12 +494,8 @@ export function createAdminHandler({
       if (guard.error) return guard.error;
       const session = guard.session;
       if (route === 'media') {
-        const {
-          normalizeProjectImage,
-          verifyProjectMedia,
-          MEDIA_INPUT_LIMIT,
-          MEDIA_PATH,
-        } = await import('./cms-media.mjs');
+        const { normalizeProjectImage, MEDIA_INPUT_LIMIT, MEDIA_PATH } =
+          await import('./cms-media.mjs');
         if (request.method === 'GET') {
           const image = url.searchParams.get('image');
           if (
@@ -570,36 +503,18 @@ export function createAdminHandler({
             !image.startsWith('/images/cms/' + collection + '/')
           )
             return error('INVALID_INPUT', 400);
-          if (collection === 'projects' || collection === 'team') {
-            const storageUrl = `${env.SUPABASE_URL}/storage/v1/object/cms-media/${image.replace(/^\/images\/cms\//, '')}`;
-            const sres = await fetchImpl(storageUrl, {
-              headers: {
-                Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
-              },
-              signal: AbortSignal.timeout(15000),
-            });
-            if (!sres.ok) return error('NOT_FOUND', 404);
-            const bytes = await sres.arrayBuffer();
-            const mediaHeaders = { ...headers, 'Content-Type': 'image/webp' };
-            if (guard.setCookie) mediaHeaders['Set-Cookie'] = guard.setCookie;
-            return new Response(bytes, { headers: mediaHeaders });
-          }
-          const result = await gas(
-            cfg,
-            undefined,
-            'media',
-            { image },
-            collection,
-          );
-          if (!result.ok)
-            return json(
-              result,
-              result.error.code === 'UNAUTHORIZED' ? 403 : 400,
-            );
-          const bytes = await verifyProjectMedia(result.data.media, image);
-          return new Response(bytes, {
-            headers: { ...headers, 'Content-Type': 'image/webp' },
+          const storageUrl = `${env.SUPABASE_URL}/storage/v1/object/cms-media/${image.replace(/^\/images\/cms\//, '')}`;
+          const sres = await fetchImpl(storageUrl, {
+            headers: {
+              Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
+            },
+            signal: AbortSignal.timeout(15000),
           });
+          if (!sres.ok) return error('NOT_FOUND', 404);
+          const bytes = await sres.arrayBuffer();
+          const mediaHeaders = { ...headers, 'Content-Type': 'image/webp' };
+          if (guard.setCookie) mediaHeaders['Set-Cookie'] = guard.setCookie;
+          return new Response(bytes, { headers: mediaHeaders });
         }
         let media;
         try {
@@ -673,13 +588,6 @@ export function createAdminHandler({
             uploaded.headers.append('Set-Cookie', guard.setCookie);
           return uploaded;
         }
-        const result = await gas(cfg, undefined, 'upload', media, collection);
-        if (result.ok && result.data.image !== media.image)
-          fail('SERVER_ERROR');
-        return json(
-          result.ok ? { ...result, csrf: session.csrf } : result,
-          result.error?.code === 'UNAUTHORIZED' ? 403 : 200,
-        );
       }
       let operation = 'load',
         payload;
@@ -701,10 +609,7 @@ export function createAdminHandler({
           Object.keys(body).some(
             (k) => !['operation', 'payload'].includes(k),
           ) ||
-          (collection !== 'projects' &&
-            collection !== 'team' &&
-            !Object.hasOwn(RPC, body.operation)) ||
-          ['load', 'upload', 'media'].includes(body.operation)
+          !['save', 'add', 'delete', 'retry'].includes(body.operation)
         )
           return error('INVALID_INPUT', 400);
         operation = body.operation;
@@ -717,20 +622,10 @@ export function createAdminHandler({
         )
           return error('INVALID_INPUT', 400);
       }
-      let result;
-      if (collection === 'projects') {
-        result = await projectsOperation(
-          cfg,
-          env,
-          undefined,
-          operation,
-          payload,
-        );
-      } else if (collection === 'team') {
-        result = await teamOperation(cfg, env, undefined, operation, payload);
-      } else {
-        result = await gas(cfg, undefined, operation, payload, collection);
-      }
+      const result =
+        collection === 'projects'
+          ? await projectsOperation(operation, payload)
+          : await teamOperation(operation, payload);
       const response = json(
         result.ok ? { ...result, csrf: session.csrf } : result,
         result.error?.code === 'UNAUTHORIZED' ? 403 : 200,

@@ -1,5 +1,39 @@
 # CMS → Supabase — TODO dan status penerimaan
 
+## Work order aktif — hapus GAS dari kode saja (8 Oct 2026)
+
+Owner clarified "di codingan kita, abaikan aja gas ibarat udah gada sama sekali".
+This supersedes prior owner-assisted inventory/archive guidance as the active task:
+local repo cleanup is authorized now, independent of remaining Google ownership/
+deployment/observation inventory. Do not continue asking owner to copy Google IDs
+or archive deployments. No resource retirement has been executed or claimed.
+
+Local code removes GAS export fetch/client, unreachable admin Script API fallback,
+SCOPES/RPC/TEAM_RPC, GAS source/manifests/HtmlService editor,3generators and4npm
+legacy commands. Legacy-only suites/mock removed; active media tests keep raster/
+hash/cache/Storage/CSRF coverage, sixRPC/source/auth/SQL/intake coverage retained.
+Admin POST operations now explicitly allow only save/add/delete/retry; unknown
+operations reject400 before privileged calls for Projects and Team.
+No UI/schema/snapshot/dependency/SQL/Auth/grant/Storage/content mutation.
+Supabase alone serves6content collections, CRUD/media and shared admin/intake.
+Retired callback route remains a fixed internal redirect for old URLs.
+
+Before-cleanup source retained in local tag backup/gas-code-before-cleanup-20261008
+(not pushed). Encrypted Google backups retained outside repo; collector stopped.
+Resource Google and Vercel env remain unchanged. Existing production4313544/
+unified feature00ac70a acceptance and recruitment OPEN stay baseline; this cleanup
+is not deployed. Fresh Node22.23.0 QA: fullCMS94PASS+10Team liveSKIP/0FAIL,
+recruitment28PASS; focused30PASS. Build0errors/23pages;7gates+SEO PASS, responsive
+468/468, browserErrors[], spacing39. Native/Team/unified mocks each4widths PASS;
+legacy HtmlService mock removed, not claimed PASS. Captured same6RPC inputs yield
+byte-exact pre/post output; snapshot SHA4345f1abe445aa2a400c31413ccc058707a77105a7e388dc8d1074e78da94857
+and19publicHTML exact. Dist52textfiles/server secrets0;49runtime files/legacy
+endpoint/config reads0. Initial stale preview listener failure corrected by owned
+static preview; dependent browser gates rerun PASS. PostgreSQL tests ephemeral,
+no new live owner/media/write/fixture proof. Proof ignored code-cleanup/qa-summary.json.
+NEXT local commit → approval exact HEAD SHA → one production push → READY/alias+
+read-only regression. No further Google action needed for this local code task.
+
 ## Owner requests direct GAS retirement — 8 Oct 2026
 
 Owner asks to skip remaining manual inventory and remove unused GAS. Proceed

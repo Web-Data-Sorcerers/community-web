@@ -1,5 +1,22 @@
 # SOP CMS — Data Sorcerers
 
+## Backend aktif — Supabase saja (8 Oct 2026)
+
+Kode lokal menghapus integrasi GAS yang tersisa atas instruksi owner. Build
+keenam content collections memakai anon Supabase RPC; Projects/Team CRUD memakai
+Management API existing dan media memakai private Supabase Storage. Auth admin
+bersama serta intake/dashboard pendaftar memakai Supabase; recruitment OPEN.
+Untuk offline gunakan CMS_DATA_SOURCE=local; Vercel wajib CMS_DATA_SOURCE=supabase.
+Tidak ada fallback/export GAS atau kewajiban Google login/backup untuk coding.
+
+Generator/installer/HtmlService editor dan suite legacy GAS dihapus. Perintah
+cms:gas, cms:admin, recruitment:gas, verify:cms-admin tidak tersedia lagi.
+Source lama dapat dipulihkan dari Git history/tag lokal
+backup/gas-code-before-cleanup-20261008; tag tidak dipush. Backup terenkripsi owner
+sebelumnya tetap disimpan di luar repo. Resource Google/env production belum
+dihapus; pekerjaan cleanup kode ini belum dipush/deploy. Lihat checkpoint terbaru
+AGENTS/handoff untuk SHA, QA dan batas proof. Arsip historis di bawah bukan setup aktif.
+
 ## GAS retirement F1 — audit dan backup parsial (8 Oct 2026)
 
 Faiz mengaktifkan next retirement (`gassssss broooo`). Read-only actual inventory
