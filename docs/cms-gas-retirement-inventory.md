@@ -255,3 +255,14 @@ ef84a2fff8a4acba4b4e3140665d1251ff6bff28d00caefb954d32dcbcffc70b.
 This verifies copied source, not actual deployed GAS version. NEXT Admin manifest,
 Properties and complete file/deployment/ownership inventory. Backup stays encrypted
 outside repo/local only. No live mutation/push. Proof f1/admin-html-proof.json.
+
+## Actual Admin manifest backed up — 8 Oct 2026
+
+Owner pasted479byte Admin appsscript.json; authenticated decrypt/file600/JSON PASS.
+V8/Asia-Jakarta;4scopes include spreadsheets/drive/userinfo.email plus
+script.external_request. Copied webapp metadata MYSELF/USER_DEPLOYING; this does
+not verify live deployment access/version. SHA256
+914d9819bba25c786c09a77cd197daf57d310b7cadf47fd87ade101e4b2f6033.
+NEXT actual Admin Script Properties name inventory via owner, then secure backup
+and complete files/deployments/ownership inventory. No live mutation/push.
+Proof ignored f1/admin-manifest-proof.json; backups outside repo/local only.
