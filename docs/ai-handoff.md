@@ -1,5 +1,14 @@
 # AI handoff — current context
 
+## Admin second commit deployment inspected — 8 Oct 2026
+
+Owner screenshots verify Admin active second commit: version2, execute as owner
+account (Saya), access Hanya saya sendiri. Displayed6Oct2026/18.08 timezone
+unverified. Exact ID not securely backed up; deployed-source equality unverified.
+NEXT inspect last active first deploy admin version/access read-only, then exact
+IDs/ownership/rollback/observation. No live mutation/push.
+Proof ignored f1/deployments-owner-partial-proof.json.
+
 ## Selected GAS deployment access verified — 8 Oct 2026
 
 Owner scrolled Manage deployments screenshots verify Export selected active v2:
