@@ -143,3 +143,26 @@ approval. Full rollout/pembukaan recruitment belum accepted. GAS retirement
 resource juga pending dan terpisah. Checkpoint ini lokal saja, push baru exactSHA.
 Proof ignored artifacts/admin-unified/{deployments-current,build-log-proof,
 public-after-push,admin-anonymous-shells,state-after-push,env-audit}.json.
+
+## G. Delegasi seluruh acceptance — 8 Oct 2026
+
+Faiz meminta agent menjalankan seluruh pengujian lanjutan (`coba lu yang
+jaalanin aja semua`). Agent memeriksa browser connected page4 production/admin:
+Projects/Team/Recruitment stats401; secure owner credential tidak tersedia di
+env lokal. Sesi owner browser pribadi tidak dapat dipakai dari browser agent.
+Owner diminta satu kali login di tab pengujian; bukan diminta menjalankan QA.
+Ini dependency akses, bukan meminta ulang izin push atau memaksa password rotation.
+Tidak mint/bypass token atau membuat/mereset akun untuk melewati dependency.
+
+Target lanjutan disiapkan: Production projectprj_3KbX29t6DYN1RMTy88lKHXd0IUVE,
+RECRUITMENT_OPEN=true existing envIDVlf93j1vLtXTaDFP/typesensitive/Production,
+redeploy exact runtime00ac70a (bukan checkpoint docs HEAD). Satu fixture sintetis
+receipt097010d8-37d7-403f-a15e-285d5493b4fc,
+canonical SHA256a1075865f744f3f1e5f49adbec985dbe71ca2d632090fd9b06bb55b089a0451f.
+Validator server actual PASS untuk synthetic example.invalid payload. Rencana:
+submit1 + identical retry1 → tepat1matching row/canonical answers → owner
+list/stats/detail → cleanup hanya exactreceipt+hash → fixture absent; applicant
+lain dipertahankan. Ignored opening-fixture-plan.json menyimpan synthetic-only
+payload; tanpa credential/PII nyata. Belum ada submit, delete, env mutation,
+redeploy, hook atau push. Production fresh READY00ac70a. Lanjut setelah akses
+owner tersedia, sesuai gate§D. Semua retirement GAS/resource tetap terpisah.
