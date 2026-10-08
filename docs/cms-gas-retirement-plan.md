@@ -1,5 +1,17 @@
 # CMS Supabase-only build dan pensiun GAS — Master Work Plan
 
+## Selected GAS deployment access verified — 8 Oct 2026
+
+Owner scrolled Manage deployments screenshots verify Export selected active v2:
+execute as owner account (Saya), access Siapa saja. Admin selected untitled v4:
+execute as owner account (Saya), access Hanya saya sendiri. Account email and
+URL/ID values not copied into tracked proof. Admin second commit and first deploy
+admin active entries still require version/access inspection. This is deployment
+UI evidence, not current-editor/deployed-source equality or collaborator audit.
+NEXT inspect remaining2Admin active entries read-only; exact IDs secure backup,
+sharing/rollback/observation and concrete retirement approval still pending.
+No live mutation/push. Proof ignored f1/deployments-owner-partial-proof.json.
+
 ## Owner GAS deployment inventory partial — 8 Oct 2026
 
 Owner Manage deployments screenshots show Export1active/1archived, selected
