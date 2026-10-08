@@ -1,5 +1,16 @@
 # AGENTS.md — instructions for AI agents
 
+## CMS Export Properties backed up — 8 Oct 2026
+
+Owner submitted6Properties through local encrypted collector. Two identical327byte
+archives AES256GCM authenticated/deep-shape verified; file600. EXPORT_TOKEN matches
+working local export config; exact Production secret equality still unverified.
+Sheet/folder ID format validated privately, values never printed. Local owner
+resource links localhost4390 use backed-up IDs; open Sheet/Drive in owner Chrome
+and upload full XLSX/ZIP via localhost4389. Resource links are read-only, no token.
+Full Sheet/Drive/deployed source/admin Properties/shared ownership still pending;
+no env/resource/content mutation or push. Proof ignored f1/owner-properties-proof.json.
+
 ## Google owner browser terbuka — local secure backup intake (8 Oct 2026)
 
 Login Google browser agent ditolak; owner normal browser menunjukkan CMS Admin/

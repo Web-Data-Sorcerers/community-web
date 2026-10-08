@@ -174,3 +174,18 @@ owner browser → backup all tabs/Drive files/source/Properties dan ownership au
 Jangan screenshot form values; jangan delete/disable resource dari screenshot ini.
 Collector proses harus dihentikan setelah backup owner selesai; jangan mematikan
 preview/process lain. Restore/deletion live tetap approval exact target terpisah.
+
+## CMS Export Properties backed up — 8 Oct 2026
+
+Owner submitted6Properties through local encrypted collector. Two identical327byte
+archives AES256GCM authenticated/deep-shape verified; file600. EXPORT_TOKEN matches
+working local export config; exact Production secret equality still unverified.
+Sheet/folder ID format validated privately, values never printed. Local owner
+resource links localhost4390 use backed-up IDs; open Sheet/Drive in owner Chrome
+and upload full XLSX/ZIP via localhost4389. Resource links are read-only, no token.
+Full Sheet/Drive/deployed source/admin Properties/shared ownership still pending;
+no env/resource/content mutation or push. Proof ignored f1/owner-properties-proof.json.
+
+Owner form clears only after success. Both saved copies are retained; no backup
+deleted. Actual owner session stays in personal browser. Stop owned collector4389
+and resource-links4390 servers after backup workflow finishes.
