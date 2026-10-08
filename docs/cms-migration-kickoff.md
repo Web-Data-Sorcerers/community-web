@@ -1,5 +1,15 @@
 # CMS → Supabase — kickoff aktif untuk AI baru
 
+## Actual Admin Index.html backed up — 8 Oct 2026
+
+Owner pasted17659byte Admin Index.html; authenticated decrypt/file600/full HTML
+closing tags and one inline JavaScript syntax compile PASS, without execution.
+Byte-exact to tracked cms/gas/admin/Index.html; SHA256
+ef84a2fff8a4acba4b4e3140665d1251ff6bff28d00caefb954d32dcbcffc70b.
+This verifies copied source, not actual deployed GAS version. NEXT Admin manifest,
+Properties and complete file/deployment/ownership inventory. Backup stays encrypted
+outside repo/local only. No live mutation/push. Proof f1/admin-html-proof.json.
+
 ## Actual Admin Code.gs backed up — 8 Oct 2026
 
 Owner pasted15822bytes/520lines Admin source; authenticated decrypt/file600/

@@ -245,3 +245,13 @@ Preserve actual backup; do not substitute newer generated repo code. SHA256
 5e9b0b228ad52206b2287803bc8f4cbbd7c119d1a10e35766a0ec7557027fed4.
 No code execution/live change/push. NEXT Admin Index.html then manifest/Properties
 and complete file/deployment/ownership inventory. Proof f1/admin-code-proof.json.
+
+## Actual Admin Index.html backed up — 8 Oct 2026
+
+Owner pasted17659byte Admin Index.html; authenticated decrypt/file600/full HTML
+closing tags and one inline JavaScript syntax compile PASS, without execution.
+Byte-exact to tracked cms/gas/admin/Index.html; SHA256
+ef84a2fff8a4acba4b4e3140665d1251ff6bff28d00caefb954d32dcbcffc70b.
+This verifies copied source, not actual deployed GAS version. NEXT Admin manifest,
+Properties and complete file/deployment/ownership inventory. Backup stays encrypted
+outside repo/local only. No live mutation/push. Proof f1/admin-html-proof.json.
