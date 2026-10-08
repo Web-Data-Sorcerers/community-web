@@ -1,5 +1,25 @@
 # CMS → Supabase — kickoff aktif untuk AI baru
 
+## Work order aktif — pengelolaan pendaftar PLAN ONLY (8 Oct 2026)
+
+Faiz meminta opsi2 plan detail/rinci: status seleksi, filter dan catatan reviewer
+pada existing shared dashboard. Master plan:
+[Recruitment review workflow](recruitment-review-workflow-plan.md). Dokumen baru lengkap
+§1–18: source audit,8proposed statuses/transition/reasons, server pagination/date/
+filter/stats, private review/notes/events, atomic revision+idempotent writes,
+existing auth/ACL, UI surfaces, A–F gates/QA/live fixture/backup/rollback/handoff.
+
+Source audit menemukan SQL list mendeklarasikan limit/offset tetapi tidak memakai
+keduanya pada query; browser masih local slice pagination. Ini belum diperbaiki.
+Plan proposals bukan schema/live acceptance; tidak membaca applicant PII/catalog
+live. Production e59abde READY/recruitment OPEN/code GAS removed tetap baseline.
+Planning docs saja; tidak implement/applySQL/grant/user/provider/env/content/
+fixture/hook/push. Defaults reviewer owner existing,8statuses internal,notes
+append-only,50/page,WIB; export/bulk/assignment/messages/retention/CAPTCHA terpisah.
+NEXT owner meminta implementasi → A–D lokal; live additive migration, exactSHA
+push dan synthetic12POST+guardedcleanup masing-masing izin konkret tersendiri.
+Izin pushe59abde consumed; checkpoint planning lokal tidak otomatis dipush.
+
 ## GAS code cleanup LIVE e59abde — 8 Oct 2026
 
 Faiz (`push`) approved exact e59abde7b16766646bc2f40dd5169cafe0bbd92a;
