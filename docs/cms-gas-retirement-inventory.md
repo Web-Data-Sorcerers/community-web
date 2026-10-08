@@ -266,3 +266,14 @@ not verify live deployment access/version. SHA256
 NEXT actual Admin Script Properties name inventory via owner, then secure backup
 and complete files/deployments/ownership inventory. No live mutation/push.
 Proof ignored f1/admin-manifest-proof.json; backups outside repo/local only.
+
+## Admin Properties collector ready — 8 Oct 2026
+
+Owner screenshot confirms7Admin Property names: ADMIN_EMAILS,
+DEPLOY_HOOK_PRODUCTION, DEPLOY_HOOK_TESTING, DRIVE_FOLDER_ID, OWNER_EMAIL,
+PUBLICATION_PENDING, SPREADSHEET_ID. Local collector now has7masked fields,
+exact-name/string/ADMIN_EMAILS-array validation, encrypted atomic backup and
+value-free response. Synthetic collector QA12PASS; live local form7fields PASS.
+Durable collector copy updated outside repo; no actual Admin Properties backup
+claimed yet. NEXT owner fill form privately, then verify backup and inventory.
+No live Google/env/content mutation/push. Proof ignored f1/collector-qa.json.
