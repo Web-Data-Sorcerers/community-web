@@ -1,5 +1,33 @@
 # AI handoff — current context
 
+## GAS retirement F1 — audit dan backup parsial (8 Oct 2026)
+
+Faiz mengaktifkan next retirement (`gassssss broooo`). Read-only actual inventory
+selesai: Production READY eaa61c4/primaryalias exact; testing404;7READY retained,
+15env records dan6legacy candidate env (exact IDs/scopes di inventory plan).
+Keenam key tidak dibaca active server/build;3unreachable gas calls masih retained.
+Focused no-server-env tests30PASS/0FAIL/0SKIP. Recruitment tetap OPEN; CMS/pendaftar
+anonymous401; tidak kembali ke kontrak isolated/closed historis.
+
+Backup encrypted di luar repo:20tracked source files83817bytes, current6RPC,
+fresh GAS export21085bytes, testing-hook exact dan local GAS config candidates.
+AES256GCM round-trip + source20byte-exact + ciphertext tamper denial PASS;
+folder700/files600/key600 terpisah. Local disk saja; bukan full DB/offsite backup.
+Full Sheet/Drive/deployed source/Properties/shared ownership belum verified;
+3Google secret values tidak tersedia, local export config belum matched Production.
+Owner memilih login Google browser pengujian; tab5sign-in siap, **belum logged-in**
+latest check. Google Drive plugin ditemukan namun belum connected; pilihan browser
+owner berlaku. Jangan meminta password/token di chat atau memperkirakan resourceID.
+
+Tidak ada env mutation/redeploy/hook/fixture/SQL/grant/provider/content write,
+resource deletion/code cleanup atau push. Observasi/publication cycle belum
+selected/accepted. NEXT login owner Google → exact resources/ownership dan full
+secure backup → pilihan observasi → approval exact env/resource+rebuild. Jangan
+menggunakan izin push lama atau general gas untuk delete target belum ditinjau.
+Master concrete result: [GAS F1 inventory](cms-gas-retirement-inventory.md).
+Checkpoint lokal saja. Proof ignored artifacts/cms-gas-retirement/f1/{inventory,
+backup-proof,restore-proof,env-backup-verification,usage-audit,no-gas-tests}.json.
+
 ## Checkpoint docs pushed eaa61c4 — Production READY (8 Oct 2026)
 
 Faiz (`pushh`) menyetujui push checkpoint eaa61c4d6dafe2b69763e681d27d32fdaeb9ad50.
