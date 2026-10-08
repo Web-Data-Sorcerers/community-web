@@ -1,5 +1,53 @@
 # AI handoff — current context
 
+## Admin bersama dan recruitment OPEN accepted — 8 Oct 2026
+
+Faiz mendelegasikan seluruh acceptance/pembukaan dan menyediakan credential uji
+untuk login agent. Credential hanya process/session memory, tidak dicatat;
+seluruh sesi uji kemudian logout. Tidak mereset/rotate akun atau mengubah izin.
+Checkpoint ini mengalahkan owner-pending/closed dan isolation arsip di bawah.
+
+RECRUITMENT_OPEN existing envIDVlf93j1vLtXTaDFP diubah menjadi true, tetap
+sensitive/Production only pada prj_3KbX29t6DYN1RMTy88lKHXd0IUVE. Metadata semua
+env lain unchanged. Satu API redeploy source exact00ac70a, bukan HEAD docs lokal.
+Current+primaryalias READY dpl_2eggE16PsV88KXchUDoGj1T8MtyM; provider READY
+8Oct2026 **05:18:25.521UTC /12:18:25.521WIB**. Workspace checkedAt clock berbeda.
+Build log prebuild+remote snapshot+23pages PASS; live GET200 accepting:true.
+Public19/19HTML exact; anonymous CMS dan recruitment admin401.
+
+Actual satu login owner: Projects200/4, Team200/25, recruitment stats200;
+3module UI390/1440 PASS, navactive/passwordempty/overflow0/pageerrors0.
+Bad CSRF403; explicit refresh200/CSRF stable/3module reads200; logout200 menutup
+Projects/Team/media/stats/list401. Sesi kedua menguji deployment OPEN: detail
+pendaftar200/all38canonical fields exact; UI detail390/1440 menampilkan24field
+nonblank/array (blank fields skipped existing), no overflow/pageerrors. Final
+refresh200/CSRF stable/3module reads200; global logout200/all5anonymous401.
+Harness awal resize menghasilkan1346; corrected emulate actual390/1440 proof.
+Satu reload/fetch browser transient gagal; navigasi ulang/read-only retry PASS.
+
+Satu submit melalui **form publik nyata**390 menghasilkan HTTP200, success screen
++receipt terlihat. Identical retry1 HTTP200, tepat1row dengan canonical hash dan
+38answers exact. Fixture receipt097010d8-37d7-403f-a15e-285d5493b4fc,
+hasha1075865f744f3f1e5f49adbec985dbe71ca2d632090fd9b06bb55b089a0451f.
+Preflight harness mismatch foundation_skills dikoreksi sebelum POST (0writes);
+actual2POST saja: submit1+retry1. Owner stats/list/detail PASS. Cleanup guarded
+exactreceipt+hash+fields menghapus hanya1fixture; absent confirmed/detail404,
+list0/stats0, other applicants count/fingerprint unchanged. Audit handler reads
+existing tetap mencatat audit; tidak menghapus audit logs untuk menyembunyikan uji.
+
+Fresh Projects4/grant1active/apps0/media0; fingerprints Projects/Team/recruitment
+allowlist unchanged8a7d4624d896842800dfd191892df7a8/
+b867f2890c939b410e3e428259082883/2a36dbfe696b9406baabd0cd4de9fb6f.
+Tidak ada migration/grant/provider/bucket/CMS content mutation/hook/GAS retirement.
+Backend intake dan dashboard memakai Supabase; shared Auth tetap mengecek izin
+per modul. Recruitment **OPEN**, unified owner+intake acceptance selesai.
+Resource/env/code GAS retained; retirement dan retensi/CAPTCHA tetap terpisah.
+Tidak ada push baru. Feature00ac70a approval consumed; checkpoint commit lokal
+saja dan push SHA baru memerlukan approval exact SHA baru.
+Proof ignored artifacts/admin-unified/opening-{deployment,config-result,
+build-proof,public,form-result,db-proof,owner-ui,cleanup-proof,final-session,
+final-state}.json dan owner-before-opening.json. Jangan mencetak secret/PII.
+
 ## Dashboard admin bersama LIVE00ac70a — owner acceptance pending (8 Oct 2026)
 
 Faiz (`okee gas ajaa`) approved exact00ac70a03516507db7d6618b23bf117856c79539;
