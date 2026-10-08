@@ -224,3 +224,14 @@ actual backup, do not replace it with generated repo source or claim equality.
 Source compiled only, never executed. Deployed version equality still unverified.
 NEXT Export appsscript.json via source form, then Admin code/HTML/manifest/Properties
 and exact deployed IDs/versions/ownership. No live changes/push. Proof f1/export-code-proof.json.
+
+## Export manifest backed up — 8 Oct 2026
+
+Owner pasted378byte appsscript.json; authenticated decrypt/file600/JSON PASS.
+V8/Asia-Jakarta,3expected scopes present/noextra scopes. Copied webapp metadata
+ANYONE_ANONYMOUS/USER_DEPLOYING; this is manifest content, not live deployment
+state proof. SHA256d9c58a787e4f37349d81609b5f729b954bf79a39d17bec0cc383009ef412e16f.
+Export Properties/source/manifest +Sheet/Drive now archived; deployed version/
+ownership/full completeness still pending. NEXT actual CMS Admin Code.gs via
+local source form, then Index.html/manifest/Properties. No live mutation/push.
+Proof ignored f1/export-manifest-proof.json.
