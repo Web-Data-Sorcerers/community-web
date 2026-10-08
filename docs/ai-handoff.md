@@ -1,5 +1,16 @@
 # AI handoff — current context
 
+## Sheet XLSX backed up — 8 Oct 2026
+
+Owner uploaded25285byte workbook, AES256GCM decrypt verified/file600. Workbook
+9worksheets: all8expected CMS tabs/headers present +1extra tab retained. Data rows
+Projects4/Team25/Roles6/Hods6/Domains6/Partners8/Milestones0/Settings0. SHA256
+90575952b8f8a3ad6445716415f8e6a594a793235cfdec018d3b01a55fec2327.
+Archive readable; live Sheet equality/formulas-formatting restore unverified.
+NEXT Drive folder backup/empty inventory via owner resource links4390, then
+GAS deployed source/manifests/admin Properties/sharing/OAuth backup. No deletion,
+SQL/grant/content/env mutation/redeploy/hook/push. Proof ignored f1/sheet-proof.json.
+
 ## CMS Export Properties backed up — 8 Oct 2026
 
 Owner submitted6Properties through local encrypted collector. Two identical327byte
