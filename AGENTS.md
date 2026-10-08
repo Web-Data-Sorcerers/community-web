@@ -1,5 +1,14 @@
 # AGENTS.md — instructions for AI agents
 
+## Admin first deployment ID backed up — 8 Oct 2026
+
+Owner saved exact ID for admin-first-v1 through local masked form; authenticated
+AES256GCM decrypt/ID format/file600 PASS,109bytes. Value retained only encrypted
+outside repo. This verifies saved owner input, not live ID/version equality.
+Other3active IDs still pending. NEXT Admin second commit v2 ID, then untitled v4
+and Export v2; sharing/rollback/observation remain pending. No deployment calls,
+Google/env/content mutation or push. Proof ignored f1/deployment-id-backup-proof.json.
+
 ## All visible active GAS deployment details inspected — 8 Oct 2026
 
 Owner screenshots verify last Admin active first deploy admin : setup admin v1,
