@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRecruitmentAdminHandler } from '../server/recruitment-admin.mjs';
 import { createCmsAuth } from '../server/cms-auth.mjs';
+import { recruitmentAdminRoute } from '../server/recruitment-admin-route.mjs';
 
 const origin = 'https://admin.example.test';
 const uid = '11111111-1111-1111-1111-111111111111';
@@ -248,6 +249,76 @@ test('one CMS login allows authorized recruitment and CMS reads with the same se
     const response = await h.read(route);
     assert.equal(response.status, 200);
     assert.equal((await response.json()).csrf, h.csrf);
+  }
+});
+test('Vercel route metadata allows authenticated GET stats, list, detail, notes and history', async () => {
+  const h = harness();
+  await h.login();
+  for (const [name, route, query] of [
+    ['stats', 'stats', ''],
+    ['applications', 'list', '&limit=50&offset=0'],
+    ['application', 'detail', '&receipt=' + receipt],
+    ['notes', 'notes', '&receipt=' + receipt + '&limit=20'],
+    ['history', 'history', '&receipt=' + receipt + '&limit=20'],
+  ]) {
+    const incoming = req(name + '?...route=' + name + query, {
+      headers: { Cookie: h.cookie },
+    });
+    // Reproduce the live failure before the adapter strips provider metadata.
+    assert.equal((await h.handle(incoming.clone(), route)).status, 400);
+    const routed = recruitmentAdminRoute(incoming);
+    assert.equal(routed.route, route);
+    assert.equal((await h.handle(routed.request, routed.route)).status, 200);
+  }
+});
+test('routing metadata cannot hide unknown, duplicated or mismatched query fields', async () => {
+  const h = harness();
+  await h.login();
+  for (const query of [
+    '?...route=stats&unexpected=x',
+    '?...route=notes',
+    '?...route=stats&...route=stats',
+    '?...route=stats&limit=50&limit=50',
+    '?route=stats',
+  ]) {
+    const routed = recruitmentAdminRoute(
+      req('stats' + query, {
+        headers: { Cookie: h.cookie },
+      }),
+    );
+    assert.equal((await h.handle(routed.request, routed.route)).status, 400);
+  }
+  const routed = recruitmentAdminRoute(req('stats?...route=stats'));
+  assert.equal((await h.handle(routed.request, routed.route)).status, 401);
+});
+test('route normalization preserves POST payload, Origin, CSRF and trusted session checks', async () => {
+  const h = harness();
+  await h.login();
+  const payload = {
+    receipt,
+    request_id: receipt,
+    expected_version: 0,
+    status: 'reviewing',
+    reason: '',
+  };
+  for (const csrf of [h.csrf, 'wrong']) {
+    const incoming = req('review-status?...route=review-status', {
+      method: 'POST',
+      headers: {
+        Cookie: h.cookie,
+        Origin: origin,
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrf,
+      },
+      body: JSON.stringify(payload),
+    });
+    const routed = recruitmentAdminRoute(incoming);
+    assert.equal(routed.request.headers.get('Origin'), origin);
+    assert.deepEqual(await routed.request.clone().json(), payload);
+    assert.equal(
+      (await h.handle(routed.request, routed.route)).status,
+      csrf === h.csrf ? 200 : 403,
+    );
   }
 });
 test('CMS permission does not implicitly grant applicant access', async () => {

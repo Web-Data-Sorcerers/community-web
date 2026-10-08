@@ -1,5 +1,79 @@
 # Recruitment review — implementasi lokal A–D
 
+## Login owner berhasil; GET workflow perlu routing fix lokal (8 Oct 2026)
+
+Faiz approved exact12POST+guardedfixturecleanup (`okee terus?`). Actual login via
+loopback helper succeeded HTTP200/password cleared; Projects/Team GET200,
+Pendaftar stats GET400 INVALID_INPUT, equivalent authenticated POST stats200.
+No fixture submit/status/note/race/retry/cleanup has executed. The isolated local helper subsequently exited during diagnostic shutdown
+(ERR_VM_DYNAMIC_IMPORT_CALLBACK_MISSING); its memory-only session was lost.
+No credentials were persisted; no fixture was submitted. Helper now reports
+progress/status, bounds waits and preserves a successful login on read-check failure.
+Owner login is needed again after the routing fix becomes live.
+
+Local fix strips only a single provider-owned `...route` query value matching
+recognized /api/admin/recruitment/{endpoint} path. Vercel filesystem route builder
+uses the literal bracket segment name in rewrite query; strict filter whitelist
+had treated this metadata as applicant filter input. Unknown/mismatched/duplicate
+queries still reject; auth/Origin/CSRF/POST body preserved. No SQL/Auth/env/grant/
+public/UI/dependency changes. Source evidence and repro in
+[acceptance checkpoint](recruitment-review-live-acceptance.md).
+
+Node22 focused QA: recruitment42PASS (3new regression cases), CMS auth9PASS;
+build0errors/23pages,19publicHTML same-local-input exact/snapshot unchanged,
+dist71textfiles secrets0/diff actual secrets0/migration hash unchanged.
+Original fullCMS94PASS+10TeamSKIP/7gates+SEO/four-width mocks are prior baseline;
+not rerun/claimed as fresh route-fix full suite. Fix local only, not deployed.
+Production remains READY e3fa488 with GET failure under actual owner session;
+positive workflow acceptance pending. NEXT exact new HEAD SHA approval→one push→
+READY and new secure owner login/actual GET proof→approved fixture12POST+
+guarded cleanup. Do not reapply SQL or reuse consumed e3fa488 push approval.
+
+## Workflow pendaftar LIVE e3fa488 — migration dan push selesai (8 Oct 2026)
+
+Faiz (`push`, lalu `okee` untuk migration prerequisite) menyetujui exact HEAD
+`e3fa488f9a20544439779987974fc8e232178f00` dan additive migration
+`supabase/migrations/20261008111118_recruitment_review_workflow.sql`, SHA256
+`8b58a828d32d8b2201f659196ad846edfd58e85b3698d866e83e460a12d5ccf4`,
+target Supabase web-community/yejrdckcmlxrkklgtrwy. Applied satu kali dengan
+lock_timeout5s/statement_timeout60s; current PostgreSQL17.11, applications0 dan
+other/waiting affected-table locks0 saat preflight. Backup encrypted di luar repo
+mencakup definitions/ACL/schema metadata + aggregate fingerprints + exact SQL;
+file600/key terpisah, authenticated decrypt/parse/byte equality dan ciphertext
+tamper denial PASS. Bukan full database/data backup; no applicant payload export.
+
+Catalog setelah apply:3private tables/4indexes/8helpers/7service-only wrappers/
+3RLS deny policies; function sources exact SQL, old definitions/ACL unchanged,
+direct table/helper privileges anon/authenticated/service_role0. Canonical answer
+fingerprint dan CMS/recruitment permission fingerprints unchanged; review rows0.
+Tidak membuat/mengubah user/grant/allowlist/env/provider/intake/CMS content.
+
+Satu push origin/main ke community-web selesai; izin exactSHA consumed.
+Production Current+primaryalias READY `dpl_BNKYG3xmg5ANjWe8LH4XZ66ct9hh`, exacte3fa488;
+provider READY **08 Oct 2026 11:43:07.731 UTC /
+18:43:07.731 WIB**. Workspace probe clock
+terpisah. Actual build prebuild/remote snapshot/23pages PASS; provider Node24.x
+existing retained, QA lokal22.23.0. Public19/19HTML byte exact against fresh live
+baseline captured before push;8anonymous CMS/recruitment GET endpoints401;
+recruitment accepting:true/OPEN retained. Content/grant/allowlist fingerprint
+read-only final unchanged; Projects4/applications0/media0 at audit time.
+
+Proposed/local/applied/deployed selesai; **positive owner/live workflow mutation
+acceptance pending**. Tidak login owner baru, fixture submit/status/note/conflict/
+retry/cleanup, hook, explicit redeploy/env change, Team write atau Google action.
+Anonymous3module shells390/1440 (6cases) PASS, overflow0/passwordempty/pageerrors0;
+harness lama menunggu label status historis, diperbarui ke label current lalu
+rerun PASS. Shell proof bukan owner acceptance. NEXT owner shared read-only acceptance
+→ separate concrete synthetic12POST+guarded child cleanup approval. Jangan gunakan
+izin migration/push ini untuk fixture atau push checkpoint berikutnya.
+
+Checkpoint sesudah push ini lokal saja, tidak dipush tambahan. Proof ignored
+artifacts/recruitment-review/live-prepare.json, live-apply.json,
+live-catalog-verified.json, live-content-baseline.json, live-final-state.json,
+live-public-baseline.json, push-deployment.json, push-build-proof.json,
+push-public.json dan admin-anonymous-shells.json. Historical local-only sections
+below describe the prior checkpoint, not current applied/deployed state.
+
 8 Oct 2026. Authorized Faiz: implementasi lokal saja. Baseline HEAD `3f4b8e9`,
 production accepted `e59abde`. Production recruitment OPEN; shared Auth accepted.
 Migration workflow belum applied, fitur belum deployed/accepted live.
