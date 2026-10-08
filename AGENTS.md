@@ -1,18 +1,29 @@
 # AGENTS.md — instructions for AI agents
 
-## NEXT — dashboard performance/loading/feedback PLAN ONLY (8 Oct 2026)
+## NEXT — dashboard performance/loading/feedback MASTER PLAN ONLY (8 Oct 2026)
 
-Faiz meminta plan percepatan seluruh admin Projects/Team/Pendaftar + loading,
-error/success/conflict/publication/retry UX. [Master plan](docs/admin-performance-feedback-plan.md) mencatat
-source audit, proposed budgets, timing baseline, duplicate-read removal,
-per-panel UI/recovery, trusted actor/permissions tiap request, Origin+CSRF,
-no persistent PII cache dan QA/live gates. Pendaftar bootstrap stats→list→stats
-adalah duplicate source-proven; cold/region/query latency belum diukur.
-Rekomendasi A–D lokal dahulu, SQL/backend tambahan hanya bila profiling perlu.
-Ini PROPOSED, bukan implementasi/applied/deployed/accepted; NEXT owner eksekusi
-lokal. Tidak live fixture/SQL/env/provider/hook/push permission baru. Fixture
-workflow12POST sebelumnya selesai+cleaned, tidak memberi izin uji ulang.
-Fix foto Team commit5c56f0d LOKAL/QA PASS; production tetap14e62af READY/OPEN.
+Faiz meminta plan detail siap eksekusi AI baru untuk seluruh admin Projects/Team/
+Pendaftar: loading/error/success/conflict/publication/retry dan percepatan actual.
+[Master plan](docs/admin-performance-feedback-plan.md) lengkap§1–22: source audit/file map, baseline/request
+budgets, algorithms/generation/abort/as_of, scoped busy, transport/session,
+UI/copy inventory, packages/DoD, QA commands+12race cases, release/rollback/handoff.
+[Kickoff AI baru](docs/admin-performance-feedback-kickoff.md) siap salin untuk authorize A–D LOKAL nanti;
+contoh prompt bukan izin implementasi sekarang. Pending optional backend/SQL E
+berbasis profiling, bukan default. No new dependencies/provider/cachePII/auth bypass.
+
+Plan proposed100msfeedback/1–2sdata, belum timing authenticated/baseline measured.
+Private recruitment startup3→2reads target; initial public intake status1 terpisah.
+CMS response masih await publication hook, jangan ack saved sebelum server confirm.
+Returned401/403 wajib clear; upstream auth error current dapat401, UI tidak boleh
+menganggap pasti expired versus service error. Mocks bukan owner/live speed proof.
+
+PLAN ONLY/performance implementation belum dimulai. Fix foto5c56f0d LOKAL/QA
+PASS; production accepted14e62af READY/OPEN/shared login/workflow unchanged.
+Workflow migration sudah applied dan fixture12POST accepted+cleaned/approval
+consumed; tidak apply ulang/uji ulang otomatis. Origin satu URL community-web,
+testing absent. Izin push14e62af consumed; checkpoint detail ini lokal saja.
+NEXT owner copy kickoff untuk authorize A–D local → implement+QA → exactSHA
+push gate dan concrete SQL/livefixture approval jika nanti diperlukan.
 
 ## Team photo fit — LOKAL, QA PASS (8 Oct 2026)
 

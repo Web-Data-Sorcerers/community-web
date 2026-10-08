@@ -1,9 +1,15 @@
-# Dashboard admin — performance, loading dan feedback plan
+# Dashboard admin — master plan performance, loading dan feedback
 
 8 Oct 2026. Owner meminta PLAN untuk percepatan seluruh dashboard admin dan
 pesan loading/error/success. Status **PROPOSED / PLAN ONLY**; belum implementasi,
 timing authenticated baru, SQL, config, deployment atau owner acceptance baru.
 Terpisah dari fix foto Team lokal. Production14e62af workflow accepted tetap.
+
+Dokumen ini diperinci menjadi handoff eksekusi AI baru: §1–10 tujuan/desain;
+§11–22 baseline, file map, algoritme, kontrak state/transport, tasks/DoD,
+QA commands, acceptance dan rollback. Prompt siap salin:
+[kickoff AI baru](admin-performance-feedback-kickoff.md). Membaca prompt contoh
+tidak memberi izin implementasi pada sesi PLAN ONLY ini.
 
 ## 1. Tujuan dan batas
 
@@ -75,8 +81,10 @@ Tidak enable EXPLAIN endpoint atau extensions baru di live.
 
 Default prioritas: Pendaftar → Team → Projects → shared navigation/auth UX.
 
-Pendaftar initial load: langsung satu list request untuk validasi sesi+permissions
-existing dan data pertama, lalu satu filtered stats memakai `as_of` response
+Pendaftar initial load: langsung satu **GET applications** untuk validasi sesi+
+permissions existing dan data pertama, sekaligus memperoleh CSRF response untuk
+request selanjutnya. Jangan langsung memanggil existing `loadList` POST dengan
+CSRF kosong. Lalu satu filtered stats memakai `as_of` response
 list. Hapus stats bootstrap duplikat:3 menjadi2 read request, daftar tidak lagi
 menunggu initial stats. Skeleton statistik terpisah. Filter tetap submit existing;
 tidak otomatis fetch setiap karakter. Jika live search dipilih kemudian, debounce
@@ -218,3 +226,508 @@ Rekomendasi: **A–D dahulu**. Tidak perlu dependency/infra/upgrade atau SQL bar
 untuk menghapus request berulang dan membuat UI lebih responsif. Implementasi
 performance belum diotorisasi oleh pesan plan ini; NEXT review plan → instruksi
 eksekusi lokal. Semua target di atas masih proposed, bukan applied/deployed/accepted.
+
+## 11. Baseline aktual dan urutan baca AI baru
+
+Workspace `/home/faiz/ds/ds5opencode`. Bahasa Indonesia, panggil owner bro.
+Pada audit planning ini working tree awal clean, HEAD plan awal
+`3cb5d53df36ffb8bba223dc26756192af0757faa`; foto Team lokal
+`5c56f0dd3e5cc144ba01a269c0a98484fdf7e6cb`. HEAD checkpoint detail berikutnya
+dilihat dari git log, bukan dianggap otomatis deployed.
+
+Production accepted terakhir `14e62aff1614436b9d9a90a359b3f2800b4a6f23`,
+Current+primaryalias READY `dpl_GadJRkTnfiRe2QeZKCzknKrBAJcX`, existing Supabase
+web-community/yejrdckcmlxrkklgtrwy. Status itu checkpoint sebelumnya, bukan hasil
+probe production baru pada pass planning ini. Recruitment OPEN/shared login
+accepted; workflow migration sudah applied, jangan apply ulang. Fixture sebelumnya
+12POST sudah selesai+cleaned dan semua session uji logout. Helper4393 sudah stop;
+AI baru tidak punya credential/session aktif. Jangan minta password di chat.
+
+Origin satu fetch/push URL community-web; production remote alias URL yang sama.
+Testing absent, jangan recreate. Izin push14e62af consumed. Pending foto lokal
+harus dipertahankan saat membandingkan baseline performance; tidak dicampur klaim
+public parity terhadap live yang belum mendapat fix foto.
+
+Urutan awal wajib:
+
+1. `git status --short`, log/refs/remotes dan Node22; jangan reset/stash perubahan asing.
+2. `AGENTS.md` terbaru → `docs/ai-handoff.md` → master plan ini seluruh §1–22.
+3. `docs/cms-migration-todo.md` → `docs/cms-sop.md`.
+4. Sebelum UI: `docs/pixel-precision-sop.md`, `docs/assets.md`,
+   `docs/page-fullscreen-migration-plan.md`; existing admin custom tanpa node baru.
+5. Workflow correctness: `docs/recruitment-review-workflow-plan.md`§1–18,
+   `docs/recruitment-review-local-implementation.md`,
+   `docs/recruitment-review-live-acceptance.md` dan `docs/admin-unified-recruitment-plan.md`.
+6. Baca file map §12, tests dan mocked transport sebelum mengubahnya.
+
+Checkpoint di awal dokumen mengalahkan arsip GAS/testing/closed di bawah.
+GAS code dihapus; jangan recreate atau meminta inventory Google. Jangan mengulang
+setup CMS, auth, users/grants/allowlist/SQL. Local Node22.23.0 pernah tersedia
+di `/tmp/ds-cms-node22/node_modules/node-linux-x64/bin/node`; cek executable/version,
+jangan menganggap `/tmp` persist. Pakai Node22 existing lain bila path hilang.
+
+## 12. File map dan batas perubahan default
+
+| File                                                                                                                | Tugas konkret                                                    | Batas                                                        |
+| ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------ |
+| `src/scripts/recruitment-admin.js`                                                                                  | bootstrap/list/detail/generation/loading/sendMutation/recovery   | Preserve filters/as_of/page/version/UUID/canonical answers   |
+| `src/scripts/cms-team-editor.js`                                                                                    | split busy scopes, load/mutate/upload/login/logout/message       | No Team live DML; preserve group/revision/limits             |
+| `src/scripts/cms-admin-editor.js`                                                                                   | load/save/delete/upload/publication/message/session clear        | Preserve existing Projects CRUD contract                     |
+| `src/pages/admin/recruitment.astro`                                                                                 | panel skeletons/status/retry/aria                                | Keep IDs used by script and current geometry                 |
+| `src/pages/admin/team.astro`                                                                                        | skeleton/feedback/busy scopes                                    | Keep field/form IDs and media input semantics                |
+| `src/pages/admin/index.astro`                                                                                       | Projects skeleton/feedback/busy scopes                           | Same constraints                                             |
+| `src/components/admin/AdminNavigation.astro`                                                                        | visible navigation busy/draft affordance if needed               | Anchors3module; no persistent SPA shell default              |
+| Proposed `src/scripts/admin-request.js`                                                                             | shared same-origin bounded transport + session-generation hooks  | Only create if duplication merits it; no auth token storage  |
+| Proposed `src/scripts/admin-feedback.js`                                                                            | shared message/state rendering and scoped ARIA                   | Prefer small helpers; avoid new UI framework                 |
+| `server/recruitment-admin.mjs`, `server/cms-admin.mjs`                                                              | local timing hooks/mock profile only by default                  | No RPC/body/ACL/audit/hook behavior change in quick wins     |
+| `server/cms-auth.mjs`                                                                                               | inspect timings/correctness; fixture injected fetch existing     | No auth rewrite/cache/permission TTL change                  |
+| `server/recruitment-admin-route.mjs`, `api/admin/recruitment/[...route].js`                                         | retain deployed Vercel metadata normalization                    | Unknown/duplicate/mismatched filters still rejected          |
+| `tests/cms-auth.test.mjs`, `tests/cms-native-admin.test.mjs`                                                        | only meaningful changed-boundary regression cases                | No live credentials loaded                                   |
+| `tests/recruitment-review-contract.test.mjs`, `tests/recruitment-shared-admin.test.mjs`                             | API/status/version/privacy/CSRF regressions                      | Preserve coverage, not implementation mirrors                |
+| `scripts/verify-cms-native-admin.mjs`, `scripts/verify-cms-team-admin.mjs`, `scripts/verify-recruitment-review.mjs` | extend existing actual built-page mocks/delays/errors            | Keep existing assertions unless scope intentionally changes  |
+| Proposed `scripts/verify-admin-performance.mjs`                                                                     | deterministic request-count/UX timing scenarios and safe summary | Synthetic data; no production URL/env/session option default |
+
+No default changes to public components/forms, `src/data/cms-snapshot.json`,
+`package.json`/lock, Supabase migrations, existing SQL/auth contracts/env.
+Shared helper must be imported only by admin entrypoints; preserve public bundle
+parity. Proposed filenames are implementation options, not files already created.
+
+## 13. Timing protocol dan request budgets yang dapat diuji
+
+Instrument browser with `performance.now()` and injected synthetic transport;
+server factory optional timing callback only if useful, disabled by default,
+request-scoped state. No public debug endpoint/secret header. Owner UI shows user
+messages, bukan raw timing/API URLs/internal config. Baseline request sequence
+captured before refactor; before/after use same synthetic values and delay schedule.
+
+Safe aggregate artifact schema example (numbers replaced by actual measured values):
+
+```json
+{
+  "module": "recruitment",
+  "scenario": "initial-warm",
+  "environment": "local-mock",
+  "width": 390,
+  "sampleCount": 20,
+  "privateReadCount": 2,
+  "feedbackMs": { "p50": 0, "p95": 0, "max": 0 },
+  "firstUsableDataMs": { "p50": 0, "p95": 0, "max": 0 },
+  "fullySettledMs": { "p50": 0, "p95": 0, "max": 0 },
+  "pageErrors": 0,
+  "proofKind": "synthetic-only"
+}
+```
+
+Zeros di atas placeholders, jangan disalin sebagai hasil. Percentile:
+sort samples lalu nearest rank `ceil(p*n)-1`; report n, median/p95/max dengan
+rumus sama. Sebut20sample cukup untuk trend lokal, bukan p95 produksi terpercaya.
+Ukur browser event→feedback DOM ready→data interactable, bukan network duration
+saja. Bytes aggregate boleh; body/filters/receipt tidak masuk artifact.
+
+| Scenario                 | Request budget default                                                | Assert                                                           |
+| ------------------------ | --------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Recruitment initial      | 1applications → 1stats; public intake status1 terpisah                | No initial stats duplicate; valid list as_of reused              |
+| Recruitment filter/reset | 1applications → 1stats per committed filter                           | No hidden extra bootstrap; stale response ignored                |
+| Recruitment page         | 1applications → 1stats                                                | Same as_of; no stat cache based only on unchanged filter         |
+| Detail open              | 1detail → 1notes + 1history parallel                                  | Detail ready before both secondary panels settle                 |
+| Notes/history page       | 1selected panel request                                               | No detail/list reload                                            |
+| Confirmed note/status    | 1mutation; at most1detail,1notes,1history,1list,1stats reconciliation | No duplicate write; ack visible before secondary requests finish |
+| Projects/Team initial    | 1module GET each                                                      | No login POST if existing sealed session valid                   |
+| Projects/Team mutation   | 1POST and existing server publication behavior                        | No browser resubmit as publication retry                         |
+| Manual retry panel       | 1failed-panel read per click                                          | No whole-page reload or unrelated panels                         |
+
+Request budgets are browser API calls, not number of internal Auth/RPC/audit
+trips. Cold start diagnosis requires provider start-type/duration evidence;
+first mock request or slow request is not proof of real cold start.
+No automatic prefetch private pages: extra reads/audits/permissions cost must be
+measured before any optional prefetch design.
+
+## 14. Recruitment algorithm dan concurrency constraints
+
+### Initial / list / filter
+
+`bootstrap` starts **GET applications** with current session generation; show anonymous neutral
+shell until trusted response. Valid list response establishes permitted workspace,
+captures as_of/counters/page data, paints table first. Start filtered stats with
+exact applied filters+list.as_of. Stats failure becomes stats-panel partial error,
+not table disappearance/global logout unless server actually returns401/403.
+Empty message only after valid list0; initial network/server error not empty state.
+
+Critical method dependency: current `loadList` uses protected POST; `csrf` initially
+undefined before restored-session bootstrap. The old initial GET stats provided
+CSRF, so removing it requires replacing that role with GET list, not deleting it
+and invoking unchanged POST list. GET list response supplies validated CSRF;
+filter/pagination POSTs can then retain existing policy. Logged-in startup from
+login response already has CSRF, but choose one tested GET-first startup path.
+Do not read HttpOnly cookie in browser or add an unprotected CSRF endpoint.
+Lock regression: valid restored sealed session + no browser CSRF → GET list200,
+then protected stats/list POST passes; anonymous first GET401, no private data.
+
+Filter commit captures immutable copy of values. Increment list generation and
+cancel superseded read; list/stat responses carry originating generation locally.
+Only current generation updates counters/pagination/status. Reset/page changes
+respect existing dirty-detail confirmation; canceling confirm sends no new read.
+`as_of` retained for same filter pagination, reset on new filters/confirmed write.
+50records/page, notes/history20/page and WIB retained, no full-table client slice.
+`as_of` is existing intake cutoff/filter consistency, not proof that all mutable
+review states are frozen. Another reviewer can change statuses during pagination;
+don't cache stats solely by filters/as_of or promise a transaction snapshot across
+separate HTTP requests. Keep existing semantics; stronger snapshot is separate SQL
+design, not a silent frontend assumption.
+
+### Detail and independent panels
+
+Increment detail generation when opening/changing receipt. Clear previous detail
+before new receipt, not show another applicant under a new title. Render detail
+upon valid response; current receipt/version establish action controls. Start notes
+and history concurrently after detail success. Each panel has independent page
+offset/generation/busy/error; older receipt callbacks cannot render into new detail.
+One failed panel does not erase successful detail or other panel. NOT_FOUND clears
+detail and explains absence; no blind reopen/retry mutation.
+
+### Successful mutation / partial revalidation
+
+Split `writePending`, `revisionPending`, per-panel `readPending`, `unconfirmedIntent`.
+After validated success show immediate authoritative action acknowledgement and
+clear only submitted draft, then reconcile. Do not wait for list/stats/history to
+report success. Keep write controls disabled while correct fresh revision is
+unknown; read/navigation remains scoped and draft-aware. Unknown/malformed success
+schema is **unknown result**, not definite success; reconciliation required.
+
+Use response metadata only if existing contract contains validated authoritative
+version/status; otherwise fresh detail must supply them. Parallelize reads only
+where independent: detail and fresh list may be independent; stats waits list.as_of,
+notes/history may remain after detail. Schedule/await ownership ensures no
+unhandled rejection and no race with later write. Event ledger UI rebuilt from
+authoritative reads, not fabricated local events/actor labels.
+
+When switching receipt/filter after confirmed write, old callbacks can finish
+but must not clear new draft/update new UI. Mutation lifecycle is not aborted by
+ordinary read cancellation. Page navigation with unknown write result warns about
+unconfirmed changes; no automatic second POST. Invalidate background data on401/403
+and never let a later successful stale callback unhide private workspace.
+
+### Conflict / replay / uncertain network
+
+409CONFLICT preserves current draft, reloads authoritative detail, explains change,
+requires owner review before building new UUID/expected_version.409ID_CONFLICT
+means same UUID was bound to a different payload; no auto new intent/write.
+For timeout/5xx after dispatch, retain exact original `{request_id,payload}`
+in current memory while session valid. Manual retry uses same UUID/body; no
+new reason/status/version attached to original intent. Retry/replay one effect
+verified by ephemeral DB. Logout clears drafts/intents; never persist them to disk.
+
+## 15. Projects/Team busy scopes dan publication limits
+
+Replace one global busy switch with explicit scopes: bootstrapRead, formRead,
+mutation, upload, publicationRetry, logout. Scope matrix:
+
+| Pending operation             | Controls disabled                                                   | Controls available                          |
+| ----------------------------- | ------------------------------------------------------------------- | ------------------------------------------- |
+| Initial module read           | Mutations until valid state/revision                                | Login/menu according to auth state          |
+| Background statistics/history | Related pager/retry duplicate                                       | Other settled areas                         |
+| Upload                        | Upload duplicate + dependent save/delete/record switching if unsafe | Unrelated navigation with draft guard       |
+| Save/delete                   | Conflicting write and dependent form operations                     | Read-only UI; menu guarded if dirty/unknown |
+| Publication retry             | Retry duplicate and overlapping publication-affecting operations    | Read-only content                           |
+| Logout request                | Login/mutation/duplicate logout                                     | Clear indication; no false logout success   |
+
+Keep dirty/read-reload confirm: ordinary reload must not silently discard draft.
+Failed read may retain settled same-view data marked stale, but no write on unknown
+revision. Partial backend success must not be rendered as total failure.
+
+Important current backend fact: save/add/delete response comes after Management
+write and publication hook(s). Browser cannot learn earlier DB commit from a pending
+request. Default A–D leaves this backend contract intact. Slow copy says saving+
+requesting publication; first actual response can confirm saved and hook acceptance.
+Do not emit optimistic “tersimpan” just because request sent. No fire-and-forget
+publication/no new queue or provider. Earlier server acknowledgement is optional
+separate backend design, requiring explicit delivery/retry proof and contract review.
+
+CMS write/network/malformed success uncertainty: preserve draft/read state,
+offer reconcile by load GET. For add, do not blindly regenerate another record;
+for delete, compare confirmed existence/revision. A match can inform owner but
+is not proof that this client request alone caused it if another session changed
+state. Offer explicit owner decision after fresh read; no automatic save/resubmit.
+Upload timeout may leave an orphan object; do not auto cleanup or retry/create
+extra objects. Live cleanup outside scope without exact target approval.
+
+## 16. Shared transport contract dan session lifecycle
+
+Small helper if adopted must support existing GET query, JSON POST and FormData
+upload. FormData Content-Type left to browser boundary, Origin same-origin browser
+behavior preserved, X-CSRF-Token required for protected POST. Login has distinct
+existing pre-session policy; don't require a session CSRF before login works.
+Keep `credentials:same-origin`, `cache:no-store`, existing sealed HttpOnly cookie.
+
+Transport classifications: success(valid schema), rejected(domain4xx), forbidden,
+unauthorized, rate_limited429, not_found404, conflict409, server5xx, malformed,
+network, timeout, cancelled/superseded. Record no raw body or sensitive URL. Preserve
+current caller contracts (`http`/`ok`/`error`) via adapters rather than silently
+changing all consumers. Cancellation due to superseded read produces no red error
+banner; timers/listeners removed in finally. New generation cannot reuse old
+in-flight request/CSRF; dedupe limited to exact same logical read operation.
+If multiple consumers share a request, define ownership; one cancelled consumer
+must not abort another still-current consumer. Avoid general cross-panel dedupe
+unless this lifecycle is tested; preventing duplicate call at source is preferable.
+
+Timeout proposed defaults: slow threshold3s, browser reads15s; mutations bounded
+only after measuring existing upstream ceiling. Browser deadline does not cancel
+SQL commit/hook. Do not choose5s mutation timeout to meet a speed target. Upstream
+auth RPC15s and recruitment RPC/Management30s per call are existing bounds;
+total serial request can exceed one bound. Instrument before selecting total
+deadline; never change server timeout/infra without evidence.
+
+Refresh same-document single-flight, csrf/session epoch synchronized. Cross-tab
+cookie rotation checked with mocks; do not invent shared process Auth client state.
+Login password clear in finally on success/HTTP error/network/parse failure;
+never emit/store form payload in instrumentation. Pending bootstrap401 from old
+generation must not end a later successful login. Starting login cancels old
+startup reads and advances generation; only current session can update state.
+
+Any actual401/403 triggers fail-closed private state clearing; revoked permission
+cannot remain editable using a memory cache. Browser network failure without
+HTTP401/403 does not automatically logout.403FORBIDDEN message is permission;
+403UNAUTHORIZED from Origin/CSRF validation is invalid session/request, not falsely
+“akun tidak diizinkan”. No auto replay rejected POST to guess CSRF; secure refresh
+or login path as required by tested existing contract.429 uses safe Retry-After
+when present, no fixed claim of when permission/login will succeed.
+
+Known backend limit: `authorizeSession` upstream error currently can become401.
+UI cannot distinguish that from actual expired session; obey returned401. Changing
+that to503 is a separate explicit backend error-contract decision with tests
+proving no data granted on upstream failure. Do not weaken auth to keep screen fast.
+
+Logout acknowledged: increment session epoch, abort reads, drop CSRF/in-flight
+state/revisions/drafts/intents/list/detail/notes/history/media objectURLs/password;
+all stale callbacks ignored. Logout failure: clear indication but no claim that
+cookie/server session ended. Idle session remains bounded by existing contract.
+
+## 17. Detailed UI inventory dan copy rules per section
+
+This is an admin custom pass, no new Figma node/assets/fonts. Reuse currently
+measured max1280/padding32desktop16mobile; verify each actual admin stylesheet
+before altering. Do not change geometry assertions to hide a bug. Skeleton shapes
+follow existing visible card/list/form row heights; placeholders have no names or
+PII, aria-hidden, high-level region labelled loading and `aria-busy=true`.
+
+| Section               | Loading/partial/error surface                            | Completion criteria                                                 |
+| --------------------- | -------------------------------------------------------- | ------------------------------------------------------------------- |
+| Shared nav/login      | Login submit pending label, inline login error           | Password blank all paths;3module active nav preserved               |
+| Module toolbar        | Reload button busy, nearby persistent action feedback    | No button jumps; duplicate reload ignored                           |
+| Projects list/form    | List placeholder, form disabled until selection/revision | Selection stable; long names wrap/ellipsis existing                 |
+| Team list/groups/form | Group list placeholder and upload preview state          | Group policy1–8 preserved; fit foto5c56f0d retained                 |
+| Recruitment table     | Table skeleton, empty/filter/error distinct              | 50/page and pager state correct                                     |
+| Recruitment stats     | Independent skeleton/error+retry                         | Same filter/as_of; correct counts                                   |
+| Recruitment detail    | Detail placeholder, revision readiness                   | Existing safe38answers formatting, no XSS                           |
+| Notes/activity        | Panel-local skeleton/error/retry/pagination              | 20/page and append-only history retained                            |
+| Upload/save/delete    | Adjacent progress/result/unknown/conflict                | Draft protection and duplicate prevention                           |
+| Publication/logout    | Persistent acknowledgement/error                         | Hook accepted not equated deployment READY; logout no false success |
+
+Use plain Indonesian, lowercase sentence case, direct next action. No raw error
+codes/stack traces/project IDs/API URLs or “konfigurasi server” details for owner
+unless meaningful. Empty count is information, success notice not alarming green
+banner by default; error persistent and actionable. No toast-only important state.
+After3s slow message must not replace confirmed-save success with generic loading;
+per-panel status precedence preserves most important unconfirmed/conflict state.
+
+Keyboard: no focus jump on background refresh; inline validation focuses first
+invalid field, explicit owner retry may focus panel heading/error.401/403 after
+private clear returns focus to login/permission explanation. `aria-live` polite
+for loading/success, assertive only critical errors; dedupe announcements so every
+statistics poll does not spam screen reader. Reduced-motion skeleton static;
+no infinite shimmer required. Check contrast/visibility in existing palette.
+
+## 18. Work packages, dependencies dan definition of done
+
+| Package                      | Depends                                | Work                                                     | DoD/artifact                                               |
+| ---------------------------- | -------------------------------------- | -------------------------------------------------------- | ---------------------------------------------------------- |
+| A0 orientation               | Owner local implementation instruction | Read§11, verify git/Node, preserve foreign changes       | safe repo-state, baseline SHA/version recorded             |
+| A1 baseline                  | A0                                     | Capture snapshot19public HTML+admin fixtures; measure§13 | baseline.json/request-count.json, source-verdict           |
+| B1 recruitment startup       | A1                                     | list-first; stats as_of; abort/generation                | 3→2private reads; delayed stats doesn't delay list         |
+| B2 recruitment detail/save   | B1                                     | separate panel lifecycle and write acknowledgement       | notes/history partial,409/replay/unknown tested            |
+| C1 shared transport/feedback | A1/B1 findings                         | Small helpers if useful, cancellation/deadline/copy      | tested classification/session clear, no dependencies       |
+| C2 Team UI                   | C1                                     | scoped busy, upload/revision/publication messages        | mock CRUD/upload/reconcile all4widths;0live writes         |
+| C3 Projects UI               | C1                                     | same state conventions, preserve CRUD/delete             | native mock and snapshot content unchanged                 |
+| D1 cross-module/session      | B2/C2/C3                               | draft navigation guards, auth/password/global clear      | delayed old responses afterlogout/login cannot leak        |
+| D2 release QA                | D1                                     | full suites/gates/parity/performance summary             | PASS/SKIP counts+limits actual, no fictitious latency      |
+| E optional backend           | A1 profile+D2 unmet target             | propose precise protected RPC/query change locally       | isolated DB/ACL proof and exactSQL proposal; no live apply |
+| F local handoff              | D2/E if selected                       | docs+commit+reviewable diff/report                       | local SHA, applied/deployed/accepted distinctions clear    |
+
+Integrate shared helper sequentially per module; don't concurrently mutate same
+dist/snapshot or race fixture builds. No subagents unless owner/applicable instruction
+explicitly requests them. Commit meaningful completed package, not every cosmetic
+line. Preserve original baseline proof as immutable; separate after-results files.
+
+Do not stop at skeleton alone: require fewer duplicate reads + confirmed timely
+acknowledgement + recovery + security regressions + numeric before/after report.
+If real latency cannot be measured without owner login, complete local work and
+report pending live timing honestly; never treat mocks as production speed proof.
+
+## 19. Reproducible local QA commands dan fixture ownership
+
+Initial read-only commands, no fetch/push mutation of remote refs required:
+
+```sh
+git status --short
+git log -5 --oneline
+git for-each-ref --format='%(refname:short) %(objectname)' refs/heads/main refs/remotes/origin/main refs/remotes/production/main
+git remote -v
+node --version
+```
+
+Select verified Node22 bin directory into task variable `ADMIN_NODE_BIN` and prepend
+to PATH. If installed22 already default use its directory. Not an env/infra provider
+change. Never repurpose HOME/CODEX_HOME. Following commands intentionally run with
+clean env: no `--env-file`, dotenv import or automatic credential inheritance.
+
+```sh
+ADMIN_NODE_BIN=/tmp/ds-cms-node22/node_modules/node-linux-x64/bin
+env -i PATH="$ADMIN_NODE_BIN:$PATH" LANG=C.UTF-8 npm run test:cms
+env -i PATH="$ADMIN_NODE_BIN:$PATH" LANG=C.UTF-8 npm run test:recruitment
+env -i PATH="$ADMIN_NODE_BIN:$PATH" LANG=C.UTF-8 CMS_DATA_SOURCE=local npm run build
+env -i PATH="$ADMIN_NODE_BIN:$PATH" LANG=C.UTF-8 npm run verify:cms-native-admin
+env -i PATH="$ADMIN_NODE_BIN:$PATH" LANG=C.UTF-8 npm run verify:cms-team-admin
+env -i PATH="$ADMIN_NODE_BIN:$PATH" LANG=C.UTF-8 npm run verify:recruitment-review
+```
+
+`test:cms` includes direct Supabase Team writes when server env exists; expected
+10SKIP without env. Validate skip count/reason from actual output; changed test
+count may vary, don't claim historical94/42 as new result. No tests against live
+CMS Team/projects RPC. Extend existing browser mocks or add proposed performance
+runner§12; command only exists after implementation, do not claim it already exists.
+
+For ephemeral DB: discover `initdb`, `pg_ctl`, `psql` actual PATH (existing local
+PostgreSQL toolchain); ensure non-root runner supported. Scripts create temporary
+cluster and synthetic fixture, no external URL option. Keep only required tool PATH
+in clean env. Run required regression once after final relevant code change:
+
+```sh
+env -i PATH="$ADMIN_NODE_BIN:$PATH" LANG=C.UTF-8 npm run verify:recruitment-db
+env -i PATH="$ADMIN_NODE_BIN:$PATH" LANG=C.UTF-8 npm run verify:recruitment-review-db
+```
+
+If binaries missing, investigate existing ephemeral toolchain from prior docs;
+do not substitute production Supabase or mutate system packages/provider silently.
+Exact PostgreSQL version reported, prior18.6 local versus17.11production not equated.
+
+Start owned static preview after build (example4331; choose free port, do not kill
+another listener). Use same preview URL for dependent browser gates:
+
+```sh
+python3 -m http.server 4331 --bind 127.0.0.1 --directory dist
+```
+
+Separate terminal / owned session:
+
+```sh
+env -i PATH="$ADMIN_NODE_BIN:$PATH" LANG=C.UTF-8 PREVIEW_URL=http://127.0.0.1:4331 node scripts/verify.mjs
+env -i PATH="$ADMIN_NODE_BIN:$PATH" LANG=C.UTF-8 PREVIEW_URL=http://127.0.0.1:4331 node scripts/navbar-audit.mjs
+env -i PATH="$ADMIN_NODE_BIN:$PATH" LANG=C.UTF-8 PREVIEW_URL=http://127.0.0.1:4331 node scripts/verify-vt.mjs
+env -i PATH="$ADMIN_NODE_BIN:$PATH" LANG=C.UTF-8 PREVIEW_URL=http://127.0.0.1:4331 node scripts/responsive-audit.mjs
+env -i PATH="$ADMIN_NODE_BIN:$PATH" LANG=C.UTF-8 npm run audit:spacing
+env -i PATH="$ADMIN_NODE_BIN:$PATH" LANG=C.UTF-8 npm run format:check
+env -i PATH="$ADMIN_NODE_BIN:$PATH" LANG=C.UTF-8 npm run seo:audit
+git diff --check
+```
+
+Run independent checks batched where memory permits; avoid too many Chromium
+processes on low RAM. Snapshot-mutating renderer/growth scripts must run alone,
+restore only their owned fixture in finally, rebuild baseline before other gates.
+Default performance pass does not need Team growth renderer after admin-only change;
+photo fit baseline already local and must not be lost.
+
+Baseline integrity: record snapshotSHA256 and19public routes HTML hashes before
+edit using local snapshot/build inputs; after compare same inputs. Admin-only
+shared import can move hashes into public bundles: fix module boundaries rather
+than loosening public parity. Current foto fix is baseline in both comparison
+builds; comparison against deployed14 may legitimately include that pending fix.
+No production content read/export needed to create synthetic baseline.
+
+Dist/diff secrets scan can privately compare known credentials in process memory,
+output count only; never print matches, env listing or credential-bearing body.
+Safe artifacts ignored `artifacts/admin-performance/` with baseline/after/qa-summary,
+mock screenshots only; real applicant screenshots/HAR/full HTML dumps forbidden.
+Owner page uses actual identities held memory only if future live login authorized.
+
+## 20. Acceptance matrix wajib sebelum local-complete
+
+Each3module at320/390/768/1440: normal load, slow read, network timeout, partial
+error, empty, valid load afterretry, invalid input, save success, unknown save,
+conflict, 401/403, logout success/failure, navigation guard. Recruitment additionally
+list/stats as_of, pagination50, notes/history20, snapshot fresh afterwrite,
+replay same effect, race guard/version, XSS note and38answers/hash invariant.
+
+Named race cases to lock:
+
+1. Filter A slow→filter B fast; only B visible/counts/as_of.
+2. Receipt A slow→B fast; no A fields/history under B.
+3. Initial auth/read401 slow→new login200; old result cannot clear new session.
+4. Read200 slow→logout200; private UI remains cleared.
+5. Current auth403 while another panel200; forbidden state wins, no rehydration.
+6. Concurrent duplicate current read intent; one network operation if dedupe used.
+7. Note/status successful response then slow/failed history/stats; confirmed-save
+   message remains, write readiness depends on authoritative revision.
+8. Workflow server commits but response lost; exact retry same UUID effect1.
+9. CMS server commits but response lost; zero automatic resubmit/hook retry.
+10. Publication hook rejected after committed save; saved+publication warning.
+11. Double click save/upload/retry/logout; duplicate effects prevented as contract
+    permits, no new persistent cache or optimistic destructive side effects.
+12. Two tabs and refresh rotation/revoke; per-request permissions still enforced.
+
+Also lock restored-session/no-CSRF startup GET-first and GET/filter encoding with
+Vercel `...route` metadata normalization. This dependency is mandatory even though
+the12 named race cases focus on asynchronous responses.
+
+Performance evidence:3→2startup request improvement, data-first ordering,
+acknowledgement latency before slow secondary reads settle; UI feedback budgets
+tested with mock schedule, real API budgets pending actual authenticated measures.
+Capture sample counts/status distribution, compare identical fixtures, don't hide
+timeouts from p95 report. All7gates+SEO/current browser suites PASS; Team10liveSKIP
+expected, secrets0/snapshot unchanged/public19parity. Report any unmet target as
+limitation, not silently mark speed accepted because functionality passed.
+
+## 21. Release, rollback dan independent live gates
+
+Default execution authorization, when owner later asks, is local A–D and QA; no
+production mutation. E optional SQL remains proposal until selected. Release:
+
+1. Review final diff+QA+exact new HEAD SHA; keep foto fix local inclusion explicit.
+2. Push needs new approval for that exact SHA; one origin push, no testing recreation.
+3. SQL if later required: separate exact SQL hash/objects/project+backup/locks
+   approval. Already-applied workflow migration untouched.
+4. After authorized deployment READY+primaryalias exactSHA, read-only public/anon/
+   OPEN checks and separately authorized secure owner read timing.
+5. Synthetic save/status/note/upload/hook/conflict/retry/cleanup live needs new
+   concrete targets/counts/ledger/cleanup guard. Prior12POST permission consumed.
+6. No auto deploy hook/env/provider/region/upgrade; errors not permission to redeploy.
+
+Rollback local code with reviewed inverse patch/commit; preserve owner/foreign
+changes. Never reset/stash or overwrite snapshot to erase drift. Runtime release
+rollback requires concrete owner-approved target SHA/provider action; no DB drop,
+reverse grant or delete applicant data. If E SQL selected, additive rollback/data
+retention plan prepared before approval; don't invent destructive undo on failure.
+
+## 22. Handoff format dan finish line
+
+Update `AGENTS.md` and `docs/ai-handoff.md` top checkpoint plus this plan execution
+ledger; update SOP/assets/fullscreen provenance only for actual UI scope changes.
+Keep plan proposal distinct from local implementation, migration applied (only if
+approved), deployed exactSHA and owner live accepted status. Commit docs+code;
+no auto push. Safe tracked report includes:
+
+- current local SHA versus deployed14e62af; code files changed and why;
+- before/after request budgets and p50/p95/max/sample count/environment;
+- UX state/copy matrix delivered and major race/recovery evidence;
+- tests PASS/SKIP/FAIL actual,7gate+SEO/snapshot/public/secrets proof;
+- untouched auth/ACL/38answers/OPEN/content boundaries and live proof limits;
+- pending gates exact approval if deployment or live mutation later requested.
+
+Complete A–D local+QA before presenting reviewable result; don't stop after plan
+when a future owner explicitly authorizes execution. If blocked by real credentials
+for live acceptance, still finish independent local implementation and tests.
+Do not ask redundant general confirmation for local work already authorized;
+only live-specific gate requires concrete approval when not already granted.
+
+Planning execution ledger (this pass): §1–22 and kickoff prepared, source audit
+verified, docs-only formatting/links/diff check. Performance implementation not
+started; no baseline timing claimed, no live reads/writes/deployment/push/SQL/env.
