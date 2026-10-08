@@ -1,5 +1,19 @@
 # AI handoff — current context
 
+## NEXT — dashboard performance/loading/feedback PLAN ONLY (8 Oct 2026)
+
+Faiz meminta plan percepatan seluruh admin Projects/Team/Pendaftar + loading,
+error/success/conflict/publication/retry UX. [Master plan](admin-performance-feedback-plan.md) mencatat
+source audit, proposed budgets, timing baseline, duplicate-read removal,
+per-panel UI/recovery, trusted actor/permissions tiap request, Origin+CSRF,
+no persistent PII cache dan QA/live gates. Pendaftar bootstrap stats→list→stats
+adalah duplicate source-proven; cold/region/query latency belum diukur.
+Rekomendasi A–D lokal dahulu, SQL/backend tambahan hanya bila profiling perlu.
+Ini PROPOSED, bukan implementasi/applied/deployed/accepted; NEXT owner eksekusi
+lokal. Tidak live fixture/SQL/env/provider/hook/push permission baru. Fixture
+workflow12POST sebelumnya selesai+cleaned, tidak memberi izin uji ulang.
+Fix foto Team commit5c56f0d LOKAL/QA PASS; production tetap14e62af READY/OPEN.
+
 ## Team photo fit — LOKAL, QA PASS (8 Oct 2026)
 
 Owner screenshot meminta foto upload otomatis pas di kartu. Existing uploaded
