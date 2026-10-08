@@ -596,11 +596,18 @@ runner ini karena dist/snapshot dipakai sementara. Bukti di artifacts/cms-growth
 Native `/api/admin/media` memerlukan owner session; POST juga Origin + CSRF.
 Input <=2 MB JPEG/PNG/WebP, decode max16 MP, animasi/SVG/HTML ditolak. Server
 normalisasi sharp existing ke WebP <=256 KiB, hash sebagai reference lokal.
-GAS memeriksa owner, hash, signature, batas byte dan folder existing; upload
-terpisah dari Sheet save/hooks. Export action media bertoken hanya membaca
-referensi Projects aktif. Browser tidak mendapat token export atau ID Drive.
-Cache diperiksa hash/decode; missing/corrupt refetch bounded. Kegagalan media
-menggagalkan build sebelum snapshot baru. Tidak memakai stale media fallback.
+Fallback resize 1600×1200/1280×960/960×720/800×600/640×480/480×360. Upload
+Storage pakai `x-upsert: true` (path content-addressed → re-upload identik
+idempoten). Sejak fix robustness (`bd9a424`): browser mengecilkan/kompres foto
+
+> 16 MP atau >2 MB lewat `src/scripts/admin-image.js` sebelum kirim, dan pesan
+> error per-kasus (tipe/decode/size/INVALID_INPUT). Batas keamanan server tidak
+> dilonggarin (tetap <=2 MB/masukan, <=16 MP, raster saja). GAS memeriksa owner,
+> hash, signature, batas byte dan folder existing; upload
+> terpisah dari Sheet save/hooks. Export action media bertoken hanya membaca
+> referensi Projects aktif. Browser tidak mendapat token export atau ID Drive.
+> Cache diperiksa hash/decode; missing/corrupt refetch bounded. Kegagalan media
+> menggagalkan build sebelum snapshot baru. Tidak memakai stale media fallback.
 
 `npm run verify:cms-media` memakai fixture HTTP di static dist, tidak mengubah
 snapshot atau reference geometry. Sharp berjalan server/build, tidak di browser.

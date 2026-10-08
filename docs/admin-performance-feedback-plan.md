@@ -800,3 +800,20 @@ vercel.app`; provider READY **08 Oct 2026 14:31:49.984 UTC / 21:31:49.984 WIB**
 stats,recruitment/applications}` anonymous 401; `/api/recruitment/application`
 `{ok:true,accepting:true}`. Izin `pyush` consumed; tidak ada SQL/env/provider/
 content/hook mutation. Deployed `a9da4ff`; checkpoint docs sesudah ini lokal saja.
+
+### 23.2 Fix upload foto admin (Team & Projects) — 8 Oct 2026
+
+Owner lapor upload foto Team gagal (“Foto belum berhasil diupload…”). Audit:
+`server/cms-media.mjs` tak berubah sejak `2a22d8a` (bukan regresi perf); bucket
+`cms-media/team` berisi 2 object (12:53/12:57 UTC) → upload pernah sukses. Server
+sengaja ketat: ≤2 MB input, ≤16 MP decode, raster only, WebP ≤256 KiB; pesan
+klien generik menutupi penyebab (400 normalisasi vs 502 Storage). Fix lokal→LIVE
+`bd9a424eee0029a6748ac229d0175077324d9bf4`: helper browser
+`src/scripts/admin-image.js` mengecilkan/kompres foto >16 MP atau >2 MB sebelum
+upload (Team + Projects), pesan error spesifik, fallback resize tambahan
+800×600/640×480/480×360, dan Storage `x-upsert: true`. Batas keamanan server
+tetap. QA: build0err/23pages; `test:cms` 94 PASS + 10 SKIP/0 FAIL; mock Team+
+Projects 320/390/768/1440 PASS termasuk 20 MP→berhasil; snapshot tetap; publik
+byte-identik; secrets 0. **Owner live upload foto Team belum diuji ulang** pasca
+fix; minta acceptance/screenshot baru. Detail [SOP §8](cms-sop.md), [Team
+setup](cms-team-setup.md), [Projects media plan](cms-projects-media-plan.md).

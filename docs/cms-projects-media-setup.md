@@ -50,7 +50,8 @@ EXISTING yang sudah terpasang. Jangan buat project, folder atau spreadsheet baru
 Buka [admin production](https://data-sorcerers-community-sigma.vercel.app/admin/)
 atau [admin testing](https://web-testing-azure.vercel.app/admin/), login owner.
 
-1. Tambah project sementara, pilih file JPG/PNG/WebP <=2 MB. Preview harus muncul;
+1. Tambah project sementara, pilih file JPG/PNG/WebP (foto >16 MP atau >2 MB
+   otomatis dikecilkan di browser sejak `bd9a424`). Preview harus muncul;
    pesan gambar siap berarti upload tersimpan, bukan project sudah diterbitkan.
 2. Isi judul/deskripsi/dua kategori, lalu Simpan dan terbitkan. Tunggu kedua
    deployment baru SUCCESS. Pastikan gambar tampil di Home dan Hall of Frames

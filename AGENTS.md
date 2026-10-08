@@ -1,5 +1,36 @@
 # AGENTS.md — instructions for AI agents
 
+## Fix upload foto/gambar admin (Team & Projects) — QA PASS (8 Oct 2026)
+
+Owner lapor gagal ganti foto Team dengan pesan “Foto belum berhasil diupload.
+Periksa format dan ukuran, lalu coba lagi.” **Bukan regresi deploy perf**: kode
+media terakhir berubah `2a22d8a`; bucket `cms-media/team` malah sudah punya 2
+object (12:53/12:57 UTC) → jalur upload pernah sukses. Server memang sengaja
+ketat, dan pesan klien menyamarkan semua penyebab jadi satu kalimat. Penyebab
+yang mungkin: input >16 MP, output normalisasi >256 KiB, format/MIME mismatch/
+animasi, atau gambar identik sudah ada (Storage POST tanpa `x-upsert` → 502).
+Tanpa sesi owner/response aktual, exact cause tidak bisa dipin; usage API
+menunjukkan attempt kemungkinan berhenti **sebelum** Storage (domain 400).
+
+Fix lokal→LIVE `bd9a424eee0029a6748ac229d0175077324d9bf4`:
+
+- [`src/scripts/admin-image.js`](src/scripts/admin-image.js) baru: browser
+  mengecilkan/kompres foto >16 MP atau >2 MB (`createImageBitmap` + canvas →
+  WebP/JPEG) sebelum upload; dipakai `cms-team-editor.js` + `cms-admin-editor.js`.
+- Pesan error spesifik: tipe/size/decode dan `INVALID_INPUT` vs generic.
+- `server/cms-media.mjs`: fallback resize tambah 800×600/640×480/480×360 agar
+  detail tinggi tetap ≤256 KiB.
+- `server/cms-admin.mjs`: Storage upload pakai `x-upsert: true` (content-addressed
+  → re-upload identik idempoten).
+- Batas keamanan server **tidak dilonggarin** (≤2 MB input, ≤16 MP, raster only,
+  animasi ditolak). Test `tests/cms-media.test.mjs` menambahkan assertion upsert.
+
+QA Node22.23.0 `CMS_DATA_SOURCE=local`: build 0 error/23 pages; `test:cms` **94
+PASS + 10 Team SKIP / 0 FAIL**; mock Team + Projects PASS 320/390/768/1440
+termasuk kasus **20 MP → dikecilkan lalu berhasil**; snapshot `4345f1…4857` tetap;
+hanya HTML admin berubah (publik byte-identik); dist secrets 0. Owner live upload
+foto Team **belum diuji ulang** pasca-fix — minta acceptance/screenshot baru.
+
 ## Dashboard performance/loading/feedback — LIVE + QA PASS (8 Oct 2026)
 
 Faiz authorize kickoff A–D lokal lalu `pyush`. Implementasi+QA selesai dan

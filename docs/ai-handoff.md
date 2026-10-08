@@ -1,5 +1,27 @@
 # AI handoff — current context
 
+## Fix upload foto/gambar admin (Team & Projects) — QA PASS (8 Oct 2026)
+
+Owner lapor gagal ganti foto Team (“Foto belum berhasil diupload…”). Bukan
+regresi deploy perf: `server/cms-media.mjs` terakhir berubah `2a22d8a`; bucket
+`cms-media/team` sudah ada 2 object (12:53/12:57 UTC). Server sengaja ketat
+(≤2 MB input, ≤16 MP, raster only, ≤256 KiB output); pesan klien menyamarkan
+penyebab. Usage API → attempt kemungkinan berhenti sebelum Storage (domain 400).
+
+Fix `bd9a424eee0029a6748ac229d0175077324d9bf4`:
+
+- `src/scripts/admin-image.js` (baru): kecilkan/kompres di browser (>16 MP atau
+  > 2 MB) sebelum upload; dipakai Team + Projects editor.
+- Pesan error spesifik (tipe/size/decode/INVALID_INPUT).
+- `server/cms-media.mjs`: fallback 800×600/640×480/480×360.
+- `server/cms-admin.mjs`: Storage `x-upsert: true` (re-upload identik aman).
+- Batas server tetap; `tests/cms-media.test.mjs` cek upsert.
+
+QA Node22 `CMS_DATA_SOURCE=local`: build0err/23pages; `test:cms` 94 PASS + 10 SKIP
+/0 FAIL; mock Team+Projects 320/390/768/1440 PASS termasuk 20 MP→berhasil;
+snapshot `4345f1…4857`; publik byte-identik; secrets 0. Live owner upload belum
+diuji ulang.
+
 ## Dashboard performance/loading/feedback — LIVE + QA PASS (8 Oct 2026)
 
 Faiz authorize kickoff A–D lokal lalu `pyush`. Implementasi+QA selesai dan

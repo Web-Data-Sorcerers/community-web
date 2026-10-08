@@ -85,8 +85,11 @@ Kontrak gambar `/images/cms/projects/<sha256>.webp`, tanpa ID/URL Drive di
 snapshot. Input JPG/PNG/WebP <=2 MB, max16 MP, tanpa animasi. sharp existing
 versi yang sama dipindah ke runtime server (bukan library UI/browser baru):
 orientasi, strip metadata, WebP <=256 KiB, max1600×1200 dengan fallback resize
-1280×960/960×720. Media tersimpan deterministik di folder existing; upload
-tidak memicu hook atau mengubah Sheet. Save menggunakan reference tervalidasi.
+1600×1200/1280×960/960×720/800×600/640×480/480×360. Upload Storage pakai
+`x-upsert: true`; browser mengecilkan foto >16 MP/>2 MB sebelum upload
+(`src/scripts/admin-image.js`, fix `bd9a424`). Media tersimpan deterministik di
+folder existing; upload tidak memicu hook atau mengubah Sheet. Save menggunakan
+reference tervalidasi.
 
 Export action media read-only bertoken hanya untuk referensi Projects aktif.
 Prebuild memeriksa hash/decode cache dan mengambil media privat bila missing/
