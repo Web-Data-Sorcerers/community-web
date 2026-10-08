@@ -1,5 +1,32 @@
 # CMS Supabase-only build dan pensiun GAS — Master Work Plan
 
+## GAS code cleanup LIVE e59abde — 8 Oct 2026
+
+Faiz (`push`) approved exact e59abde7b16766646bc2f40dd5169cafe0bbd92a;
+one origin/main push to community-web completed, approval consumed. Production
+Current+primaryalias READY exact SHA dpl_A3GRRJ44rnycsCwiSe9QrW5KQmBc; provider
+READY8Oct2026 08:44:16.015UTC/15:44:16.015WIB. Workspace probe clock separate.
+Main/origin/main/production/main synced e59abde before this local docs checkpoint.
+Actual build prebuild/remote Supabase snapshot/23pages PASS; no env mutation.
+
+Public19/19HTML exact;5anonymous admin endpoints401; recruitment accepting:true.
+Three admin login shells390/1440 (6cases) PASS, menu/forms/passwordempty/nooverflow,
+0pageerrors. Fresh read-only DB4Projects, grant1active, applications0/media0;
+Projects/Team/recruitment fingerprints unchanged8a7d4624d896842800dfd191892df7a8/
+b867f2890c939b410e3e428259082883/2a36dbfe696b9406baabd0cd4de9fb6f.
+No new owner login/read/write/positive live media acceptance claimed; unified
+owner/intake acceptance00ac70a retained, local native/media/auth coverage PASS.
+
+GAS code/tooling removed in deployed commit;6content collections/CRUD/media/
+auth/shared admin/recruitment use Supabase. Google resources and legacy env remain
+unchanged; owner clarified code-only scope, no further Google manual task needed.
+No archive/delete/hook/fixture/SQL/grant/provider/bucket/content action performed.
+Local backup tag and encrypted backups retained. Source-code cleanup deployed,
+not a claim that all Google resources or old Vercel env were deleted.
+Proof ignored code-cleanup/{push-deployment,push-build-proof,push-public,
+admin-anonymous-shells,push-state,qa-summary}.json. Checkpoint docs local only;
+next push, including docs, requires new exact SHA approval. No pending code task.
+
 ## Work order aktif — hapus GAS dari kode saja (8 Oct 2026)
 
 Owner clarified "di codingan kita, abaikan aja gas ibarat udah gada sama sekali".
