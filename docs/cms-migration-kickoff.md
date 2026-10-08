@@ -1,5 +1,16 @@
 # CMS → Supabase — kickoff aktif untuk AI baru
 
+## Actual Export Code.gs backed up — 8 Oct 2026
+
+Owner pasted44676bytes/1313lines Export source into encrypted local collector.
+Authenticated decrypt/file600/JavaScript syntax compile PASS;6required export/media
+functions +CMS_SEED present. Source SHA256425e2c6af4b58f93f947a127bdde0397f54d1e3e1cbb309eb733f0573613fa07.
+Actual copied source not byte/token-identical to tracked exporter+media; retain
+actual backup, do not replace it with generated repo source or claim equality.
+Source compiled only, never executed. Deployed version equality still unverified.
+NEXT Export appsscript.json via source form, then Admin code/HTML/manifest/Properties
+and exact deployed IDs/versions/ownership. No live changes/push. Proof f1/export-code-proof.json.
+
 ## Drive archive backed up — 8 Oct 2026
 
 Owner uploaded39714byte Drive ZIP; decrypt/file600/ZIP CRC/path safety PASS.

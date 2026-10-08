@@ -213,3 +213,14 @@ Only owned collector process restarted; existing encrypted archives retained.
 NEXT owner copy actual Export Code.gs into local form (export-code), then
 manifest/Admin code/HTML/manifest/Properties + deployed version/resource inventory.
 No resource/env/content/SQL/grant mutation, hook, deploy or push. Proof f1/drive-proof.json.
+
+## Actual Export Code.gs backed up — 8 Oct 2026
+
+Owner pasted44676bytes/1313lines Export source into encrypted local collector.
+Authenticated decrypt/file600/JavaScript syntax compile PASS;6required export/media
+functions +CMS_SEED present. Source SHA256425e2c6af4b58f93f947a127bdde0397f54d1e3e1cbb309eb733f0573613fa07.
+Actual copied source not byte/token-identical to tracked exporter+media; retain
+actual backup, do not replace it with generated repo source or claim equality.
+Source compiled only, never executed. Deployed version equality still unverified.
+NEXT Export appsscript.json via source form, then Admin code/HTML/manifest/Properties
+and exact deployed IDs/versions/ownership. No live changes/push. Proof f1/export-code-proof.json.
