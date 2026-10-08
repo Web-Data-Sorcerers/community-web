@@ -1,5 +1,66 @@
 # AGENTS.md — instructions for AI agents
 
+## Team photo fit — LOKAL, QA PASS (8 Oct 2026)
+
+Owner screenshot meminta foto upload otomatis pas di kartu. Existing uploaded
+photo memakai offset potret transparan-42px pada row overflow visible. Selector
+uploaded kini top0/width100%/height100%, cover center dan radius inherit:
+foto portrait/landscape/square mengisi kartu302×400 tanpa stretch/bleed. Crop
+tepi proporsional, bukan deteksi wajah. Preset transparan dan layout/reference
+existing tetap. Master plan [Team photo fit](docs/team-photo-fit-plan.md).
+Tidak CMS/Team/media live write, SQL/env/provider/hook/push. Production tetap
+14e62af READY/recruitment OPEN/accepted. Perubahan UI ini belum deployed;
+Node22.23.0 QA:24 synthetic fit cases/4widths/leader+HoDS PASS; baseline
+Team pixels exact/snapshot unchanged/pageerrors0, build0errors/23pages,
+7gates+SEO PASS/responsive468/468/spacing39. Actual owner photo upload/live
+acceptance tidak diuji ulang. Commit lokal; exact SHA push perlu izin baru.
+
+## Workflow LIVE14e62af — accepted dan fixture cleaned (8 Oct 2026)
+
+Implementasi A–D lokal selesai; migration additive sudah applied pada existing
+Supabase web-community/yejrdckcmlxrkklgtrwy. Production Current+primaryalias READY
+exact `14e62aff1614436b9d9a90a359b3f2800b4a6f23`, deployment
+`dpl_GadJRkTnfiRe2QeZKCzknKrBAJcX`; provider READY
+**08 Oct 2026 12:24:06.468 UTC /19:24:06.468 WIB**. Fresh post-cleanup checks
+confirm exact deployment, recruitment **OPEN**, public19/19HTML byte exact,
+Projects4/apps0/media0 and content/grant/allowlist fingerprints unchanged.
+
+Fresh actual owner login200/shared Projects+Team+Pendaftar GET200/refresh200;
+authenticated workflow GET stats/list/detail/notes/history accepted. Approved
+exact synthetic fixture scope (`okee terus?`) executed **12/12 POST**:
+real public form submit+identical retry2, status transitions5 including accepted
+and reopening, append-only notes2, exact successful-note replay1, concurrent
+same-version writes2. Intake produced one applicant; replay had one effect;
+race returned200/409 and one winning effect, final version8/status shortlisted,
+notes2/events8. Every verified step preserved all38 canonical answers/hash and
+received metadata. Trusted actor/CMS permission/recruitment allowlist and
+Origin+CSRF remained enforced; no bypass or new reviewer account.
+
+Actual authenticated UI390/1440 PASS:24 nonblank/array answer fields displayed
+(existing blank-field omission), API/DB all38 exact, notes2/history8,
+no overflow/pageerrors0/password empty and script-like note text safely rendered.
+Guarded exact receipt/hash/38fields/actor/request/child ledger cleanup committed:
+events8→notes2→review1→application1 deleted. Fixture absent in DB/API; other
+applicant count/fingerprint unchanged, read-audit preserved. Global logout200,
+private UI cleared and8anonymous admin endpoints401. Both isolated browser
+contexts closed; owned loopback helper4393 stopped. No credentials/cookies/CSRF
+or real applicant payload persisted in docs/artifacts.
+
+Checkpoint states: plan proposals documented; local implementation/QA complete;
+migration applied; feature+routing fix deployed; positive owner/workflow acceptance
+**accepted** with synthetic fixture cleaned. Original local fullQA remains
+CMS94PASS+10Team liveSKIP, recruitment39PASS, workflow PostgreSQL142/intake13,
+7gates+SEO, four-width Native/Team/workflow mocks, snapshot/public parity and
+secrets0. Routing regression QA42 recruitment+9auth PASS is distinct from that
+full baseline; actual live acceptance above supplies owner/fixture proof.
+
+No further SQL/Auth/grant/allowlist/env/provider/CMS/Team/content/hook/Google
+mutation or push. Exact14e62af push approval consumed. This post-acceptance docs
+checkpoint is LOCAL ONLY, not pushed. Proof ignored
+artifacts/recruitment-review/{live-workflow-proof,owner-session-proof}.json and
+route-fix-release/{acceptance-final-state,push-deployment,push-public}.json.
+Historical sections below describe previous checkpoints, not current pending work.
+
 ## Login owner berhasil; GET workflow perlu routing fix lokal (8 Oct 2026)
 
 Faiz approved exact12POST+guardedfixturecleanup (`okee terus?`). Actual login via

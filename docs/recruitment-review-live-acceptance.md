@@ -1,5 +1,53 @@
 # Workflow live acceptance — fixture konkret
 
+## Workflow LIVE14e62af — accepted dan fixture cleaned (8 Oct 2026)
+
+Implementasi A–D lokal selesai; migration additive sudah applied pada existing
+Supabase web-community/yejrdckcmlxrkklgtrwy. Production Current+primaryalias READY
+exact `14e62aff1614436b9d9a90a359b3f2800b4a6f23`, deployment
+`dpl_GadJRkTnfiRe2QeZKCzknKrBAJcX`; provider READY
+**08 Oct 2026 12:24:06.468 UTC /19:24:06.468 WIB**. Fresh post-cleanup checks
+confirm exact deployment, recruitment **OPEN**, public19/19HTML byte exact,
+Projects4/apps0/media0 and content/grant/allowlist fingerprints unchanged.
+
+Fresh actual owner login200/shared Projects+Team+Pendaftar GET200/refresh200;
+authenticated workflow GET stats/list/detail/notes/history accepted. Approved
+exact synthetic fixture scope (`okee terus?`) executed **12/12 POST**:
+real public form submit+identical retry2, status transitions5 including accepted
+and reopening, append-only notes2, exact successful-note replay1, concurrent
+same-version writes2. Intake produced one applicant; replay had one effect;
+race returned200/409 and one winning effect, final version8/status shortlisted,
+notes2/events8. Every verified step preserved all38 canonical answers/hash and
+received metadata. Trusted actor/CMS permission/recruitment allowlist and
+Origin+CSRF remained enforced; no bypass or new reviewer account.
+
+Actual authenticated UI390/1440 PASS:24 nonblank/array answer fields displayed
+(existing blank-field omission), API/DB all38 exact, notes2/history8,
+no overflow/pageerrors0/password empty and script-like note text safely rendered.
+Guarded exact receipt/hash/38fields/actor/request/child ledger cleanup committed:
+events8→notes2→review1→application1 deleted. Fixture absent in DB/API; other
+applicant count/fingerprint unchanged, read-audit preserved. Global logout200,
+private UI cleared and8anonymous admin endpoints401. Both isolated browser
+contexts closed; owned loopback helper4393 stopped. No credentials/cookies/CSRF
+or real applicant payload persisted in docs/artifacts.
+
+Checkpoint states: plan proposals documented; local implementation/QA complete;
+migration applied; feature+routing fix deployed; positive owner/workflow acceptance
+**accepted** with synthetic fixture cleaned. Original local fullQA remains
+CMS94PASS+10Team liveSKIP, recruitment39PASS, workflow PostgreSQL142/intake13,
+7gates+SEO, four-width Native/Team/workflow mocks, snapshot/public parity and
+secrets0. Routing regression QA42 recruitment+9auth PASS is distinct from that
+full baseline; actual live acceptance above supplies owner/fixture proof.
+
+No further SQL/Auth/grant/allowlist/env/provider/CMS/Team/content/hook/Google
+mutation or push. Exact14e62af push approval consumed. This post-acceptance docs
+checkpoint is LOCAL ONLY, not pushed. Proof ignored
+artifacts/recruitment-review/{live-workflow-proof,owner-session-proof}.json and
+route-fix-release/{acceptance-final-state,push-deployment,push-public}.json.
+Historical sections below describe previous checkpoints, not current pending work.
+
+## Historical preparation and approval scope
+
 Prepared 8 Oct 2026; no live fixture mutation executed. Production READY exact
 `e3fa488f9a20544439779987974fc8e232178f00`, deployment
 `dpl_BNKYG3xmg5ANjWe8LH4XZ66ct9hh`; primary alias
@@ -49,23 +97,12 @@ recruitment closure, messages, real applicant export or Google actions. No new p
 
 ## Current checkpoint
 
-Prepared local; Faiz approved the exact12POST+guarded cleanup scope with
-`okee terus?` after the concrete proposal. No fixture mutation executed.
-Initial agent browser tab2 opened as an anonymous login shell. The local helper
-subsequently performed a real owner login (HTTP200), clearing password. Projects/
-Team GET200; recruitment stats GET400 while equivalent POST stats200. The diagnostic helper later exited; its memory-only session was lost.
-No fixture executed. New secure owner login is required after routing fix deployment.
-No password, cookies or CSRF are stored in artifacts.
-The owner personal browser session is separate from the agent browser.
-Local loopback login helper at http://127.0.0.1:4393 uses the actual production
-login UI in an isolated browser context; password/email/cookies/CSRF remain in
-process/context memory only, no storageState/HAR/trace/credential artifacts.
-Login alone performs shared module reads and refresh, not fixture mutations.
-Positive live workflow acceptance pending; GET routing fix required before fixture; no fixture submit/status/note/race/retry/
-cleanup has run. Exact12POST+guarded cleanup scope is approved; execution awaits routing fix
-deployment and new secure owner session.
+Accepted on LIVE14e62af; approved12POST and guarded cleanup completed exactly as
+recorded in the current checkpoint above. Synthetic fixture absent, other data
+unchanged, sessions logged out, loopback helper stopped. No remaining owner login
+or fixture execution task for this scope. No new push authorization.
 
-## Owner login diagnostic and local fix
+## Historical owner login diagnostic and local fix
 
 The local helper waited for read-only validation after a successful login. Its
 recruitment GET stats check returned400 INVALID_INPUT; POST stats with the same

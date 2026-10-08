@@ -1,5 +1,20 @@
 # Page Full-Screen Migration Plan — Hero Gambar + Section 100svh
 
+## Team photo fit — LOKAL, QA PASS (8 Oct 2026)
+
+Owner screenshot meminta foto upload otomatis pas di kartu. Existing uploaded
+photo memakai offset potret transparan-42px pada row overflow visible. Selector
+uploaded kini top0/width100%/height100%, cover center dan radius inherit:
+foto portrait/landscape/square mengisi kartu302×400 tanpa stretch/bleed. Crop
+tepi proporsional, bukan deteksi wajah. Preset transparan dan layout/reference
+existing tetap. Master plan [Team photo fit](team-photo-fit-plan.md).
+Tidak CMS/Team/media live write, SQL/env/provider/hook/push. Production tetap
+14e62af READY/recruitment OPEN/accepted. Perubahan UI ini belum deployed;
+Node22.23.0 QA:24 synthetic fit cases/4widths/leader+HoDS PASS; baseline
+Team pixels exact/snapshot unchanged/pageerrors0, build0errors/23pages,
+7gates+SEO PASS/responsive468/468/spacing39. Actual owner photo upload/live
+acceptance tidak diuji ulang. Commit lokal; exact SHA push perlu izin baru.
+
 ## Pengelolaan pendaftar — admin custom lokal (8 Oct 2026)
 
 UI existing /admin/recruitment/ diperluas dalam authorized A–D lokal: filter/list/

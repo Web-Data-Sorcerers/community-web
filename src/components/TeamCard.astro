@@ -142,9 +142,13 @@ const uploaded = photo.startsWith('/images/cms/team/');
   }
 
   .team-card-photo.is-uploaded {
-    top: -42px;
-    height: 442px;
+    /* Regular photos fill the card; only baked cutout presets bleed above it. */
+    top: 0;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
+    object-position: center;
+    border-radius: inherit;
   }
 
   .team-card-fade {
