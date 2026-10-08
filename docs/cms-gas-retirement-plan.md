@@ -1,5 +1,19 @@
 # CMS Supabase-only build dan pensiun GAS — Master Work Plan
 
+## F1 inventory checkpoint pushed4313544 — 8 Oct 2026
+
+Faiz (`psuh`) approved checkpoint43135447343c3e00c1babf746d72999557063c99.
+Satu push origin/main/community-web selesai; izin consumed. Current+primaryalias
+READY exactSHA dpl_HQcjAPnnohQCR9oYw8V432vnrda1; provider05:45:09.110UTC/
+12:45:09.110WIB8Oct2026 (workspace clock terpisah). Prebuild/remote/23pages PASS.
+Public19/19HTML exact; anonymous5admin endpoints401; recruitment OPEN tetap.
+Docs-only deploy; F1 backup parsial dan Google dependency di bawah tetap berlaku.
+Google tab5 masih sign-in pada fresh check; tidak ada resource/env/SQL/grant/
+content mutation, hook, fixture, cleanup code atau push tambahan.
+NEXT owner Google login → full secure backup/ownership → observasi dan approval
+exact retirement targets+rebuild. Catatan verifikasi sesudah push lokal saja.
+Proof ignored artifacts/admin-unified/f1-push-{deployment,build-proof,public}.json.
+
 ## GAS retirement F1 — audit dan backup parsial (8 Oct 2026)
 
 Faiz mengaktifkan next retirement (`gassssss broooo`). Read-only actual inventory
