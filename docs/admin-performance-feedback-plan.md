@@ -731,3 +731,59 @@ only live-specific gate requires concrete approval when not already granted.
 Planning execution ledger (this pass): §1–22 and kickoff prepared, source audit
 verified, docs-only formatting/links/diff check. Performance implementation not
 started; no baseline timing claimed, no live reads/writes/deployment/push/SQL/env.
+
+## 23. Execution ledger — A–D LOKAL (8 Oct 2026)
+
+Owner menyalin kickoff authorize A–D lokal. Implementasi+QA lokal selesai;
+**local only, belum commit/push/deploy** pada saat ledger ditulis.
+
+Local SHA baseline: `b377e1c` (di atas `5c56f0d` foto Team & plan docs);
+deployed terakhir tetap `14e62af`. File berubah: `src/scripts/admin-request.js`
+(baru), `src/scripts/recruitment-admin.js`, `src/scripts/cms-team-editor.js`,
+`src/scripts/cms-admin-editor.js`, `scripts/verify-recruitment-review.mjs`.
+
+Delivered:
+
+- **C1 transport**: `createTransport` bounded same-origin fetch, klasifikasi
+  success/rejected/unauthorized/not_found/conflict/server/malformed/network/
+  timeout/cancelled, read deadline15s, slow-notice3s, abort per generation;
+  caller contract lama (`ok`/`http`/`error`) dipertahankan.
+- **B1 Pendaftar startup**: bootstrap GET `applications` (validasi sealed session
+  - CSRF dari response) → 1 filtered `stats` dengan `as_of` list; stats bootstrap
+    duplikat dihapus. Request budget lokal: **3→2 private read**. Tabel dirender
+    sebelum stats.
+- **B2 detail/save**: detail ready sebelum notes/history; panel notes/history
+  independen dengan error partial + retry via Muat detail terbaru; mutation ack
+  authoritative tampil segera, `revisionPending` menahan write control sampai
+  reconcile background (list/stats/detail) selesai; 409/unknown/retry-same-UUID
+  dipertahankan.
+- **C2/C3**: Team & Projects `setBusy` global → scopes
+  read/mutation/upload/publication/logout; nav guard draft; add/delete/retry
+  hanya terkunci pada scope relevan.
+- **D1**: 401/403 tetap fail-closed clear (UNAUTHORIZED code existing); nav guard
+  draft ditambahkan ke Team/Projects.
+- Skeletons/`aria-busy` untuk tabel & stats Pendaftar; placeholder tanpa PII.
+
+QA (Node22.23.0, `CMS_DATA_SOURCE=local`, clean env): `test:cms` 104 run
+(94 PASS + 10 Team live SKIP, 0 FAIL); `test:recruitment` 42 PASS; browser mock
+`verify:recruitment-review` (GET-first + 2-read assertion + ack-before-secondary)
+/`verify:cms-native-admin`/`verify:cms-team-admin` 320/390/768/1440 PASS;
+`verify.mjs`, `navbar-audit`, `responsive-audit` 468/468, `audit:spacing`,
+`seo:audit`, `format:check` PASS; snapshot `4345f1abe445aa2a400c31413ccc0587
+07a77105a7e388dc8d1074e78da94857` tetap; 20 HTML non-admin byte-identik pre/post
+(hanya 3 HTML admin berubah); dist48textfiles secrets0.
+
+Limitations (jujur):
+
+- `verify-vt` exit non-zero karena pageerror `Transition was skipped.
+skipTransition() called` pada history back/forward; dibuktikan **juga muncul
+  pada baseline HEAD** (`b377e1c`, `git stash` build) → environmental, bukan
+  regresi A–D. Public HTML/JS bytes identik.
+- Target 100ms feedback / 1–2s data **belum diukur live**; mock menuntukkan
+  sequencing & request-count, bukan latency Supabase nyata. `scripts/verify-
+admin-performance.mjs` (runner p50/p95) belum dibuat.
+- E backend/SQL/region/combined-RPC tetap proposal; tidak ada perubahan server,
+  RPC, ACL, audit, migration, env atau dependency.
+
+Live gates tetap: push butuh izin exact HEAD SHA baru (izin14e62af consumed);
+owner read-only timing & fixture/cleanup mutation perlu approval konkret baru.

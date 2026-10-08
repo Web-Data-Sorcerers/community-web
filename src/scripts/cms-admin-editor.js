@@ -3,8 +3,15 @@
   const form = byId('project-form');
   let state;
   let selected;
-  let busy = false;
   let dirty = false;
+  const scopes = {
+    read: false,
+    mutation: false,
+    upload: false,
+    publication: false,
+    logout: false,
+  };
+  const locked = () => scopes.read || scopes.mutation;
   const errors = {
     UNAUTHORIZED:
       'Masuk dengan akun owner untuk mengelola Projects. Perubahan formulir belum disimpan.',
@@ -26,20 +33,36 @@
     byId('status').textContent = text;
     byId('status').dataset.error = String(error);
   };
-  const setBusy = (value) => {
-    busy = value;
-    byId('fields').disabled = value;
-    document.querySelectorAll('button').forEach((button) => {
-      button.disabled = value;
-    });
-    byId('workspace').setAttribute('aria-busy', String(value));
+  const setScope = (name, value) => {
+    scopes[name] = value;
+    applyBusy();
+  };
+  const applyBusy = () => {
+    const writeLocked = locked();
+    byId('fields').disabled = writeLocked || scopes.upload;
+    byId('image-upload').disabled = writeLocked || scopes.upload;
+    byId('save').disabled = writeLocked || scopes.upload;
     byId('add').disabled =
-      value || !state || state.projects.length >= state.maxProjects;
+      writeLocked ||
+      scopes.upload ||
+      !state ||
+      state.projects.length >= state.maxProjects;
     byId('delete').disabled =
-      value ||
+      writeLocked ||
+      scopes.upload ||
       !selected ||
       !state ||
       state.projects.length <= state.minProjects;
+    byId('retry').disabled = writeLocked || scopes.publication;
+    byId('reload').disabled = scopes.read;
+    byId('logout').disabled = scopes.logout || scopes.mutation;
+    document
+      .querySelectorAll('.project-choice')
+      .forEach((choice) => (choice.disabled = writeLocked || scopes.upload));
+    byId('workspace').setAttribute(
+      'aria-busy',
+      String(writeLocked || scopes.upload),
+    );
   };
   let csrf;
   const preview = () => {
@@ -109,7 +132,8 @@
   };
   const choose = (id) => {
     if (
-      busy ||
+      locked() ||
+      scopes.upload ||
       (dirty &&
         !window.confirm(
           'Perubahan belum disimpan. Pindah project dan abaikan perubahan?',
@@ -125,7 +149,6 @@
       image: state.imagePresets[0],
     };
     byId('editor-title').textContent = id ? 'Isi project' : 'Project baru';
-    setBusy(false);
     byId('title').value = record.title;
     byId('description').value = record.description;
     byId('tag-one').value = record.tags[0];
@@ -138,6 +161,7 @@
       .forEach((button) =>
         button.setAttribute('aria-current', String(button.dataset.id === id)),
       );
+    applyBusy();
   };
   const render = () => {
     byId('project-list').replaceChildren();
@@ -178,15 +202,13 @@
     );
   };
   const load = async () => {
+    if (locked() || scopes.read) return;
     if (
-      busy ||
-      (dirty &&
-        !window.confirm(
-          'Muat ulang dan abaikan perubahan yang belum disimpan?',
-        ))
+      dirty &&
+      !window.confirm('Muat ulang dan abaikan perubahan yang belum disimpan?')
     )
       return;
-    setBusy(true);
+    setScope('read', true);
     message('Memuat projects…');
     try {
       const result = await rpc('adminLoadProjects');
@@ -197,7 +219,7 @@
       }
       state = result.data;
       dirty = false;
-      setBusy(false);
+      setScope('read', false);
       render();
       byId('reload').hidden = true;
       byId('retry').hidden = !state.publicationPending;
@@ -213,13 +235,13 @@
       );
       byId('reload').hidden = false;
     } finally {
-      setBusy(false);
+      setScope('read', false);
     }
   };
   byId('image').addEventListener('change', preview);
   byId('image-upload').addEventListener('change', async () => {
     const file = byId('image-upload').files[0];
-    if (!file || busy) return;
+    if (!file || locked() || scopes.upload) return;
     if (
       file.size > 2 * 1024 * 1024 ||
       !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)
@@ -228,7 +250,7 @@
       byId('image-upload').value = '';
       return;
     }
-    setBusy(true);
+    setScope('upload', true);
     message('Mengupload gambar…');
     try {
       const response = await fetch('/api/admin/media', {
@@ -273,7 +295,7 @@
       );
     } finally {
       byId('image-upload').value = '';
-      setBusy(false);
+      setScope('upload', false);
     }
   });
   form.addEventListener('input', () => {
@@ -284,7 +306,7 @@
   });
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    if (busy || !form.reportValidity()) return;
+    if (locked() || !form.reportValidity()) return;
     const project = {
       ...(selected ? { id: selected } : {}),
       title: byId('title').value,
@@ -292,7 +314,7 @@
       tags: [byId('tag-one').value, byId('tag-two').value],
       image: byId('image').value,
     };
-    setBusy(true);
+    setScope('mutation', true);
     message('Menyimpan dan meminta penerbitan…');
     try {
       const result = await rpc(
@@ -310,7 +332,7 @@
       state = result.data;
       selected = result.data.affectedId;
       dirty = false;
-      setBusy(false);
+      setScope('mutation', false);
       render();
       byId('reload').hidden = true;
       publicationMessage(result.data.publication, true);
@@ -321,11 +343,11 @@
       );
       byId('reload').hidden = false;
     } finally {
-      setBusy(false);
+      setScope('mutation', false);
     }
   });
   byId('add').addEventListener('click', () => {
-    if (busy || state.projects.length >= state.maxProjects) return;
+    if (locked() || state.projects.length >= state.maxProjects) return;
     choose(null);
     if (selected === null) {
       dirty = true;
@@ -333,7 +355,8 @@
     }
   });
   byId('delete').addEventListener('click', async () => {
-    if (busy || !selected || state.projects.length <= state.minProjects) return;
+    if (locked() || !selected || state.projects.length <= state.minProjects)
+      return;
     const record = state.projects.find((project) => project.id === selected);
     if (
       !window.confirm(
@@ -341,7 +364,7 @@
       )
     )
       return;
-    setBusy(true);
+    setScope('mutation', true);
     message('Menghapus dan meminta penerbitan…');
     try {
       const result = await rpc('adminDeleteProject', {
@@ -355,7 +378,7 @@
       }
       state = result.data;
       dirty = false;
-      setBusy(false);
+      setScope('mutation', false);
       render();
       byId('reload').hidden = true;
       publicationMessage(result.data.publication, true);
@@ -367,12 +390,12 @@
       );
       byId('reload').hidden = false;
     } finally {
-      setBusy(false);
+      setScope('mutation', false);
     }
   });
   byId('retry').addEventListener('click', async () => {
-    if (busy) return;
-    setBusy(true);
+    if (locked() || scopes.publication) return;
+    setScope('publication', true);
     message('Meminta penerbitan ulang…');
     try {
       const result = await rpc('adminRetryPublication');
@@ -382,7 +405,7 @@
     } catch (_error) {
       message('Koneksi terputus. Coba terbitkan lagi.', true);
     } finally {
-      setBusy(false);
+      setScope('publication', false);
     }
   });
   byId('reload').addEventListener('click', load);
@@ -392,14 +415,27 @@
       event.returnValue = '';
     }
   });
+  document
+    .querySelectorAll('.admin-navigation a, .auth-actions a')
+    .forEach((link) =>
+      link.addEventListener('click', (event) => {
+        if (
+          dirty &&
+          !window.confirm(
+            'Perubahan belum disimpan. Tinggalkan halaman dan abaikan perubahan?',
+          )
+        )
+          event.preventDefault();
+      }),
+    );
   byId('logout').addEventListener('click', async () => {
+    if (locked() || scopes.logout) return;
     if (
-      busy ||
-      (dirty &&
-        !window.confirm('Keluar dan abaikan perubahan yang belum disimpan?'))
+      dirty &&
+      !window.confirm('Keluar dan abaikan perubahan yang belum disimpan?')
     )
       return;
-    setBusy(true);
+    setScope('logout', true);
     try {
       const response = await fetch('/api/admin/auth/logout', {
         method: 'POST',
@@ -422,7 +458,7 @@
     } catch {
       message('Koneksi terputus. Coba keluar lagi.', true);
     } finally {
-      setBusy(false);
+      setScope('logout', false);
     }
   });
   const loginForm = byId('login-form');
@@ -435,7 +471,7 @@
   byId('login').addEventListener('click', showLogin);
   loginForm.addEventListener('submit', async (event) => {
     event.preventDefault();
-    if (busy) return;
+    if (scopes.logout) return;
     const submit = byId('login-submit');
     const email = byId('login-email').value.trim();
     const password = byId('login-password').value;

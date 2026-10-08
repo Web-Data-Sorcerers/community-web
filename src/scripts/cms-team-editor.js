@@ -2,8 +2,15 @@
   const el = (id) => document.getElementById(id);
   const form = el('project-form');
   let state, selected, csrf;
-  let busy = false,
-    dirty = false;
+  let dirty = false;
+  const scopes = {
+    read: false,
+    mutation: false,
+    upload: false,
+    publication: false,
+    logout: false,
+  };
+  const locked = () => scopes.read || scopes.mutation;
   const messages = {
     UNAUTHORIZED:
       'Masuk dengan akun owner untuk mengelola Team. Formulir belum disimpan.',
@@ -24,22 +31,37 @@
     el('status').textContent = text;
     el('status').dataset.error = String(error);
   };
-  const setBusy = (value) => {
-    busy = value;
-    el('fields').disabled = value;
-    document.querySelectorAll('button').forEach((b) => (b.disabled = value));
-    el('workspace').setAttribute('aria-busy', String(value));
+  const setScope = (name, value) => {
+    scopes[name] = value;
+    applyBusy();
+  };
+  const applyBusy = () => {
+    const writeLocked = locked();
+    el('fields').disabled = writeLocked || scopes.upload;
+    el('image-upload').disabled = writeLocked || scopes.upload;
+    el('save').disabled = writeLocked || scopes.upload;
     el('add').disabled =
-      value ||
+      writeLocked ||
       !state ||
       state.groups.every(
         (g) => state.members.filter((m) => m.group === g.id).length >= 8,
       );
     const record = state?.members.find((m) => m.id === selected);
     el('delete').disabled =
-      value ||
+      writeLocked ||
+      scopes.upload ||
       !record ||
       state.members.filter((m) => m.group === record.group).length <= 1;
+    el('retry').disabled = writeLocked || scopes.publication;
+    el('reload').disabled = scopes.read;
+    el('logout').disabled = scopes.logout || scopes.mutation;
+    document
+      .querySelectorAll('.project-choice')
+      .forEach((choice) => (choice.disabled = writeLocked || scopes.upload));
+    el('workspace').setAttribute(
+      'aria-busy',
+      String(writeLocked || scopes.upload),
+    );
   };
   const expire = () => {
     el('workspace').hidden = true;
@@ -91,7 +113,8 @@
   };
   const choose = (id) => {
     if (
-      busy ||
+      locked() ||
+      scopes.upload ||
       (dirty &&
         !confirm(
           'Perubahan belum disimpan. Pindah anggota dan abaikan perubahan?',
@@ -121,7 +144,7 @@
       .forEach((b) =>
         b.setAttribute('aria-current', String(b.dataset.id === id)),
       );
-    setBusy(false);
+    applyBusy();
     preview();
     return true;
   };
@@ -179,13 +202,13 @@
     );
   };
   const load = async () => {
+    if (locked() || scopes.read) return;
     if (
-      busy ||
-      (dirty &&
-        !confirm('Muat ulang dan abaikan perubahan yang belum disimpan?'))
+      dirty &&
+      !confirm('Muat ulang dan abaikan perubahan yang belum disimpan?')
     )
       return;
-    setBusy(true);
+    setScope('read', true);
     message('Memuat Team…');
     try {
       const result = await rpc('load');
@@ -196,7 +219,7 @@
       }
       state = result.data;
       dirty = false;
-      setBusy(false);
+      setScope('read', false);
       render();
       el('reload').hidden = true;
       el('retry').hidden = !state.publicationPending;
@@ -209,7 +232,7 @@
       message('Koneksi terputus. Muat ulang Team untuk mencoba lagi.', true);
       el('reload').hidden = false;
     } finally {
-      setBusy(false);
+      setScope('read', false);
     }
   };
   form.addEventListener('input', () => (dirty = true));
@@ -222,7 +245,7 @@
     }
   });
   const mutate = async (operation, payload) => {
-    setBusy(true);
+    setScope('mutation', true);
     message('Menyimpan dan meminta penerbitan…');
     try {
       const result = await rpc(operation, {
@@ -237,7 +260,7 @@
       state = result.data;
       selected = result.data.affectedId;
       dirty = false;
-      setBusy(false);
+      setScope('mutation', false);
       render();
       el('reload').hidden = true;
       publication(result.data.publication);
@@ -248,12 +271,12 @@
       );
       el('reload').hidden = false;
     } finally {
-      setBusy(false);
+      setScope('mutation', false);
     }
   };
   form.addEventListener('submit', (event) => {
     event.preventDefault();
-    if (busy || !form.reportValidity()) return;
+    if (locked() || !form.reportValidity()) return;
     const member = {
       ...(selected ? { id: selected } : {}),
       group: el('group').value,
@@ -265,7 +288,7 @@
     void mutate(selected ? 'save' : 'add', { member });
   });
   el('delete').addEventListener('click', () => {
-    if (busy || !selected) return;
+    if (locked() || !selected) return;
     const member = state.members.find((m) => m.id === selected);
     if (
       confirm('Hapus anggota “' + member.name + '”? Situs akan dibangun ulang.')
@@ -273,8 +296,8 @@
       void mutate('delete', { id: selected });
   });
   el('retry').addEventListener('click', async () => {
-    if (busy) return;
-    setBusy(true);
+    if (locked() || scopes.publication) return;
+    setScope('publication', true);
     try {
       const result = await rpc('retry');
       if (result.ok) publication(result.data.publication);
@@ -282,13 +305,13 @@
     } catch {
       message('Koneksi terputus. Coba terbitkan lagi.', true);
     } finally {
-      setBusy(false);
+      setScope('publication', false);
     }
   });
   el('reload').addEventListener('click', load);
   el('image-upload').addEventListener('change', async () => {
     const file = el('image-upload').files[0];
-    if (!file || busy) return;
+    if (!file || locked() || scopes.upload) return;
     if (
       file.size > 2 * 1024 * 1024 ||
       !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)
@@ -297,7 +320,7 @@
       el('image-upload').value = '';
       return;
     }
-    setBusy(true);
+    setScope('upload', true);
     message('Mengupload foto…');
     try {
       const response = await fetch('/api/admin/media?collection=team', {
@@ -342,7 +365,7 @@
       );
     } finally {
       el('image-upload').value = '';
-      setBusy(false);
+      setScope('upload', false);
     }
   });
   window.addEventListener('beforeunload', (event) => {
@@ -351,13 +374,24 @@
       event.returnValue = '';
     }
   });
+  document
+    .querySelectorAll('.admin-navigation a, .auth-actions a')
+    .forEach((link) =>
+      link.addEventListener('click', (event) => {
+        if (
+          dirty &&
+          !confirm(
+            'Perubahan belum disimpan. Tinggalkan halaman dan abaikan perubahan?',
+          )
+        )
+          event.preventDefault();
+      }),
+    );
   el('logout').addEventListener('click', async () => {
-    if (
-      busy ||
-      (dirty && !confirm('Keluar dan abaikan perubahan yang belum disimpan?'))
-    )
+    if (locked() || scopes.logout) return;
+    if (dirty && !confirm('Keluar dan abaikan perubahan yang belum disimpan?'))
       return;
-    setBusy(true);
+    setScope('logout', true);
     try {
       const response = await fetch('/api/admin/auth/logout', {
         method: 'POST',
@@ -380,7 +414,7 @@
     } catch {
       message('Koneksi terputus. Coba keluar lagi.', true);
     } finally {
-      setBusy(false);
+      setScope('logout', false);
     }
   });
   const loginForm = el('login-form');
@@ -392,7 +426,7 @@
   el('login').addEventListener('click', showLogin);
   loginForm.addEventListener('submit', async (event) => {
     event.preventDefault();
-    if (busy) return;
+    if (scopes.logout) return;
     const submit = el('login-submit');
     const email = el('login-email').value.trim();
     const password = el('login-password').value;

@@ -326,6 +326,22 @@ try {
       await page.locator('#page-info').textContent(),
       'Halaman 1 dari 5',
     );
+    // Two private reads on startup (list then filtered stats); no duplicate
+    // bootstrap statistics request.
+    await page.waitForFunction(
+      () => document.getElementById('stats').children.length > 0,
+    );
+    const initialReads = requests.filter(
+      (r) =>
+        !r.path.endsWith('/api/recruitment/application') &&
+        (r.path.endsWith('/applications') || r.path.endsWith('/stats')),
+    );
+    assert.equal(initialReads.length, 2);
+    assert.equal(initialReads[0].path, '/api/admin/recruitment/applications');
+    assert.equal(initialReads[0].method, 'GET');
+    assert.equal(initialReads[1].path, '/api/admin/recruitment/stats');
+    assert.equal(initialReads[1].method, 'POST');
+    assert.equal(initialReads[1].body.as_of, '2026-10-08T00:00:00Z');
     await page.screenshot({ path: `${out}/list-${width}.png`, fullPage: true });
     await checkOverflow();
     for (let i = 0; i < 4; i++) {
@@ -341,17 +357,23 @@ try {
     assert.equal(await page.locator('.applicant-detail').count(), 1);
     assert(await page.locator('#next-page').isDisabled());
     const lists = requests.filter((r) => r.path.endsWith('/applications'));
+    // Bootstrap is a single private GET that validates the restored session
+    // and yields CSRF; later filter/page reads reuse the protected POST path.
+    assert.equal(lists[0].method, 'GET');
+    assert.equal(lists[0].csrf, undefined);
     assert.deepEqual(
-      lists.slice(0, 5).map((r) => r.body.offset),
+      lists.slice(0, 5).map((r) => Number(r.body.offset)),
       [0, 50, 100, 150, 200],
     );
     assert(
-      lists.every(
-        (r) =>
-          r.method === 'POST' &&
-          !r.path.includes('?') &&
-          r.csrf === 'synthetic-csrf',
-      ),
+      lists
+        .slice(1)
+        .every(
+          (r) =>
+            r.method === 'POST' &&
+            !r.path.includes('?') &&
+            r.csrf === 'synthetic-csrf',
+        ),
     );
     assert(
       lists
@@ -362,6 +384,8 @@ try {
             r.body.as_of === '2026-10-08T00:00:00Z',
         ),
     );
+    // Two private reads on startup (list then filtered stats); no duplicate
+    // bootstrap statistics request.
     await page.locator('#search').fill('not-present');
     await page.locator('#filter-btn').click();
     await page.waitForFunction(() =>
@@ -434,11 +458,18 @@ try {
       'draft preserved',
     );
     assert.equal(fixture.notes.length, 0);
+    // With the statistics reconciliation deliberately slow, the confirmed
+    // acknowledgement must appear before secondary reads settle.
+    delayStats = true;
     await page.locator('#save-note').click();
     await page.waitForFunction(() =>
       document
         .getElementById('review-feedback')
         .textContent.includes('tersimpan'),
+    );
+    assert(
+      await page.locator('#save-note').isDisabled(),
+      'write readiness must stay pending until the fresh revision settles',
     );
     await settled();
     assert.equal(fixture.notes.length, 1);

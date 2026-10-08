@@ -3,7 +3,13 @@ import {
   TRANSITIONS,
   TERMINAL,
 } from '../../server/recruitment-review-status.mjs';
+import {
+  createTransport,
+  createSlowNotice,
+  READ_DEADLINE_MS,
+} from './admin-request.js';
 (() => {
+  const send = createTransport();
   const byId = (id) => document.getElementById(id);
   const api = '/api/admin/recruitment/';
   const create = (tag, text, cls) => {
@@ -46,13 +52,26 @@ import {
     activeFilters = {},
     filtered = 0,
     mutationPending = null,
-    saving = false;
+    saving = false,
+    revisionPending = false;
   const pages = { notes: 0, history: 0 };
   const generations = { notes: 0, history: 0 };
+  const reads = new Map();
+  const readSignal = (kind) => {
+    reads.get(kind)?.abort();
+    const controller = new AbortController();
+    reads.set(kind, controller);
+    return controller.signal;
+  };
+  const abortReads = () => {
+    for (const controller of reads.values()) controller.abort();
+    reads.clear();
+  };
   const message = (s, bad = false) => {
     byId('status').textContent = s;
     byId('status').dataset.error = String(bad);
   };
+  const armSlow = createSlowNotice((text) => message(text));
   const feedback = (s) => {
     byId('review-feedback').textContent = s;
     byId('review-feedback').focus();
@@ -73,7 +92,9 @@ import {
   function clearDetail() {
     current = null;
     mutationPending = null;
+    revisionPending = false;
     detailGeneration++;
+    abortReads();
     for (const k of ['notes', 'history']) {
       generations[k]++;
       pages[k] = 0;
@@ -129,36 +150,41 @@ import {
     byId('logout').hidden = false;
     if (!refreshTimer) refreshTimer = setInterval(refresh, 30 * 60 * 1000);
   }
-  async function request(route, input, post = false) {
+  const READ_KINDS = new Set(['list', 'stats', 'detail', 'notes', 'history']);
+  async function request(route, input, post = false, kind = route) {
     const gen = session;
     const url = new URL(api + route, location.origin);
     if (!post)
       for (const [k, v] of Object.entries(input || {}))
         url.searchParams.set(k, v);
-    try {
-      const r = await fetch(url, {
-        method: post ? 'POST' : 'GET',
-        credentials: 'same-origin',
-        cache: 'no-store',
-        headers: post
-          ? { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf || '' }
-          : {},
-        ...(post ? { body: JSON.stringify(input) } : {}),
-      });
-      const result = await r.json();
-      if (gen !== session) return null;
-      if (r.status === 401 || r.status === 403) {
-        if (r.status === 403 && result.csrf) csrf = result.csrf;
-        endSession(r.status === 403 ? 'FORBIDDEN' : 'UNAUTHORIZED');
-        return null;
-      }
-      if (result.csrf) csrf = result.csrf;
-      if (result.ok) loggedIn();
-      return { ...result, http: r.status };
-    } catch {
-      if (gen !== session) return null;
+    const read = READ_KINDS.has(kind);
+    const outcome = await send(url, {
+      method: post ? 'POST' : 'GET',
+      headers: post
+        ? { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf || '' }
+        : {},
+      body: post ? JSON.stringify(input) : undefined,
+      signal: read ? readSignal(kind) : undefined,
+      deadline: read ? READ_DEADLINE_MS : undefined,
+    });
+    if (gen !== session) return null;
+    if (outcome.cancelled) return { cancelled: true };
+    if (outcome.timeout)
+      return { ok: false, error: { code: 'TIMEOUT' }, http: 0, timeout: true };
+    if (outcome.network)
       return { ok: false, error: { code: 'NETWORK' }, http: 0 };
+    if (outcome.malformed)
+      return { ok: false, error: { code: 'MALFORMED' }, http: 0 };
+    const r = outcome.response;
+    const result = outcome.result;
+    if (r.status === 401 || r.status === 403) {
+      if (r.status === 403 && result.csrf) csrf = result.csrf;
+      endSession(r.status === 403 ? 'FORBIDDEN' : 'UNAUTHORIZED');
+      return null;
     }
+    if (result.csrf) csrf = result.csrf;
+    if (result.ok) loggedIn();
+    return { ...result, http: r.status };
   }
   function renderStats(stats) {
     const counts = Object.fromEntries(
@@ -202,7 +228,7 @@ import {
       if (byId(id).value) f[key] = byId(id).value;
     return f;
   }
-  async function loadList(reset = false) {
+  async function loadList(reset = false, bootstrap = false) {
     if (current && !mayLeave()) return;
     if (current) clearDetail();
     const gen = ++listGeneration;
@@ -218,14 +244,27 @@ import {
       ...(asOf ? { as_of: asOf } : {}),
     };
     byId('table-wrapper').hidden = false;
+    byId('table-wrapper').setAttribute('aria-busy', 'true');
     byId('pagination').hidden = true;
-    message('Memuat daftar…');
     byId('list-error').textContent = '';
-    const result = await request('applications', input, true);
-    if (gen !== listGeneration || !result) return;
+    const placeholder = create('tr');
+    const placeholderCell = create('td', 'Memuat pendaftar…');
+    placeholderCell.colSpan = 6;
+    placeholder.append(placeholderCell);
+    byId('applications-body').replaceChildren(placeholder);
+    const doneSlow = armSlow('Memuat daftar…');
+    // Bootstrap uses GET so a restored sealed session yields validated CSRF
+    // before the protected list/stats POSTs (no CSRF-guessing request).
+    const result = await request('applications', input, !bootstrap, 'list');
+    if (gen !== listGeneration || !result || result.cancelled) return;
     if (!result.ok) {
+      doneSlow();
+      byId('table-wrapper').setAttribute('aria-busy', 'false');
       byId('list-error').textContent =
-        errors[result.error?.code] || 'Koneksi terputus. Muat ulang daftar.';
+        errors[result.error?.code] ||
+        (result.timeout
+          ? 'Data belum bisa dimuat. Coba lagi.'
+          : 'Koneksi terputus. Muat ulang daftar.');
       return;
     }
     const data = result.data;
@@ -234,6 +273,7 @@ import {
     if (!data.applications.length && offset > 0) {
       offset = Math.max(0, Math.ceil(filtered / 50 - 1) * 50);
       asOf = undefined;
+      doneSlow();
       return loadList();
     }
     byId('applications-body').replaceChildren();
@@ -277,9 +317,22 @@ import {
     byId('pagination').hidden = false;
     byId('prev-page').disabled = offset === 0;
     byId('next-page').disabled = !data.has_more;
+    byId('table-wrapper').setAttribute('aria-busy', 'false');
+    doneSlow();
     message(`${filtered} dari ${data.total_global} pendaftar`);
-    const sr = await request('stats', { ...activeFilters, as_of: asOf }, true);
-    if (gen !== listGeneration || !sr) return;
+    // Secondary statistics must not gate the list: paint the table first,
+    // then load filtered stats with the list snapshot as_of.
+    byId('stats').replaceChildren();
+    byId('stats').setAttribute('aria-busy', 'true');
+    byId('stats-scope').textContent = 'Memuat ringkasan…';
+    const sr = await request(
+      'stats',
+      { ...activeFilters, as_of: asOf },
+      true,
+      'stats',
+    );
+    if (gen !== listGeneration || !sr || sr.cancelled) return;
+    byId('stats').setAttribute('aria-busy', 'false');
     if (sr.ok) renderStats(sr.data);
     else {
       byId('stats').replaceChildren();
@@ -409,13 +462,19 @@ import {
     if (!preserve) clearDetail();
     const gen = ++detailGeneration;
     listGeneration++;
-    message('Memuat detail…');
     byId('notes-list').textContent = 'Memuat catatan…';
     byId('history-list').textContent = 'Memuat aktivitas…';
-    const result = await request('application', { receipt });
-    if (gen !== detailGeneration || !result) return;
+    const doneSlow = armSlow('Memuat detail…');
+    const result = await request('application', { receipt }, false, 'detail');
+    if (gen !== detailGeneration || !result || result.cancelled) return;
     if (!result.ok) {
-      message(errors[result.error?.code] || errors.SERVER_ERROR, true);
+      doneSlow();
+      message(
+        result.timeout
+          ? 'Data belum bisa dimuat. Coba lagi.'
+          : errors[result.error?.code] || errors.SERVER_ERROR,
+        true,
+      );
       byId('notes-list').textContent =
         'Detail belum bisa dimuat. Coba muat detail terbaru.';
       byId('history-list').textContent =
@@ -424,7 +483,9 @@ import {
     }
     renderDetail(result.data, preserve);
     if (!preserve) byId('detail-heading').focus();
+    doneSlow();
     message('Detail pendaftar: ' + (result.data.fields.full_name || ''));
+    // Detail is usable now; notes and history load independently.
     await Promise.all([loadHistory('notes'), loadHistory('history')]);
     return true;
   }
@@ -435,24 +496,31 @@ import {
       dgen = detailGeneration;
     byId(kind + '-list').textContent =
       kind === 'notes' ? 'Memuat catatan…' : 'Memuat aktivitas…';
-    const result = await request(kind, {
-      receipt: id,
-      limit: 20,
-      offset: pages[kind],
-    });
+    const result = await request(
+      kind,
+      {
+        receipt: id,
+        limit: 20,
+        offset: pages[kind],
+      },
+      false,
+      kind,
+    );
     if (
       gen !== generations[kind] ||
       dgen !== detailGeneration ||
       current?.receipt !== id ||
-      !result
+      !result ||
+      result.cancelled
     )
       return;
     const container = byId(kind + '-list');
     container.replaceChildren();
     if (!result.ok) {
-      container.textContent =
-        errors[result.error?.code] ||
-        'Gagal memuat. Klik Muat detail terbaru untuk mencoba lagi.';
+      container.textContent = result.timeout
+        ? 'Panel ini belum bisa dimuat. Coba lagi.'
+        : errors[result.error?.code] ||
+          'Gagal memuat. Klik Muat detail terbaru untuk mencoba lagi.';
       return;
     }
     const d = result.data;
@@ -495,6 +563,7 @@ import {
       `${d.total} ${kind === 'notes' ? 'catatan' : 'aktivitas'} · halaman ${Math.floor(pages[kind] / 20) + 1}`;
   }
   function controls() {
+    const locked = saving || revisionPending || Boolean(mutationPending);
     for (const id of [
       'save-status',
       'save-note',
@@ -503,11 +572,11 @@ import {
       'review-note',
       'confirm-status',
     ])
-      byId(id).disabled = saving || Boolean(mutationPending);
-    byId('retry-mutation').disabled = saving;
+      byId(id).disabled = locked;
+    byId('retry-mutation').disabled = saving || revisionPending;
     byId('retry-mutation').hidden = !mutationPending;
-    byId('back-list').disabled = saving;
-    byId('reload-detail').disabled = saving;
+    byId('back-list').disabled = locked;
+    byId('reload-detail').disabled = saving || revisionPending;
   }
   function noteCount() {
     byId('note-help').textContent =
@@ -523,7 +592,7 @@ import {
     );
   }
   async function submit(kind) {
-    if (saving || mutationPending || !current) return;
+    if (saving || revisionPending || mutationPending || !current) return;
     const body = {
       receipt: current.receipt,
       request_id: crypto.randomUUID(),
@@ -575,42 +644,28 @@ import {
         intent.kind === 'status' ? 'review-status' : 'review-note',
         intent.body,
         true,
+        'write',
       );
       if (gen !== detailGeneration || sg !== session || !r) return;
       if (r.ok) {
+        const replayed = Boolean(r.data?.replayed);
         mutationPending = null;
         if (intent.kind === 'note') byId('review-note').value = '';
         else {
           byId('review-status').value = '';
           byId('review-reason').value = '';
         }
-        const refreshed = await loadDetail(id, true);
-        if (sg !== session) return;
+        // Acknowledge the authoritative write result immediately; list/stats
+        // and notes/history reconciliation continue in the background.
         feedback(
-          !refreshed
-            ? 'Perubahan tersimpan. Detail terbaru belum bisa dimuat; muat detail sebelum perubahan berikutnya.'
-            : r.data.replayed
-              ? 'Kiriman yang sama sudah tersimpan. Tidak ada duplikasi.'
-              : 'Perubahan tersimpan.',
+          replayed
+            ? 'Kiriman yang sama sudah tersimpan. Tidak ada duplikasi.'
+            : 'Perubahan tersimpan.',
         );
-        asOf = undefined;
-        offset = 0;
-        const lr = await request(
-          'applications',
-          { ...activeFilters, limit: 50, offset: 0 },
-          true,
-        );
-        if (sg !== session || current?.receipt !== id) return;
-        if (lr?.ok) {
-          asOf = lr.data.as_of;
-          filtered = lr.data.filtered;
-          const st = await request(
-            'stats',
-            { ...activeFilters, as_of: asOf },
-            true,
-          );
-          if (sg === session && st?.ok) renderStats(st.data);
-        }
+        revisionPending = true;
+        controls();
+        void reconcile(id, sg);
+        return;
       } else if (r.http === 409) {
         mutationPending = null;
         const refreshed = await loadDetail(id, true);
@@ -642,6 +697,41 @@ import {
       }
     }
   }
+  async function reconcile(id, sg) {
+    try {
+      const refreshed = await loadDetail(id, true);
+      if (sg !== session) return;
+      if (!refreshed && current)
+        feedback(
+          'Perubahan tersimpan. Detail terbaru belum bisa dimuat; muat detail sebelum perubahan berikutnya.',
+        );
+      asOf = undefined;
+      offset = 0;
+      const lr = await request(
+        'applications',
+        { ...activeFilters, limit: 50, offset: 0 },
+        true,
+        'list',
+      );
+      if (sg !== session || current?.receipt !== id) return;
+      if (lr?.ok) {
+        asOf = lr.data.as_of;
+        filtered = lr.data.filtered;
+        const st = await request(
+          'stats',
+          { ...activeFilters, as_of: asOf },
+          true,
+          'stats',
+        );
+        if (sg === session && st?.ok) renderStats(st.data);
+      }
+    } finally {
+      if (sg === session) {
+        revisionPending = false;
+        controls();
+      }
+    }
+  }
   async function refresh() {
     const gen = session;
     try {
@@ -663,14 +753,9 @@ import {
     }
   }
   async function bootstrap() {
-    const r = await request('stats');
-    if (!r) return;
-    if (!r.ok) {
-      message(errors[r.error?.code] || errors.SERVER_ERROR, true);
-      return;
-    }
-    renderStats(r.data);
-    await loadList(true);
+    // The first private read validates the restored sealed session and yields
+    // CSRF; the table paints before the filtered-statistics request.
+    await loadList(true, true);
   }
   function init() {
     for (const [id, entries] of [
