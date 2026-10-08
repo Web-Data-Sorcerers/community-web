@@ -1,5 +1,17 @@
 # AGENTS.md — instructions for AI agents
 
+## Owner GAS deployment inventory partial — 8 Oct 2026
+
+Owner Manage deployments screenshots show Export1active/1archived, selected
+active version2; Admin3active/1archived, selected untitled active version4.
+Other Admin active entries second commit and first deploy admin remain uninspected.
+Displayed version dates6Oct2026 are UI metadata with timezone unverified; do not
+infer runtime/apply chronology. Execute-as/access lower fields not visible yet.
+Exact deployment IDs/URLs not backed up, owner/shared reuse and deployed-source
+equality remain unverified. NEXT scroll selected Export/Admin details read-only,
+then inspect remaining2Admin active entries. No archive/delete/env mutation/push.
+Proof ignored f1/deployments-owner-partial-proof.json.
+
 ## Owner GAS file lists confirmed — 8 Oct 2026
 
 Owner editor-sidebar screenshots show Admin appsscript.json/Kode.gs/Index.html
