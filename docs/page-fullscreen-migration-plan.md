@@ -1,5 +1,16 @@
 # Page Full-Screen Migration Plan — Hero Gambar + Section 100svh
 
+## Pengelolaan pendaftar — admin custom lokal (8 Oct 2026)
+
+UI existing /admin/recruitment/ diperluas dalam authorized A–D lokal: filter/list/
+stats, status, append-only notes dan paged activity. Tidak punya node Figma/PNG
+baru, tidak mengklaim pixel-match. Existing Manrope400/700+BluuNext700, palette
+admin, max1280/padding32desktop16mobile/gaps8–32, controls48. Natural scroll
+admin exception; tidak hero/artwork/fullscreen baru. Public UI/assets/reference
+terkunci; snapshot+19HTML byte exact. Synthetic320/390/768/1440 PASS/overflow0/
+pageerrors0,7gates+SEO PASS. Applied/deployed/live workflow belum.
+[Inventaris/desain/hasil lokal](recruitment-review-local-implementation.md).
+
 ## Admin bersama — pass custom terpisah (8 Oct 2026)
 
 User mengotorisasi penyatuan dashboard admin CMS+Recruitment. Surface admin

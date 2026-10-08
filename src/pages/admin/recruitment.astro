@@ -277,6 +277,108 @@ const image = new URL('/og/og-default.jpg', Astro.site).href;
         letter-spacing: 0.5px;
       }
 
+      [hidden] {
+        display: none !important;
+      }
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 4px;
+      }
+      label {
+        display: grid;
+        gap: 8px;
+        min-width: 0;
+      }
+      input,
+      select,
+      textarea,
+      button {
+        min-height: 48px;
+        max-width: 100%;
+      }
+      textarea {
+        width: 100%;
+        resize: vertical;
+        padding: 8px 16px;
+        border: 1px solid #393344;
+        border-radius: 8px;
+        background: var(--bg);
+        color: var(--text);
+      }
+      form {
+        display: grid;
+        gap: 16px;
+      }
+      .search-bar {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+      .search-bar .actions {
+        grid-column: 1 / -1;
+      }
+      .review-block {
+        display: grid;
+        gap: 16px;
+        padding: 24px;
+        margin: 24px 0;
+        border: 1px solid #393344;
+        border-radius: 8px;
+        background: var(--surface);
+      }
+      #detail-summary,
+      .field,
+      td {
+        overflow-wrap: anywhere;
+      }
+      .field {
+        white-space: pre-wrap;
+      }
+      #decision-confirm {
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      #confirm-status {
+        width: 24px;
+        min-height: 24px;
+        flex-shrink: 0;
+      }
+      #review-feedback,
+      #list-error {
+        margin: 16px 0;
+        color: var(--accent);
+      }
+      #table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+      }
+      table {
+        min-width: 800px;
+      }
+      #pagination {
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      button:disabled {
+        opacity: 0.55;
+        cursor: default;
+      }
+      @media (max-width: 760px) {
+        .search-bar {
+          grid-template-columns: 1fr;
+        }
+        .review-block {
+          padding: 16px;
+        }
+      }
       @media (max-width: 760px) {
         main {
           padding: 16px;
@@ -345,20 +447,65 @@ const image = new URL('/og/og-default.jpg', Astro.site).href;
           Memeriksa status pendaftaran…
         </p>
         <div class="stats-grid" id="stats"></div>
-        <div class="search-bar">
-          <input
-            id="search"
-            type="search"
-            placeholder="Cari nama atau email…"
-          />
-          <select id="filter-hods">
-            <option value="">Semua domain</option>
-          </select>
-          <button id="filter-btn" class="primary">
-            Cari
-          </button>
-        </div>
-        <div id="table-wrapper">
+        <form id="filter-form" class="search-bar">
+          <label>
+            Nama atau email
+            <input
+              id="search"
+              type="search"
+              maxlength="400"
+              placeholder="Cari nama atau email…"
+            />
+          </label>
+          <label>
+            Domain
+            <select id="filter-hods">
+              <option value="">Semua domain</option>
+            </select>
+          </label>
+          <label>
+            Status
+            <select id="filter-status">
+              <option value="">Semua status</option>
+            </select>
+          </label>
+          <label>
+            Tanggal mulai (WIB)
+            <input id="filter-since" type="date" />
+          </label>
+          <label>
+            Tanggal akhir (WIB)
+            <input id="filter-until" type="date" />
+          </label>
+          <label>
+            Urutan
+            <select id="filter-sort">
+              <option value="received_at_desc">Terbaru</option>
+              <option value="received_at_asc">Terlama</option>
+            </select>
+          </label>
+          <div class="actions">
+            <button id="filter-btn" class="primary" type="submit">
+              Cari
+            </button>
+            <button id="reset-filter" type="button">
+              Reset filter
+            </button>
+            <button id="reload-list" type="button">
+              Muat ulang daftar
+            </button>
+          </div>
+        </form>
+        <p id="stats-scope">
+          Ringkasan status dan domain mengikuti filter. Tanggal menggunakan WIB.
+        </p>
+        <p id="list-error" role="status" aria-live="polite"></p>
+        <div
+          id="table-wrapper"
+          tabindex="0"
+          role="region"
+          aria-label="Daftar pendaftar, geser untuk melihat seluruh kolom"
+        >
           <table>
             <thead>
               <tr>
@@ -366,7 +513,8 @@ const image = new URL('/og/og-default.jpg', Astro.site).href;
                 <th>Email</th>
                 <th>Domain</th>
                 <th>Tanggal</th>
-                <th>Resi</th>
+                <th>Status</th>
+                <th>Catatan</th>
               </tr>
             </thead>
             <tbody id="applications-body"></tbody>
@@ -382,7 +530,99 @@ const image = new URL('/og/og-default.jpg', Astro.site).href;
           </button>
         </div>
         <div id="detail-area" hidden>
-          <h2>Detail pendaftar</h2>
+          <h2 id="detail-heading" tabindex="-1">
+            Detail pendaftar
+          </h2>
+          <div id="detail-summary" class="review-block"></div>
+          <section class="review-block" aria-labelledby="selection-heading">
+            <h2 id="selection-heading">Seleksi internal</h2>
+            <p>Status ini tidak mengirim pesan atau menambah anggota Team.</p>
+            <p id="review-meta"></p>
+            <form id="status-form">
+              <label>
+                Status tujuan<select id="review-status" required></select>
+              </label>
+              <label>
+                Alasan
+                <textarea
+                  id="review-reason"
+                  rows="3"
+                  aria-describedby="reason-help"
+                ></textarea>
+              </label>
+              <p id="reason-help">
+                Maksimum 500 karakter. Keputusan akhir dan pembukaan kembali
+                wajib alasan minimal 10 karakter.
+              </p>
+              <label id="decision-confirm" hidden>
+                <input id="confirm-status" type="checkbox" />
+                <span id="confirm-label"></span>
+              </label>
+              <button id="save-status" type="submit" class="primary">
+                Simpan status
+              </button>
+            </form>
+          </section>
+          <p
+            id="review-feedback"
+            role="status"
+            aria-live="polite"
+            tabindex="-1"
+          ></p>
+          <div class="actions">
+            <button id="retry-mutation" type="button" hidden>
+              Coba kiriman yang sama
+            </button>
+            <button id="reload-detail" type="button">
+              Muat detail terbaru
+            </button>
+          </div>
+          <section class="review-block" aria-labelledby="notes-heading">
+            <h2 id="notes-heading">Catatan internal</h2>
+            <p>
+              Koreksi ditulis sebagai catatan baru. Catatan yang tersimpan tidak
+              dapat diedit atau dihapus.
+            </p>
+            <form id="note-form">
+              <label>
+                Catatan
+                <textarea
+                  id="review-note"
+                  rows="5"
+                  aria-describedby="note-help"
+                  required
+                ></textarea>
+              </label>
+              <p id="note-help">1–4000 karakter, maksimum 16 KiB.</p>
+              <button id="save-note" type="submit" class="primary">
+                Tambah catatan
+              </button>
+            </form>
+            <div id="notes-list" class="detail-panel"></div>
+            <div class="actions">
+              <button id="notes-prev" type="button">
+                Catatan sebelumnya
+              </button>
+              <span id="notes-page"></span>
+              <button id="notes-next" type="button">
+                Catatan selanjutnya
+              </button>
+            </div>
+          </section>
+          <section class="review-block" aria-labelledby="history-heading">
+            <h2 id="history-heading">Aktivitas</h2>
+            <div id="history-list" class="detail-panel"></div>
+            <div class="actions">
+              <button id="history-prev" type="button">
+                Aktivitas sebelumnya
+              </button>
+              <span id="history-page"></span>
+              <button id="history-next" type="button">
+                Aktivitas selanjutnya
+              </button>
+            </div>
+          </section>
+          <h2>Jawaban formulir</h2>
           <div id="detail-panel" class="detail-panel"></div>
           <button id="back-list" type="button">
             Kembali ke daftar

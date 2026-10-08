@@ -13,6 +13,7 @@ const env = {
   SUPABASE_URL: 'https://placeholder.supabase.co',
   SUPABASE_ANON_KEY: 'anon',
   SUPABASE_SERVICE_ROLE_KEY: 'service',
+  SUPABASE_ACCESS_TOKEN: 'management-test',
 };
 const req = (route, options = {}) =>
   new Request(origin + '/api/admin/recruitment/' + route, options);
@@ -33,6 +34,9 @@ function harness() {
     badLogin: false,
     fail: '',
     missing: false,
+    writeError: '',
+    oversized: false,
+    malformed: false,
   };
   const calls = [];
   const fetchImpl = async (url, options = {}) => {
@@ -65,13 +69,56 @@ function harness() {
       assert.equal(body.p_auth_id, uid);
       return Response.json({ ok: state.recruitment });
     }
+    if (path.includes('/database/query')) {
+      if (state.writeError)
+        return Response.json([
+          {
+            result: {
+              ok: false,
+              error: { code: state.writeError, message: 'PRIVATE' },
+            },
+          },
+        ]);
+      if (state.oversized) return new Response('x'.repeat(1024 * 1024 + 1));
+      if (state.malformed) return new Response('not-json');
+      assert(body.query.startsWith('select public.'));
+      return Response.json([
+        {
+          result: {
+            ok: true,
+            receipt,
+            status: 'reviewing',
+            version: 1,
+            event_id: receipt,
+            replayed: false,
+          },
+        },
+      ]);
+    }
+    if (path.includes('admin_list_review_'))
+      return Response.json({
+        items: [],
+        total: 0,
+        limit: body.p_page.limit,
+        offset: body.p_page.offset,
+        has_more: false,
+      });
     if (path.includes('admin_list_applications'))
       return Response.json({
         applications: [
-          { receipt, full_name: 'Test', email: 'test@example.invalid' },
+          {
+            receipt,
+            full_name: 'Test',
+            email: 'test@example.invalid',
+            review: { status: 'new', version: 0, note_count: 0 },
+          },
         ],
-        total: 1,
+        total_global: 1,
         filtered: 1,
+        limit: body.p_filters.limit,
+        offset: body.p_filters.offset,
+        has_more: false,
+        as_of: body.p_filters.as_of || '2026-01-01T00:00:00Z',
       });
     if (path.includes('admin_get_application'))
       return Response.json(
@@ -80,6 +127,7 @@ function harness() {
           : {
               found: true,
               receipt,
+              review: { status: 'new', version: 0, note_count: 0 },
               fields: {
                 full_name: 'Test',
                 portfolio_link: 'https://example.invalid/',
@@ -87,7 +135,29 @@ function harness() {
             },
       );
     if (path.includes('admin_get_stats'))
-      return Response.json({ total: 1, by_hods: [{ hods: 'data', count: 1 }] });
+      return Response.json({
+        total_global: 1,
+        filtered: 1,
+        as_of: '2026-01-01T00:00:00Z',
+        by_status: [
+          'new',
+          'reviewing',
+          'shortlisted',
+          'interview',
+          'waitlisted',
+          'accepted',
+          'rejected',
+          'withdrawn',
+        ].map((status) => ({ status, count: status === 'new' ? 1 : 0 })),
+        by_hods: [
+          'data',
+          'core',
+          'language',
+          'vision',
+          'product',
+          'growth',
+        ].map((hods) => ({ hods, count: hods === 'data' ? 1 : 0 })),
+      });
     return Response.json({ ok: true });
   };
   const clock = () => now;
@@ -202,7 +272,7 @@ test('revoked trusted Auth identity denies applicant reads', async () => {
   h.state.user = false;
   assert.equal((await h.read('stats')).status, 401);
 });
-test('search/domain/date filters use existing RPC; only trusted UID authorizes access', async () => {
+test('search/domain/date filters use v2 RPC; only trusted UID authorizes access', async () => {
   const h = harness();
   await h.login();
   assert.equal(
@@ -224,6 +294,7 @@ test('search/domain/date filters use existing RPC; only trusted UID authorizes a
       until: '2026-12-31',
       limit: 50,
       offset: 0,
+      sort: 'received_at_desc',
     },
   );
 });
@@ -249,10 +320,11 @@ test('stats and read audit use owner identity without storing applicant answers'
   const h = harness();
   await h.login();
   const response = await h.read('stats');
-  assert.equal((await response.json()).data.total, 1);
+  assert.equal((await response.json()).data.total_global, 1);
   const audit = h.calls.find((c) => c.path.includes('admin_audit_write'));
   assert.equal(audit.body.p_actor_id, uid);
-  assert.deepEqual(audit.body.p_details, {});
+  assert.equal(audit.body.p_details.search_applied, false);
+  assert(!Object.hasOwn(audit.body.p_details, 'search'));
 });
 test('permission and data RPC failures are sanitized and fail closed', async () => {
   for (const fail of ['admin_verify_identity', 'admin_get_stats']) {
@@ -394,4 +466,182 @@ test('malformed POST filter bodies are400 and never call applicant list RPC', as
     assert.equal(response.status, 400);
   }
   assert(!h.calls.some((c) => c.path.includes('admin_list_applications')));
+});
+
+test('workflow POST body guards, trusted actor and bounded SQL literals', async () => {
+  const h = harness();
+  await h.login();
+  const post = (body) =>
+    h.handle(
+      req('review-status', {
+        method: 'POST',
+        headers: {
+          Cookie: h.cookie,
+          Origin: origin,
+          'X-CSRF-Token': h.csrf,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      }),
+      'status',
+    );
+  const payload = {
+    request_id: receipt,
+    receipt,
+    expected_version: 0,
+    status: 'reviewing',
+    reason: "quote ' and SQL ;",
+  };
+  assert.equal((await post(payload)).status, 200);
+  const call = h.calls.find((c) => c.path.includes('/database/query'));
+  assert(!call.body.query.includes(payload.reason));
+  assert(call.body.query.includes(Buffer.from(uid).toString('hex')));
+  for (const bad of [
+    { ...payload, actor_id: uid },
+    { ...payload, expected_version: '0' },
+    { ...payload, status: 'accepted', reason: 'short' },
+    { ...payload, expected_version: -1 },
+    { ...payload, request_id: 'bad' },
+  ])
+    assert.equal((await post(bad)).status, 400);
+  const before = h.calls.filter((c) =>
+    c.path.includes('/database/query'),
+  ).length;
+  assert.equal(
+    (await post({ ...payload, reason: 'a'.repeat(40000) })).status,
+    413,
+  );
+  assert.equal(
+    h.calls.filter((c) => c.path.includes('/database/query')).length,
+    before,
+  );
+});
+test('workflow new routes require permission, strict GET methods and bounded pages', async () => {
+  const h = harness();
+  await h.login();
+  for (const route of ['notes', 'history']) {
+    assert.equal((await h.read(route, '?receipt=' + receipt)).status, 200);
+    assert.equal(
+      (await h.read(route, '?receipt=' + receipt + '&limit=21')).status,
+      400,
+    );
+    assert.equal((await h.post(route)).status, 405);
+  }
+  for (const route of ['status', 'note'])
+    assert.equal((await h.read(route)).status, 405);
+  for (const query of [
+    '?limit=2oops',
+    '?offset=-1',
+    '?limit=101',
+    '?limit=1&limit=2',
+    '?unexpected=x',
+  ])
+    assert.equal((await h.read('list', query)).status, 400);
+  h.state.recruitment = false;
+  assert.equal((await h.read('notes', '?receipt=' + receipt)).status, 403);
+});
+test('workflow mutations enforce Origin/CSRF before upstream calls', async () => {
+  const h = harness();
+  await h.login();
+  h.calls.length = 0;
+  for (const route of ['status', 'note'])
+    for (const headers of [
+      { Origin: 'https://evil.test' },
+      { 'X-CSRF-Token': 'bad' },
+    ])
+      assert.equal((await h.post(route, headers)).status, 403);
+  assert.equal(h.calls.length, 0);
+});
+test('search audit stores presence/categories only; no raw query', async () => {
+  const h = harness();
+  await h.login();
+  await h.read('list', '?search=private-name');
+  const audit = h.calls.find((c) => c.path.includes('admin_audit_write'));
+  assert(audit.body.p_details.search_applied);
+  assert(!JSON.stringify(audit.body).includes('private-name'));
+});
+
+test('write conflicts/invalid/denied/notfound map to sanitized status', async () => {
+  for (const [code, status] of [
+    ['CONFLICT', 409],
+    ['ID_CONFLICT', 409],
+    ['INVALID_TRANSITION', 409],
+    ['FORBIDDEN', 403],
+    ['NOT_FOUND', 404],
+    ['INVALID_INPUT', 400],
+  ]) {
+    const h = harness();
+    await h.login();
+    h.state.writeError = code;
+    const r = await h.handle(
+      req('review-note', {
+        method: 'POST',
+        headers: {
+          Cookie: h.cookie,
+          Origin: origin,
+          'X-CSRF-Token': h.csrf,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          receipt,
+          request_id: receipt,
+          expected_version: 0,
+          body: 'Synthetic note',
+        }),
+      }),
+      'note',
+    );
+    assert.equal(r.status, status);
+    const b = await r.json();
+    assert.equal(b.error.code, code);
+    assert.equal(b.csrf, h.csrf);
+    assert(!JSON.stringify(b).includes('PRIVATE'));
+  }
+});
+test('workflow oversized and malformed upstream fail502 without exposing payload', async () => {
+  for (const setting of ['oversized', 'malformed']) {
+    const h = harness();
+    await h.login();
+    h.state[setting] = true;
+    const r = await h.handle(
+      req('review-note', {
+        method: 'POST',
+        headers: {
+          Cookie: h.cookie,
+          Origin: origin,
+          'X-CSRF-Token': h.csrf,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          receipt,
+          request_id: receipt,
+          expected_version: 0,
+          body: 'Synthetic note',
+        }),
+      }),
+      'note',
+    );
+    assert.equal(r.status, 502);
+    assert.equal((await r.json()).error.code, 'SERVER_ERROR');
+  }
+});
+test('all new data routes deny anonymous; revoked grants never enter write', async () => {
+  const h = harness();
+  for (const route of ['notes', 'history'])
+    assert.equal((await h.read(route)).status, 401);
+  for (const route of ['status', 'note'])
+    assert.equal((await h.post(route)).status, 401);
+  assert.equal(h.calls.length, 0);
+  await h.login();
+  h.calls.length = 0;
+  h.state.cms = false;
+  for (const route of ['status', 'note'])
+    assert.equal((await h.post(route)).status, 403);
+  assert(
+    !h.calls.some(
+      (c) =>
+        c.path.includes('/database/query') ||
+        c.path.includes('admin_verify_identity'),
+    ),
+  );
 });

@@ -1,476 +1,832 @@
+import {
+  STATUSES,
+  TRANSITIONS,
+  TERMINAL,
+} from '../../server/recruitment-review-status.mjs';
 (() => {
   const byId = (id) => document.getElementById(id);
-  const api = '/api/admin/recruitment';
-  let applications = [];
-  let total = 0;
-  let filtered = 0;
-  let busy = false;
-  let page = 0;
-  const PAGE_SIZE = 50;
-  const REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes
-  let refreshTimer = null;
-  let csrf;
-  let sessionGeneration = 0;
-  const hodsDivisions = [
-    'data',
-    'core',
-    'language',
-    'vision',
-    'product',
-    'growth',
-  ];
+  const api = '/api/admin/recruitment/';
+  const create = (tag, text, cls) => {
+    const el = document.createElement(tag);
+    if (text !== undefined) el.textContent = text;
+    if (cls) el.className = cls;
+    return el;
+  };
+  const date = (iso) =>
+    iso
+      ? new Date(iso).toLocaleString('id-ID', {
+          timeZone: 'Asia/Jakarta',
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }) + ' WIB'
+      : '—';
   const errors = {
     UNAUTHORIZED: 'Sesi admin berakhir. Silakan masuk lagi.',
     FORBIDDEN: 'Akun ini belum memiliki izin melihat pendaftar.',
-    CONFIGURATION: 'Konfigurasi server belum lengkap.',
-    INVALID_INPUT: 'Permintaan tidak valid.',
+    INVALID_INPUT: 'Periksa input dan batas karakter.',
     NOT_FOUND: 'Data tidak ditemukan.',
-    SERVER_ERROR: 'Kesalahan server. Coba lagi.',
-    LIMIT: 'Terlalu banyak percobaan. Coba beberapa saat lagi.',
+    SERVER_ERROR: 'Data belum bisa dimuat. Coba muat ulang.',
+    CONFIGURATION: 'Konfigurasi server belum lengkap.',
+    ID_CONFLICT:
+      'ID kiriman sudah dipakai untuk perubahan lain. Muat detail terbaru.',
+    INVALID_TRANSITION: 'Perpindahan status tidak diizinkan.',
+    BODY_TOO_LARGE: 'Kiriman terlalu besar.',
   };
-
-  const message = (text, error = false) => {
-    byId('status').textContent = text;
-    byId('status').dataset.error = String(error);
+  let csrf,
+    session = 0,
+    listGeneration = 0,
+    detailGeneration = 0,
+    refreshTimer;
+  let current = null,
+    offset = 0,
+    asOf,
+    activeFilters = {},
+    filtered = 0,
+    mutationPending = null,
+    saving = false;
+  const pages = { notes: 0, history: 0 };
+  const generations = { notes: 0, history: 0 };
+  const message = (s, bad = false) => {
+    byId('status').textContent = s;
+    byId('status').dataset.error = String(bad);
   };
-
-  const setBusy = (value) => {
-    busy = value;
-    document
-      .querySelectorAll('button, input, select')
-      .forEach((el) => (el.disabled = value));
+  const feedback = (s) => {
+    byId('review-feedback').textContent = s;
+    byId('review-feedback').focus();
   };
-
-  const loggedIn = () => {
+  const dirty = () =>
+    Boolean(
+      byId('review-note').value.trim() ||
+      byId('review-reason').value.trim() ||
+      byId('review-status').value ||
+      mutationPending,
+    );
+  const mayLeave = () =>
+    !saving &&
+    (!dirty() ||
+      confirm(
+        'Ada draft atau kiriman belum dikonfirmasi. Tinggalkan detail? Periksa aktivitas sebelum mengirim ulang.',
+      ));
+  function clearDetail() {
+    current = null;
+    mutationPending = null;
+    detailGeneration++;
+    for (const k of ['notes', 'history']) {
+      generations[k]++;
+      pages[k] = 0;
+    }
+    for (const id of [
+      'detail-panel',
+      'detail-summary',
+      'notes-list',
+      'history-list',
+    ])
+      byId(id).replaceChildren();
+    for (const id of ['review-note', 'review-reason', 'review-status'])
+      byId(id).value = '';
+    byId('confirm-status').checked = false;
+    byId('confirm-label').textContent = '';
+    byId('decision-confirm').hidden = true;
+    byId('retry-mutation').hidden = true;
+    byId('review-feedback').textContent = '';
+    byId('review-meta').textContent = '';
+    byId('detail-area').hidden = true;
+    for (const id of ['filter-form', 'stats', 'stats-scope', 'intake-status'])
+      byId(id).hidden = false;
+  }
+  function endSession(code = 'UNAUTHORIZED') {
+    session++;
+    listGeneration++;
+    clearDetail();
+    if (code !== 'FORBIDDEN') csrf = undefined;
+    saving = false;
+    byId('workspace').hidden = true;
+    byId('applications-body').replaceChildren();
+    byId('stats').replaceChildren();
+    for (const id of [
+      'search',
+      'filter-since',
+      'filter-until',
+      'filter-status',
+      'filter-hods',
+    ])
+      byId(id).value = '';
+    byId('login-password').value = '';
+    byId('login-email').value = '';
+    byId('login-form').hidden = code === 'FORBIDDEN';
+    byId('logout').hidden = code !== 'FORBIDDEN';
+    byId('login-submit').disabled = false;
+    message(errors[code], true);
+    clearInterval(refreshTimer);
+    refreshTimer = null;
+  }
+  function loggedIn() {
     byId('workspace').hidden = false;
     byId('login-form').hidden = true;
     byId('logout').hidden = false;
-  };
-
-  const clearApplicantData = () => {
-    byId('detail-area').hidden = true;
-    byId('detail-panel').replaceChildren();
-    byId('applications-body').replaceChildren();
-    byId('stats').replaceChildren();
-    applications = [];
-  };
-
-  const expire = () => {
-    sessionGeneration++;
-    clearApplicantData();
-    byId('workspace').hidden = true;
-    byId('login-form').hidden = false;
-    byId('logout').hidden = true;
-    csrf = undefined;
-    byId('table-wrapper').hidden = false;
-    message('Sesi berakhir. Silakan login ulang.', true);
-    if (refreshTimer) {
-      clearInterval(refreshTimer);
-      refreshTimer = null;
-    }
-  };
-
-  const refreshToken = async () => {
+    if (!refreshTimer) refreshTimer = setInterval(refresh, 30 * 60 * 1000);
+  }
+  async function request(route, input, post = false) {
+    const gen = session;
+    const url = new URL(api + route, location.origin);
+    if (!post)
+      for (const [k, v] of Object.entries(input || {}))
+        url.searchParams.set(k, v);
     try {
-      const response = await fetch('/api/admin/auth/refresh', {
+      const r = await fetch(url, {
+        method: post ? 'POST' : 'GET',
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: post
+          ? { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf || '' }
+          : {},
+        ...(post ? { body: JSON.stringify(input) } : {}),
+      });
+      const result = await r.json();
+      if (gen !== session) return null;
+      if (r.status === 401 || r.status === 403) {
+        if (r.status === 403 && result.csrf) csrf = result.csrf;
+        endSession(r.status === 403 ? 'FORBIDDEN' : 'UNAUTHORIZED');
+        return null;
+      }
+      if (result.csrf) csrf = result.csrf;
+      if (result.ok) loggedIn();
+      return { ...result, http: r.status };
+    } catch {
+      if (gen !== session) return null;
+      return { ok: false, error: { code: 'NETWORK' }, http: 0 };
+    }
+  }
+  function renderStats(stats) {
+    const counts = Object.fromEntries(
+      stats.by_status.map((x) => [x.status, x.count]),
+    );
+    const cards = [
+      ['Total seluruh pendaftar', stats.total_global],
+      ['Hasil filter', stats.filtered],
+      ['Baru', counts.new],
+      ['Proses', counts.reviewing + counts.shortlisted + counts.interview],
+      ['Daftar tunggu', counts.waitlisted],
+      ['Diterima', counts.accepted],
+      ['Ditolak', counts.rejected],
+      ['Mundur', counts.withdrawn],
+    ];
+    byId('stats').replaceChildren(
+      ...cards.map(([label, value]) => {
+        const card = create('div', undefined, 'stat-card');
+        card.append(
+          create('span', String(value), 'number'),
+          create('span', label, 'label'),
+        );
+        return card;
+      }),
+    );
+    byId('stats-scope').textContent =
+      'Ringkasan mengikuti filter: ' +
+      stats.by_hods.map((x) => x.hods + ' ' + x.count).join(', ') +
+      '. Tanggal WIB. Status dapat berubah saat reviewer lain menyimpan.';
+  }
+  function readFilters() {
+    const f = {};
+    for (const [id, key] of [
+      ['search', 'search'],
+      ['filter-hods', 'primary_hods'],
+      ['filter-status', 'status'],
+      ['filter-since', 'since'],
+      ['filter-until', 'until'],
+      ['filter-sort', 'sort'],
+    ])
+      if (byId(id).value) f[key] = byId(id).value;
+    return f;
+  }
+  async function loadList(reset = false) {
+    if (current && !mayLeave()) return;
+    if (current) clearDetail();
+    const gen = ++listGeneration;
+    if (reset) {
+      offset = 0;
+      asOf = undefined;
+      activeFilters = readFilters();
+    }
+    const input = {
+      ...activeFilters,
+      limit: 50,
+      offset,
+      ...(asOf ? { as_of: asOf } : {}),
+    };
+    byId('table-wrapper').hidden = false;
+    byId('pagination').hidden = true;
+    message('Memuat daftar…');
+    byId('list-error').textContent = '';
+    const result = await request('applications', input, true);
+    if (gen !== listGeneration || !result) return;
+    if (!result.ok) {
+      byId('list-error').textContent =
+        errors[result.error?.code] || 'Koneksi terputus. Muat ulang daftar.';
+      return;
+    }
+    const data = result.data;
+    asOf = data.as_of;
+    filtered = data.filtered;
+    if (!data.applications.length && offset > 0) {
+      offset = Math.max(0, Math.ceil(filtered / 50 - 1) * 50);
+      asOf = undefined;
+      return loadList();
+    }
+    byId('applications-body').replaceChildren();
+    if (!data.applications.length) {
+      const row = create('tr'),
+        cell = create(
+          'td',
+          data.total_global === 0
+            ? 'Belum ada pendaftar.'
+            : 'Tidak ada pendaftar yang cocok. Reset filter untuk melihat lainnya.',
+        );
+      cell.colSpan = 6;
+      row.append(cell);
+      byId('applications-body').append(row);
+    }
+    for (const a of data.applications) {
+      const row = create('tr');
+      const name = create('td'),
+        button = create(
+          'button',
+          a.full_name || 'Lihat detail',
+          'applicant-detail',
+        );
+      button.type = 'button';
+      button.addEventListener('click', () => loadDetail(a.receipt));
+      name.append(button);
+      row.append(
+        name,
+        ...[
+          a.email || '—',
+          a.primary_hods || '—',
+          date(a.received_at),
+          STATUSES[a.review.status],
+          String(a.review.note_count),
+        ].map((x) => create('td', x)),
+      );
+      byId('applications-body').append(row);
+    }
+    byId('page-info').textContent =
+      `Halaman ${Math.floor(offset / 50) + 1} dari ${Math.max(1, Math.ceil(filtered / 50))}`;
+    byId('pagination').hidden = false;
+    byId('prev-page').disabled = offset === 0;
+    byId('next-page').disabled = !data.has_more;
+    message(`${filtered} dari ${data.total_global} pendaftar`);
+    const sr = await request('stats', { ...activeFilters, as_of: asOf }, true);
+    if (gen !== listGeneration || !sr) return;
+    if (sr.ok) renderStats(sr.data);
+    else {
+      byId('stats').replaceChildren();
+      byId('stats-scope').textContent =
+        'Statistik belum bisa dimuat. Muat ulang daftar.';
+    }
+  }
+  const labels = {
+    full_name: 'Nama lengkap',
+    preferred_name: 'Nama panggilan',
+    email: 'Email',
+    whatsapp: 'WhatsApp',
+    institution: 'Institusi',
+    city_region: 'Kota / wilayah',
+    current_status: 'Status saat ini',
+    current_level: 'Tingkat pengalaman',
+    currently_exploring: 'Sedang dipelajari',
+    primary_hods: 'Domain utama',
+    secondary_interest: 'Minat lain',
+    most_relevant_work: 'Karya paling relevan',
+    portfolio_link: 'Tautan portofolio',
+    alternative_evidence: 'Bukti karya alternatif',
+    real_world_problem: 'Masalah yang ingin diselesaikan',
+    technology_approach: 'Pendekatan teknologi',
+    explore_or_build: 'Eksplorasi atau membangun',
+    skill_to_improve: 'Kemampuan yang ingin ditingkatkan',
+    six_months_goal: 'Target enam bulan',
+    team_story: 'Pengalaman bekerja dalam tim',
+    why_join: 'Alasan bergabung',
+    what_to_contribute: 'Kontribusi yang ditawarkan',
+    what_to_build_together: 'Yang ingin dibangun bersama',
+    learning_methods: 'Cara belajar',
+    project_experience: 'Pengalaman project',
+    desired_output: 'Hasil yang diinginkan',
+    team_comfort: 'Kenyamanan dalam tim',
+    team_roles: 'Peran dalam tim',
+    time_commitment: 'Komitmen waktu',
+    contribution_types: 'Jenis kontribusi',
+    cross_hods_willingness: 'Kolaborasi lintas domain',
+    best_description: 'Deskripsi diri',
+    independent_learning: 'Belajar mandiri',
+    agreement_1: 'Persetujuan 1',
+    agreement_2: 'Persetujuan 2',
+    agreement_3: 'Persetujuan 3',
+    specific_area: 'Bidang spesifik',
+    foundation_skills: 'Kemampuan dasar',
+  };
+  function renderDetail(data, preserve = false) {
+    const draft = preserve
+      ? {
+          status: byId('review-status').value,
+          reason: byId('review-reason').value,
+          note: byId('review-note').value,
+        }
+      : null;
+    current = data;
+    byId('detail-area').hidden = false;
+    for (const id of ['filter-form', 'stats', 'stats-scope', 'intake-status'])
+      byId(id).hidden = true;
+    byId('table-wrapper').hidden = true;
+    byId('pagination').hidden = true;
+    byId('detail-summary').replaceChildren(
+      create('strong', data.fields.full_name || 'Pendaftar'),
+      create(
+        'p',
+        `${data.fields.email || ''} · ${data.fields.primary_hods || ''}`,
+      ),
+      create('p', `Diterima ${date(data.received_at)} · Resi ${data.receipt}`),
+    );
+    byId('review-meta').textContent =
+      `${STATUSES[data.review.status]} · Revisi ${data.review.version} · ${data.review.reviewer_label || 'Belum ditinjau'} · ${date(data.review.updated_at)}`;
+    const select = byId('review-status');
+    select.replaceChildren();
+    const blank = create('option', 'Pilih status tujuan');
+    blank.value = '';
+    select.append(blank);
+    for (const s of TRANSITIONS[data.review.status]) {
+      const opt = create('option', STATUSES[s]);
+      opt.value = s;
+      select.append(opt);
+    }
+    if (draft) {
+      if (
+        draft.status &&
+        !TRANSITIONS[data.review.status].includes(draft.status)
+      ) {
+        const opt = create(
+          'option',
+          STATUSES[draft.status] + ' (tidak diizinkan dari status terbaru)',
+        );
+        opt.value = draft.status;
+        select.append(opt);
+      }
+      select.value = draft.status;
+      byId('review-reason').value = draft.reason;
+      byId('review-note').value = draft.note;
+    } else {
+      byId('review-reason').value = '';
+      byId('review-note').value = '';
+    }
+    byId('confirm-status').checked = false;
+    confirmation();
+    byId('detail-panel').replaceChildren();
+    for (const [key, value] of Object.entries(data.fields)) {
+      if (value === null || value === undefined || value === '') continue;
+      const field = create('div', undefined, 'field');
+      field.append(
+        create('div', labels[key] || key.replaceAll('_', ' '), 'field-label'),
+        create('div', Array.isArray(value) ? value.join(', ') : String(value)),
+      );
+      byId('detail-panel').append(field);
+    }
+    noteCount();
+    controls();
+  }
+  function confirmation() {
+    if (!current) return;
+    const to = byId('review-status').value;
+    const needed =
+      TERMINAL.includes(to) || TERMINAL.includes(current.review.status);
+    byId('decision-confirm').hidden = !to || !needed;
+    byId('confirm-label').textContent =
+      `Saya mengonfirmasi ${current.fields.full_name || 'pendaftar'} → ${STATUSES[to] || ''}. Riwayat keputusan tetap tersimpan.`;
+  }
+  async function loadDetail(receipt, preserve = false) {
+    if (!preserve && current && !mayLeave()) return;
+    if (!preserve) clearDetail();
+    const gen = ++detailGeneration;
+    listGeneration++;
+    message('Memuat detail…');
+    byId('notes-list').textContent = 'Memuat catatan…';
+    byId('history-list').textContent = 'Memuat aktivitas…';
+    const result = await request('application', { receipt });
+    if (gen !== detailGeneration || !result) return;
+    if (!result.ok) {
+      message(errors[result.error?.code] || errors.SERVER_ERROR, true);
+      byId('notes-list').textContent =
+        'Detail belum bisa dimuat. Coba muat detail terbaru.';
+      byId('history-list').textContent =
+        'Detail belum bisa dimuat. Coba muat detail terbaru.';
+      return false;
+    }
+    renderDetail(result.data, preserve);
+    if (!preserve) byId('detail-heading').focus();
+    message('Detail pendaftar: ' + (result.data.fields.full_name || ''));
+    await Promise.all([loadHistory('notes'), loadHistory('history')]);
+    return true;
+  }
+  async function loadHistory(kind) {
+    if (!current) return;
+    const gen = ++generations[kind],
+      id = current.receipt,
+      dgen = detailGeneration;
+    byId(kind + '-list').textContent =
+      kind === 'notes' ? 'Memuat catatan…' : 'Memuat aktivitas…';
+    const result = await request(kind, {
+      receipt: id,
+      limit: 20,
+      offset: pages[kind],
+    });
+    if (
+      gen !== generations[kind] ||
+      dgen !== detailGeneration ||
+      current?.receipt !== id ||
+      !result
+    )
+      return;
+    const container = byId(kind + '-list');
+    container.replaceChildren();
+    if (!result.ok) {
+      container.textContent =
+        errors[result.error?.code] ||
+        'Gagal memuat. Klik Muat detail terbaru untuk mencoba lagi.';
+      return;
+    }
+    const d = result.data;
+    if (!d.items.length && pages[kind] > 0) {
+      pages[kind] = Math.max(0, pages[kind] - 20);
+      return loadHistory(kind);
+    }
+    if (!d.items.length)
+      container.textContent =
+        kind === 'notes'
+          ? 'Belum ada catatan internal.'
+          : 'Belum ada aktivitas review.';
+    for (const item of d.items) {
+      const field = create('div', undefined, 'field');
+      if (kind === 'notes')
+        field.append(
+          create('strong', item.author_label || 'Reviewer'),
+          create('p', date(item.created_at)),
+          create('div', item.body),
+        );
+      else
+        field.append(
+          create(
+            'strong',
+            item.action === 'note_added'
+              ? 'Catatan ditambahkan'
+              : `${STATUSES[item.from_status]} → ${STATUSES[item.to_status]}`,
+          ),
+          create(
+            'p',
+            `${item.actor_label} · ${date(item.created_at)} · Revisi ${item.before_version} → ${item.after_version}`,
+          ),
+          create('div', item.reason || ''),
+        );
+      container.append(field);
+    }
+    byId(kind + '-prev').disabled = pages[kind] === 0;
+    byId(kind + '-next').disabled = !d.has_more;
+    byId(kind + '-page').textContent =
+      `${d.total} ${kind === 'notes' ? 'catatan' : 'aktivitas'} · halaman ${Math.floor(pages[kind] / 20) + 1}`;
+  }
+  function controls() {
+    for (const id of [
+      'save-status',
+      'save-note',
+      'review-status',
+      'review-reason',
+      'review-note',
+      'confirm-status',
+    ])
+      byId(id).disabled = saving || Boolean(mutationPending);
+    byId('retry-mutation').disabled = saving;
+    byId('retry-mutation').hidden = !mutationPending;
+    byId('back-list').disabled = saving;
+    byId('reload-detail').disabled = saving;
+  }
+  function noteCount() {
+    byId('note-help').textContent =
+      `${[...byId('review-note').value.trim()].length}/4000 karakter. Maksimum 16 KiB. Catatan hanya tersimpan setelah Tambah catatan.`;
+  }
+  const normalize = (s) => s.replace(/\r\n?/g, '\n').trim();
+  function validText(s, min, max) {
+    return (
+      [...s].length >= min &&
+      [...s].length <= max &&
+      new TextEncoder().encode(s).length <= 16384 &&
+      !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(s)
+    );
+  }
+  async function submit(kind) {
+    if (saving || mutationPending || !current) return;
+    const body = {
+      receipt: current.receipt,
+      request_id: crypto.randomUUID(),
+      expected_version: current.review.version,
+    };
+    if (kind === 'status') {
+      body.status = byId('review-status').value;
+      body.reason = normalize(byId('review-reason').value);
+      const terminal =
+        TERMINAL.includes(body.status) ||
+        TERMINAL.includes(current.review.status);
+      if (
+        !TRANSITIONS[current.review.status].includes(body.status) ||
+        !validText(body.reason, terminal ? 10 : 0, 500)
+      ) {
+        feedback(
+          'Pilih perpindahan yang diizinkan dan periksa panjang alasan.',
+        );
+        return;
+      }
+      if (terminal && !byId('confirm-status').checked) {
+        feedback('Konfirmasikan keputusan sebelum menyimpan.');
+        byId('confirm-status').focus();
+        return;
+      }
+    } else {
+      body.body = normalize(byId('review-note').value);
+      if (!validText(body.body, 1, 4000)) {
+        feedback(
+          'Catatan wajib 1–4000 karakter, maksimum 16 KiB, tanpa karakter kontrol.',
+        );
+        return;
+      }
+    }
+    mutationPending = { kind, body };
+    await sendMutation();
+  }
+  async function sendMutation() {
+    if (saving || !mutationPending || !current) return;
+    const intent = mutationPending,
+      id = current.receipt,
+      gen = detailGeneration,
+      sg = session;
+    saving = true;
+    controls();
+    feedback('Menyimpan…');
+    try {
+      const r = await request(
+        intent.kind === 'status' ? 'review-status' : 'review-note',
+        intent.body,
+        true,
+      );
+      if (gen !== detailGeneration || sg !== session || !r) return;
+      if (r.ok) {
+        mutationPending = null;
+        if (intent.kind === 'note') byId('review-note').value = '';
+        else {
+          byId('review-status').value = '';
+          byId('review-reason').value = '';
+        }
+        const refreshed = await loadDetail(id, true);
+        if (sg !== session) return;
+        feedback(
+          !refreshed
+            ? 'Perubahan tersimpan. Detail terbaru belum bisa dimuat; muat detail sebelum perubahan berikutnya.'
+            : r.data.replayed
+              ? 'Kiriman yang sama sudah tersimpan. Tidak ada duplikasi.'
+              : 'Perubahan tersimpan.',
+        );
+        asOf = undefined;
+        offset = 0;
+        const lr = await request(
+          'applications',
+          { ...activeFilters, limit: 50, offset: 0 },
+          true,
+        );
+        if (sg !== session || current?.receipt !== id) return;
+        if (lr?.ok) {
+          asOf = lr.data.as_of;
+          filtered = lr.data.filtered;
+          const st = await request(
+            'stats',
+            { ...activeFilters, as_of: asOf },
+            true,
+          );
+          if (sg === session && st?.ok) renderStats(st.data);
+        }
+      } else if (r.http === 409) {
+        mutationPending = null;
+        const refreshed = await loadDetail(id, true);
+        if (!refreshed) {
+          if (current)
+            feedback(
+              'Konflik: detail terbaru belum bisa dimuat. Draft tetap ada. Muat detail sebelum mengirim ulang.',
+            );
+          return;
+        }
+        feedback(
+          r.error.code === 'CONFLICT'
+            ? 'Konflik: reviewer lain sudah menyimpan. Draft tetap ada. Tinjau data terbaru sebelum menyimpan sebagai kiriman baru.'
+            : errors[r.error.code] ||
+                'Konflik kiriman. Tinjau aktivitas sebelum mencoba lagi.',
+        );
+      } else if (r.http >= 400 && r.http < 500) {
+        mutationPending = null;
+        feedback(errors[r.error.code] || 'Kiriman ditolak. Periksa input.');
+      } else {
+        feedback(
+          'Kiriman belum dikonfirmasi. Periksa detail terbaru atau coba kiriman yang sama. Draft dan ID kiriman dipertahankan.',
+        );
+      }
+    } finally {
+      if (sg === session) {
+        saving = false;
+        controls();
+      }
+    }
+  }
+  async function refresh() {
+    const gen = session;
+    try {
+      const r = await fetch('/api/admin/auth/refresh', {
         method: 'POST',
         credentials: 'same-origin',
         cache: 'no-store',
         headers: { 'X-CSRF-Token': csrf || '' },
       });
-      if (!response.ok) {
-        expire();
-        return false;
+      if (gen !== session) return;
+      if (r.status === 401 || r.status === 403) {
+        endSession(r.status === 403 ? 'FORBIDDEN' : 'UNAUTHORIZED');
+        return;
       }
-      return true;
+      const d = await r.json();
+      if (gen === session && d.csrf) csrf = d.csrf;
     } catch {
-      return false;
+      /* Retry only explicit read; no automatic mutation retry. */
     }
-  };
-
-  const startRefreshTimer = () => {
-    if (refreshTimer) clearInterval(refreshTimer);
-    refreshTimer = setInterval(refreshToken, REFRESH_INTERVAL);
-  };
-
-  const apiFetch = async (route, params = {}) => {
-    const generation = sessionGeneration;
-    const url = new URL(api + '/' + route, location.origin);
-    for (const [k, v] of Object.entries(params)) {
-      if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, v);
-    }
-    try {
-      const response = await fetch(url, {
-        credentials: 'same-origin',
-        cache: 'no-store',
-      });
-      if (generation !== sessionGeneration) return null;
-      if (response.status === 401) {
-        expire();
-        return null;
-      }
-      const result = await response.json();
-      if (generation !== sessionGeneration) return null;
-      if (response.status === 403) {
-        sessionGeneration++;
-        clearApplicantData();
-        byId('workspace').hidden = true;
-        byId('login-form').hidden = true;
-        byId('logout').hidden = false;
-        message(errors.FORBIDDEN, true);
-      }
-      if (result.csrf) csrf = result.csrf;
-      if (result.ok) loggedIn();
-      return result;
-    } catch {
-      if (!busy) message('Koneksi terputus.', true);
-      return null;
-    }
-  };
-
-  const renderStats = (stats) => {
-    const container = byId('stats');
-    container.innerHTML = '';
-    if (!stats) return;
-    const cards = [
-      { label: 'Total', value: stats.total ?? 0 },
-      ...(stats.by_hods || []).map((h) => ({
-        label: h.hods,
-        value: h.count,
-      })),
-    ];
-    for (const card of cards) {
-      const div = document.createElement('div');
-      div.className = 'stat-card';
-      const number = document.createElement('span');
-      number.className = 'number';
-      number.textContent = String(card.value);
-      const label = document.createElement('span');
-      label.className = 'label';
-      label.textContent = card.label;
-      div.append(number, label);
-      container.appendChild(div);
-    }
-  };
-
-  const escapeHtml = (text) => {
-    const d = document.createElement('div');
-    d.textContent = text;
-    return d.innerHTML;
-  };
-
-  const formatDate = (iso) => {
-    if (!iso) return '-';
-    try {
-      return new Date(iso).toLocaleString('id-ID', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    } catch {
-      return iso;
-    }
-  };
-
-  const renderTable = () => {
-    const tbody = byId('applications-body');
-    tbody.innerHTML = '';
-    const start = page * PAGE_SIZE;
-    const slice = applications.slice(start, start + PAGE_SIZE);
-    if (slice.length === 0) {
-      tbody.innerHTML =
-        '<tr><td colspan="5" style="text-align:center;color:#bcb7cb">Belum ada pendaftar.</td></tr>';
+  }
+  async function bootstrap() {
+    const r = await request('stats');
+    if (!r) return;
+    if (!r.ok) {
+      message(errors[r.error?.code] || errors.SERVER_ERROR, true);
       return;
     }
-    for (const app of slice) {
-      const tr = document.createElement('tr');
-      tr.style.cursor = 'pointer';
-      tr.innerHTML =
-        '<td>' +
-        escapeHtml(app.full_name || '-') +
-        '</td><td>' +
-        escapeHtml(app.email || '-') +
-        '</td><td>' +
-        escapeHtml(app.primary_hods || '-') +
-        '</td><td>' +
-        formatDate(app.received_at) +
-        '</td><td style="font-family:monospace;font-size:12px">' +
-        (app.receipt || '').slice(0, 8) +
-        '…</td>';
-      const detailButton = document.createElement('button');
-      detailButton.type = 'button';
-      detailButton.className = 'applicant-detail';
-      detailButton.textContent = app.full_name || 'Lihat detail';
-      tr.firstElementChild.replaceChildren(detailButton);
-      tr.addEventListener('click', () => loadDetail(app.receipt));
-      tbody.appendChild(tr);
-    }
-    byId('page-info').textContent =
-      'Halaman ' +
-      (page + 1) +
-      ' dari ' +
-      Math.max(1, Math.ceil(applications.length / PAGE_SIZE));
-    byId('pagination').hidden = applications.length <= PAGE_SIZE;
-    byId('prev-page').disabled = page === 0;
-    byId('next-page').disabled = (page + 1) * PAGE_SIZE >= applications.length;
-  };
-
-  const loadList = async (search, hods) => {
-    setBusy(true);
-    message('Memuat data…');
-    try {
-      const params = { limit: 200 };
-      if (search) params.search = search;
-      if (hods) params.primary_hods = hods;
-      const result = await apiFetch('applications', params);
-      if (!result) return;
-      if (!result.ok) {
-        message(errors[result.error?.code] || errors.SERVER_ERROR, true);
-        return;
+    renderStats(r.data);
+    await loadList(true);
+  }
+  function init() {
+    for (const [id, entries] of [
+      [
+        'filter-hods',
+        ['data', 'core', 'language', 'vision', 'product', 'growth'].map((x) => [
+          x,
+          x,
+        ]),
+      ],
+      ['filter-status', Object.entries(STATUSES)],
+    ])
+      for (const [value, label] of entries) {
+        const o = create('option', label);
+        o.value = value;
+        byId(id).append(o);
       }
-      applications = result.data?.applications || [];
-      total = result.data?.total || 0;
-      filtered = result.data?.filtered || 0;
-      page = 0;
-      byId('detail-area').hidden = true;
-      byId('table-wrapper').hidden = false;
-      renderTable();
-      message(filtered + ' dari ' + total + ' pendaftar');
-    } catch {
-      message('Gagal memuat data.', true);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const loadDetail = async (receipt) => {
-    setBusy(true);
-    message('Memuat detail…');
-    try {
-      const result = await apiFetch('application', { receipt });
-      if (!result) return;
-      if (!result.ok) {
-        message(errors[result.error?.code] || 'Gagal memuat detail.', true);
-        return;
-      }
-      byId('table-wrapper').hidden = true;
-      byId('detail-area').hidden = false;
-      byId('pagination').hidden = true;
-      const data = result.data;
-      const panel = byId('detail-panel');
-      panel.innerHTML = '';
-      const fields = data.fields || {};
-      const labels = {
-        full_name: 'Nama lengkap',
-        preferred_name: 'Nama panggilan',
-        email: 'Email',
-        whatsapp: 'WhatsApp',
-        institution: 'Institusi',
-        city_region: 'Kota / wilayah',
-        current_status: 'Status saat ini',
-        current_level: 'Tingkat pengalaman',
-        currently_exploring: 'Sedang dipelajari',
-        primary_hods: 'Domain utama',
-        secondary_interest: 'Minat lain',
-        most_relevant_work: 'Karya paling relevan',
-        portfolio_link: 'Tautan portofolio',
-        alternative_evidence: 'Bukti karya alternatif',
-        real_world_problem: 'Masalah yang ingin diselesaikan',
-        technology_approach: 'Pendekatan teknologi',
-        explore_or_build: 'Eksplorasi atau membangun',
-        skill_to_improve: 'Kemampuan yang ingin ditingkatkan',
-        six_months_goal: 'Target enam bulan',
-        team_story: 'Pengalaman bekerja dalam tim',
-        why_join: 'Alasan bergabung',
-        what_to_contribute: 'Kontribusi yang ditawarkan',
-        what_to_build_together: 'Yang ingin dibangun bersama',
-        learning_methods: 'Cara belajar',
-        project_experience: 'Pengalaman project',
-        desired_output: 'Hasil yang diinginkan',
-        team_comfort: 'Kenyamanan dalam tim',
-        team_roles: 'Peran dalam tim',
-        time_commitment: 'Komitmen waktu',
-        contribution_types: 'Jenis kontribusi',
-        cross_hods_willingness: 'Kolaborasi lintas domain',
-        best_description: 'Deskripsi diri',
-        independent_learning: 'Belajar mandiri',
-        agreement_1: 'Persetujuan 1',
-        agreement_2: 'Persetujuan 2',
-        agreement_3: 'Persetujuan 3',
-        specific_area: 'Bidang spesifik',
-        foundation_skills: 'Kemampuan dasar',
-      };
-      const allKeys = Object.keys(fields);
-      for (const key of allKeys) {
-        const val = fields[key];
-        if (val === undefined || val === null || val === '') continue;
-        const div = document.createElement('div');
-        div.className = 'field';
-        div.innerHTML =
-          '<div class="field-label">' +
-          escapeHtml(labels[key] || key.replaceAll('_', ' ')) +
-          '</div><div>' +
-          escapeHtml(Array.isArray(val) ? val.join(', ') : String(val)) +
-          '</div>';
-        panel.appendChild(div);
-      }
-      message(
-        'Detail pendaftar: ' + (data.full_name || fields.full_name || ''),
+    byId('filter-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      loadList(true);
+    });
+    byId('reset-filter').addEventListener('click', () => {
+      if (current && !mayLeave()) return;
+      clearDetail();
+      byId('filter-form').reset();
+      loadList(true);
+    });
+    byId('reload-list').addEventListener('click', () => loadList(true));
+    byId('prev-page').addEventListener('click', () => {
+      offset = Math.max(0, offset - 50);
+      loadList();
+    });
+    byId('next-page').addEventListener('click', () => {
+      offset += 50;
+      loadList();
+    });
+    byId('back-list').addEventListener('click', () => {
+      if (!mayLeave()) return;
+      clearDetail();
+      loadList();
+    });
+    byId('review-status').addEventListener('change', () => {
+      byId('confirm-status').checked = false;
+      confirmation();
+    });
+    byId('review-note').addEventListener('input', noteCount);
+    byId('status-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      submit('status');
+    });
+    byId('note-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      submit('note');
+    });
+    byId('retry-mutation').addEventListener('click', sendMutation);
+    byId('reload-detail').addEventListener('click', () => {
+      if (current && !saving) loadDetail(current.receipt, true);
+    });
+    for (const kind of ['notes', 'history'])
+      for (const dir of ['prev', 'next'])
+        byId(kind + '-' + dir).addEventListener('click', () => {
+          pages[kind] = Math.max(0, pages[kind] + (dir === 'next' ? 20 : -20));
+          loadHistory(kind);
+        });
+    document
+      .querySelectorAll('.admin-navigation a, .auth-links a')
+      .forEach((a) =>
+        a.addEventListener('click', (e) => {
+          if (current && !mayLeave()) e.preventDefault();
+        }),
       );
-    } catch {
-      message('Gagal memuat detail.', true);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const loadStats = async () => {
-    try {
-      const result = await apiFetch('stats');
-      if (result?.ok) renderStats(result.data);
-    } catch {
-      // Stats failure is non-critical.
-    }
-  };
-
-  const init = () => {
-    const params = new URL(location.href).searchParams;
-    if (params.get('login') === 'failed') {
-      message('Login gagal. Coba lagi.', true);
-      history.replaceState(null, '', '/admin/recruitment/');
-    } else if (params.get('login') === 'unavailable') {
-      message('Konfigurasi server belum lengkap.', true);
-      history.replaceState(null, '', '/admin/recruitment/');
-    }
-
-    const select = byId('filter-hods');
-    for (const h of hodsDivisions) {
-      const opt = document.createElement('option');
-      opt.value = h;
-      opt.textContent = h;
-      select.appendChild(opt);
-    }
-
+    window.addEventListener('beforeunload', (e) => {
+      if (current && dirty()) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
     byId('logout').addEventListener('click', async () => {
-      if (busy) return;
-      setBusy(true);
+      const gen = session;
       try {
-        const response = await fetch('/api/admin/auth/logout', {
+        const r = await fetch('/api/admin/auth/logout', {
           method: 'POST',
           credentials: 'same-origin',
           cache: 'no-store',
           headers: { 'X-CSRF-Token': csrf || '' },
         });
-        if (response.ok || response.status === 401) {
-          expire();
+        if (gen !== session) return;
+        if (r.ok || r.status === 401) {
+          endSession();
           message('Sudah keluar dari admin.');
-        } else message('Belum berhasil keluar. Coba lagi.', true);
+        } else {
+          if (r.status === 403) endSession('FORBIDDEN');
+          message('Belum berhasil keluar. Coba lagi.', true);
+        }
       } catch {
         message('Koneksi terputus. Coba keluar lagi.', true);
-      } finally {
-        setBusy(false);
       }
     });
-
-    byId('login-form').addEventListener('submit', async (event) => {
-      event.preventDefault();
-      if (busy) return;
-      const email = byId('login-email').value;
-      const password = byId('login-password').value;
-      if (!email || !password) return;
-      setBusy(true);
+    byId('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (byId('login-submit').disabled) return;
+      const gen = session;
+      byId('login-submit').disabled = true;
       message('Masuk…');
       try {
-        const response = await fetch('/api/admin/auth/login', {
+        const r = await fetch('/api/admin/auth/login', {
           method: 'POST',
           credentials: 'same-origin',
           cache: 'no-store',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
+          body: JSON.stringify({
+            email: byId('login-email').value,
+            password: byId('login-password').value,
+          }),
         });
-        if (response.status === 429) {
-          message(errors.LIMIT, true);
-          return;
-        }
-        const result = await response.json().catch(() => ({}));
-        if (!response.ok || !result.ok) {
+        const d = await r.json();
+        if (gen !== session) return;
+        byId('login-password').value = '';
+        if (!r.ok) {
           message(
-            result.error?.code === 'CONFIGURATION'
-              ? errors.CONFIGURATION
+            r.status === 429
+              ? 'Terlalu banyak percobaan. Coba beberapa saat lagi.'
               : 'Email atau password salah.',
             true,
           );
           return;
         }
-        byId('login-password').value = '';
-        sessionGeneration++;
-        csrf = result.csrf;
+        session++;
+        csrf = d.csrf;
         loggedIn();
-        startRefreshTimer();
-        await loadList();
-        await loadStats();
+        await bootstrap();
       } catch {
         message('Koneksi terputus.', true);
       } finally {
-        setBusy(false);
+        byId('login-submit').disabled = false;
       }
     });
-
-    byId('filter-btn').addEventListener('click', () => {
-      loadList(byId('search').value, byId('filter-hods').value);
-    });
-
-    byId('search').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter')
-        loadList(byId('search').value, byId('filter-hods').value);
-    });
-
-    byId('prev-page').addEventListener('click', () => {
-      if (page > 0) {
-        page--;
-        renderTable();
-      }
-    });
-
-    byId('next-page').addEventListener('click', () => {
-      if ((page + 1) * PAGE_SIZE < applications.length) {
-        page++;
-        renderTable();
-      }
-    });
-
-    byId('back-list').addEventListener('click', () => {
-      byId('detail-area').hidden = true;
-      byId('table-wrapper').hidden = false;
-      renderTable();
-      message(filtered + ' dari ' + total + ' pendaftar');
-    });
-
     fetch('/api/recruitment/application', { cache: 'no-store' })
-      .then(async (response) => {
-        if (!response.ok) throw new Error();
-        return response.json();
-      })
-      .then((result) => {
-        byId('intake-status').textContent =
-          result.accepting === true
+      .then((r) => r.json())
+      .then(
+        (d) =>
+          (byId('intake-status').textContent = d.accepting
             ? 'Pendaftaran dibuka. Pendaftar baru akan tersimpan di sini.'
-            : 'Pendaftaran belum dibuka. Form belum menerima kiriman baru.';
-      })
-      .catch(() => {
-        byId('intake-status').textContent =
-          'Status pendaftaran belum bisa diperiksa.';
-      });
-    loadList();
-    loadStats();
-    startRefreshTimer();
-  };
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
+            : 'Pendaftaran belum dibuka.'),
+      )
+      .catch(
+        () =>
+          (byId('intake-status').textContent =
+            'Status pendaftaran belum bisa diperiksa.'),
+      );
+    byId('login-submit').disabled = true;
+    bootstrap().finally(() => {
+      byId('login-submit').disabled = false;
+    });
   }
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', init);
+  else init();
 })();

@@ -1,5 +1,47 @@
 # SOP CMS — Data Sorcerers
 
+## Review pendaftar — SOP fitur lokal (8 Oct 2026)
+
+Fitur hanya **lokal**, additive migration belum applied dan belum deployed/live
+accepted. Production e59abde OPEN/shared login tetap baseline. Hasil/QA/objects:
+[implementasi lokal A–D](recruitment-review-local-implementation.md).
+
+Setelah gate live terpisah disetujui dan acceptance selesai, alur owner:
+
+1. Login admin existing sekali; menu Pendaftar memakai shared sesi CMS dengan
+   izin recruitment sendiri. Filter nama/email/domain/status/tanggal WIB; reset
+   atau Muat ulang daftar membuka snapshot baru.50/page server-side, bukan slice
+   seluruh pendaftar di browser. Global total berbeda dari hasil filter.
+2. Buka detail dengan button/keyboard. Jawaban asli38fields tidak diedit. Pilih
+   status hanya draft; Simpan status menyimpan keputusan internal saja. Alasan
+   10–500codepoints wajib untuk Diterima/Ditolak/Mundur dan reopen. Konfirmasi
+   inline terminal/reopen, riwayat lama tetap ada, tidak mengirim pesan/Team write.
+3. Tambah catatan1–4000codepoints/16KiB plain text. Notes append-only; koreksi
+   sebagai catatan baru. Notes/history20/page, actor/waktu dari server (WIB UI).
+4. Konflik409: draft tetap, baca detail terbaru, tinjau lagi, lalu kiriman baru.
+   Tidak auto-overwrite. Timeout/network/5xx = **belum dikonfirmasi**; retry manual
+   kiriman sama memakai UUID+payload tetap. Detail/history dibaca lagi sesudah
+   replay; hasil replay lama tidak menimpa state terbaru.
+5. Setelah reload penuh, intent memory hilang: baca detail/aktivitas sebelum
+   menambahkan ulang catatan. Jangan anggap network failure berarti DB gagal.
+   Logout/401/403 membuang applicant data/draft/in-flight replies. Jangan salin
+   credential, jawaban, notes atau alasan ke chat/log/artifact/commit.
+
+Per request trusted Auth actor → CMS permission → recruitment allowlist; POST
+Origin+CSRF sebelum privileged calls. Reads v2 service-only; writes via existing
+Management API dan SQL rechecks permission locks, version/dedupe, state/note/event
+atomik. Tidak menambah dependency/env/provider/user/grant atau browser DB access.
+Read-audit tetap best effort; mutation events atomic. Raw search sekarang tidak
+masuk read-audit; historical audit retention/redaction bukan bagian pass ini.
+
+QA fresh: CMS94PASS+10Team liveSKIP, recruitment39PASS, intakeDB13/13,
+workflow ephemeral18.6 142/142, native/Team/workflow4widths,7gates+SEO,
+snapshot/19publicHTML exact, secrets0. Ephemeral/mock bukan live owner proof.
+Apply SQL existing project+objects/backup, push exact HEAD SHA, dan concrete
+fixture12POST+guarded child cleanup masing-masing perlu approval tersendiri.
+Rollback forward fix; preserve new metadata/events, gunakan retained old RPC/UI
+bila deployment rollback diotorisasi, tidak drop tables/delete notes sebagai undo.
+
 ## GAS code cleanup LIVE e59abde — 8 Oct 2026
 
 Faiz (`push`) approved exact e59abde7b16766646bc2f40dd5169cafe0bbd92a;

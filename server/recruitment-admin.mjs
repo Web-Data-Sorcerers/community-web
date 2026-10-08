@@ -1,4 +1,12 @@
 import { createCmsAuth } from './cms-auth.mjs';
+import {
+  filters,
+  mutation,
+  receipt,
+  page,
+  queryInput,
+  project,
+} from './recruitment-review-contract.mjs';
 
 const headers = {
   'Cache-Control': 'no-store',
@@ -20,7 +28,10 @@ async function boundedJson(request, limit) {
     size += value.byteLength;
     if (size > limit) {
       await reader.cancel();
-      throw new Error();
+      throw Object.assign(new Error('BODY_TOO_LARGE'), {
+        code: 'BODY_TOO_LARGE',
+        status: 413,
+      });
     }
     chunks.push(Buffer.from(value));
   }
@@ -59,8 +70,47 @@ export function createRecruitmentAdminHandler({
       },
       body: JSON.stringify(params),
     });
+    const data = await boundedJson(response, 1024 * 1024).catch(() => {
+      throw new Error('INVALID_UPSTREAM');
+    });
+    if (!response.ok) {
+      if (['FORBIDDEN', 'NOT_FOUND', 'INVALID_INPUT'].includes(data?.message))
+        throw Object.assign(new Error(data.message), {
+          code: data.message,
+          status: { FORBIDDEN: 403, NOT_FOUND: 404, INVALID_INPUT: 400 }[
+            data.message
+          ],
+        });
+      throw new Error();
+    }
+    return data;
+  }
+
+  async function writeRpc(name, actorId, body) {
+    if (!env.SUPABASE_ACCESS_TOKEN) throw new Error();
+    // Function names are dispatch constants. Hex UTF-8 literals cannot become SQL.
+    const literal = (value) =>
+      `convert_from(decode('${Buffer.from(value).toString('hex')}','hex'),'UTF8')`;
+    const query = `select public.${name}(${literal(actorId)},${literal(JSON.stringify(body))}::jsonb) as result`;
+    const response = await fetchImpl(
+      'https://api.supabase.com/v1/projects/yejrdckcmlxrkklgtrwy/database/query',
+      {
+        method: 'POST',
+        redirect: 'error',
+        signal: AbortSignal.timeout(30000),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${env.SUPABASE_ACCESS_TOKEN}`,
+        },
+        body: JSON.stringify({ query }),
+      },
+    );
     if (!response.ok) throw new Error();
-    return boundedJson(response, 1024 * 1024);
+    const data = await boundedJson(response, 1024 * 1024).catch(() => {
+      throw new Error('INVALID_UPSTREAM');
+    });
+    if (!Array.isArray(data) || data.length !== 1) throw new Error();
+    return data[0].result;
   }
 
   async function audit(action, actor, targetId, details) {
@@ -88,9 +138,27 @@ export function createRecruitmentAdminHandler({
     if (route === 'login') return auth.login(request);
     if (route === 'refresh') return auth.refresh(request);
     if (route === 'logout') return auth.logout(request);
-    if (!['list', 'detail', 'stats'].includes(route))
+    if (
+      ![
+        'list',
+        'detail',
+        'stats',
+        'notes',
+        'history',
+        'status',
+        'note',
+      ].includes(route)
+    )
       return error('NOT_FOUND', 404);
-    if (!['GET', 'POST'].includes(request.method))
+    if (
+      !(
+        ['list', 'stats'].includes(route)
+          ? ['GET', 'POST']
+          : ['status', 'note'].includes(route)
+            ? ['POST']
+            : ['GET']
+      ).includes(request.method)
+    )
       return error('METHOD_NOT_ALLOWED', 405);
 
     let finish = json;
@@ -112,64 +180,124 @@ export function createRecruitmentAdminHandler({
       if (identity?.ok !== true)
         return finish({ ok: false, error: { code: 'FORBIDDEN' } }, 403);
       const actor = authorized.actor;
-      if (route === 'list') {
-        let filters = {};
+      const url = new URL(request.url);
+      const actorParams = { p_actor_id: actor.id };
+      let result, input;
+      if (['status', 'note'].includes(route)) {
         if (
-          request.method === 'POST' &&
-          request.headers.get('content-type')?.startsWith('application/json')
-        ) {
-          filters = await boundedJson(request, 32768).catch(() => null);
-          if (!filters || typeof filters !== 'object' || Array.isArray(filters))
-            return finish({ ok: false, error: { code: 'INVALID_INPUT' } }, 400);
-        } else if (request.method === 'GET') {
-          const url = new URL(request.url);
-          const search = url.searchParams.get('search');
-          const hods = url.searchParams.get('primary_hods');
-          const since = url.searchParams.get('since');
-          const until = url.searchParams.get('until');
-          const limit = url.searchParams.get('limit');
-          const offset = url.searchParams.get('offset');
-          if (search) filters.search = search;
-          if (hods) filters.primary_hods = hods;
-          if (since) filters.since = since;
-          if (until) filters.until = until;
-          if (limit) filters.limit = parseInt(limit, 10);
-          if (offset) filters.offset = parseInt(offset, 10);
-        }
-        const result = await callRpc('admin_list_applications', {
-          p_filters: filters,
-        });
-        await audit('admin_read_list', actor, null, { filters });
-        return finish({ ok: true, data: result });
-      }
-
-      if (route === 'detail') {
-        const url = new URL(request.url);
-        const receipt = url.searchParams.get('receipt');
-        if (
-          !receipt ||
-          !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-            receipt,
-          )
+          !request.headers.get('content-type')?.startsWith('application/json')
         )
           return finish({ ok: false, error: { code: 'INVALID_INPUT' } }, 400);
-        const result = await callRpc('admin_get_application', {
-          p_receipt: receipt,
-        });
-        if (!result?.found)
-          return finish({ ok: false, error: { code: 'NOT_FOUND' } }, 404);
-        await audit('admin_read_detail', actor, receipt, {});
+        input = mutation(await boundedJson(request, 32768), route);
+        result = project(
+          await writeRpc(
+            route === 'status'
+              ? 'admin_update_application_status'
+              : 'admin_add_review_note',
+            actor.id,
+            input,
+          ),
+          route,
+        );
+        if (!result.ok)
+          return finish(
+            result,
+            {
+              FORBIDDEN: 403,
+              NOT_FOUND: 404,
+              INVALID_INPUT: 400,
+              CONFLICT: 409,
+              ID_CONFLICT: 409,
+              INVALID_TRANSITION: 409,
+            }[result.error.code],
+          );
         return finish({ ok: true, data: result });
       }
-
-      if (route === 'stats') {
-        const result = await callRpc('admin_get_stats', {});
-        await audit('admin_stats', actor, null, {});
-        return finish({ ok: true, data: result });
+      if (['list', 'stats'].includes(route)) {
+        if (request.method === 'POST') {
+          if (
+            !request.headers.get('content-type')?.startsWith('application/json')
+          )
+            return finish({ ok: false, error: { code: 'INVALID_INPUT' } }, 400);
+          input = await boundedJson(request, 32768);
+        } else
+          input = queryInput(url, [
+            'search',
+            'primary_hods',
+            'status',
+            'since',
+            'until',
+            'sort',
+            'limit',
+            'offset',
+            'as_of',
+          ]);
+        input = filters(input);
+        result = project(
+          await callRpc(
+            route === 'list'
+              ? 'admin_list_applications_v2'
+              : 'admin_get_stats_v2',
+            { ...actorParams, p_filters: input },
+          ),
+          route,
+          input,
+        );
+        await audit(
+          route === 'list' ? 'admin_read_list' : 'admin_stats',
+          actor,
+          null,
+          {
+            search_applied: Boolean(input.search),
+            domain: input.primary_hods || '',
+            status: input.status || '',
+            date_applied: Boolean(input.since || input.until),
+            offset: input.offset,
+            limit: input.limit,
+          },
+        );
+      } else {
+        input = queryInput(
+          url,
+          route === 'detail' ? ['receipt'] : ['receipt', 'limit', 'offset'],
+        );
+        const id = receipt(input.receipt);
+        if (route === 'detail') {
+          result = project(
+            await callRpc('admin_get_application_v2', {
+              ...actorParams,
+              p_receipt: id,
+            }),
+            route,
+          );
+          if (!result.found)
+            return finish({ ok: false, error: { code: 'NOT_FOUND' } }, 404);
+        } else {
+          delete input.receipt;
+          input = page(input);
+          result = project(
+            await callRpc(
+              route === 'notes'
+                ? 'admin_list_review_notes'
+                : 'admin_list_review_events',
+              { ...actorParams, p_receipt: id, p_page: input },
+            ),
+            route,
+            input,
+          );
+        }
+        await audit('admin_read_detail', actor, id, { surface: route });
       }
-
-      return error('NOT_FOUND', 404);
-    } catch {
+      return finish({ ok: true, data: result });
+    } catch (cause) {
+      if (
+        ['INVALID_INPUT', 'BODY_TOO_LARGE', 'FORBIDDEN', 'NOT_FOUND'].includes(
+          cause.code,
+        )
+      )
+        return finish({ ok: false, error: { code: cause.code } }, cause.status);
+      if (cause instanceof SyntaxError)
+        return finish({ ok: false, error: { code: 'INVALID_INPUT' } }, 400);
       return finish({ ok: false, error: { code: 'SERVER_ERROR' } }, 502);
     }
   };

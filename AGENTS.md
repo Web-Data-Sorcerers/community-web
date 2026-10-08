@@ -1,5 +1,44 @@
 # AGENTS.md — instructions for AI agents
 
+## Pengelolaan pendaftar — A–D LOKAL selesai (8 Oct 2026)
+
+Faiz mengotorisasi implementasi lokal master plan §1–18. Server pagination50/page
+(max100), filter/status/date WIB/sort/as_of/statistik,8status/transitions/reasons,
+review metadata/version, notes append-only dan history20/page, atomic mutation+
+idempotent UUID retry/conflict tersedia lokal di dashboard Pendaftar existing.
+Canonical38fields/hash immutable; shared CMS Auth dipakai tanpa perubahan.
+
+Migration additive `supabase/migrations/20261008111118_recruitment_review_workflow.sql` hanya lokal:3private tables,4indexes,
+8private helpers dan7public service-only wrappers,3RLS deny policies. Trusted actor
++CMS permission+recruitment allowlist per request dan SQL (reads/writes); POST
+Origin+CSRF, stream32KiB/upstream1MiB. Writes existing Management API transport;
+SQL locks permission rows → actor/request advisory → applicant, state/note/event
+satu transaksi. Wrapper lama/SQL Auth/intake/CMS/grants tetap utuh.
+
+Node22.23.0 QA: CMS94PASS+10Team live mutation SKIP/0FAIL, recruitment39PASS,
+intake ephemeral13/13, workflow Postgres18.6 142/142 (production17.11 tidak diuji
+mutation).7gates+SEO PASS, responsive468/468, spacing39+workflow, pageerrors[].
+Native/Team/workflow mocks masing-masing320/390/768/1440 PASS; bukan owner/live
+mutation proof. Snapshot4345f1…4857/19publicHTML byte exact, dist71textfiles
+termasuk SVG/server secrets0. Public form script hash sempat berubah akibat
+shared bundling; UI status module dipisah, parity final kembali exact.
+
+Actual catalog read-only: proposed3tables/7wrappers absent, counts applications0
+saat audit/CMSgrant1/recruitmentallowlist1; no applicant payload read/export.
+Origin/main remote fresh e59abde verified read-only. Production baseline READY
+exacte59abde/recruitment OPEN/shared login accepted tetap berlaku. Tidak live
+migration/fixture/grant/user/provider/env/content mutation, hook/deploy atau push.
+**Local complete; applied/deployed/accepted live workflow belum.**
+
+Checkpoint lokal saja, lihat gitlog untuk SHA fitur. NEXT terpisah: exact SQL/
+objects/project web-community+backup/locks approval → apply once; exact HEAD SHA
+approval → satu origin/main push; concrete synthetic12POST+guarded child cleanup
+approval → live acceptance. Izin e59abde consumed; testing absent tidak dibuat.
+Tidak exportPII/bulk/assignment/messages/Team write/Google cleanup dalam scope.
+Detail [hasil lokal](docs/recruitment-review-local-implementation.md); master [workflow plan](docs/recruitment-review-workflow-plan.md).
+Proof ignored artifacts/recruitment-review/{db-proof,browser-proof,integrity-proof,
+qa-summary,catalog-baseline,catalog-final}.json dan synthetic screenshots/logs.
+
 ## Work order aktif — pengelolaan pendaftar PLAN ONLY (8 Oct 2026)
 
 Faiz meminta opsi2 plan detail/rinci: status seleksi, filter dan catatan reviewer

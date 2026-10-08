@@ -38,7 +38,9 @@
     "verify:cms-media": "node scripts/verify-cms-media.mjs",
     "test:recruitment": "node --test tests/recruitment*.test.mjs",
     "verify:recruitment": "node scripts/verify-recruitment-form.mjs",
-    "verify:recruitment-db": "node scripts/verify-recruitment-db.mjs"
+    "verify:recruitment-db": "node scripts/verify-recruitment-db.mjs",
+    "verify:recruitment-review-db": "node scripts/verify-recruitment-review-db.mjs",
+    "verify:recruitment-review": "node scripts/verify-recruitment-review.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.117.3",
