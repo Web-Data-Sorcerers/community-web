@@ -627,9 +627,127 @@ konkret yang belum diizinkan. Sesi ini meminta implementasi lokal plan tersebut,
 bukan izin otomatis untuk push/env/live mutation atau delete resource.
 ```
 
-## 16. Progress sesi planning
+## 16. Progress sesi planning (historis)
 
 - [x] Fresh git/status/refs/Node22 dan actual client/schema/server/test inventory.
 - [x] Plan A–F, mode/envelope/media/failure design, QA/live/backup/rollback/DoD.
 - [x] Prompt AI baru dan pointer work order aktif.
-- [ ] Execution A–F: **belum dilakukan**; user pindah AI untuk eksekusi.
+- [x] User kemudian mengaktifkan implementasi lokal; status aktual di §17.
+- [ ] Config/push/live acceptance/resource retirement masih gated terpisah.
+
+## 17. Eksekusi lokal A–C selesai — live cutover pending (8 Oct 2026)
+
+Faiz memberi instruksi `gass eksekusi` sesudah membaca handoff. Izin ini
+mengaktifkan implementasi lokal; tidak mencakup live config, push, hook/fixture,
+SQL/grant/bucket/provider/recruitment mutation atau pensiun resource. Seluruh
+hasil lokal disiapkan sebelum meminta gate config §9.2. Password rotation owner
+tetap ditunda; tidak ada login/password/session baru pada sesi lokal ini.
+
+### A — actual audit dan frozen-input baseline
+
+- Main awal27a158b, tree awal bersih. `git ls-remote origin refs/heads/main`
+  fresh a042b071e438a5fec59a644c938144158a007602; origin fetch/push tepat satu
+  community-web URL. Docs255d190/e9079e3/27a158b masih local ancestry belum push.
+- Vercel Current dpl_EGG8a3RDz3mxB2BFsgL8hdNMTr2f READY exacta042b07,
+  primary alias assigned; readyAt1791398322353/provider clock. Testing404 dan
+  tiga retained deployment READY; tidak delete ulang atau recreate testing.
+- Read-only catalog/ACL inventory private CMS tables/functions + private bucket,
+  tanpa SQL apply. Server/auth/routes/migration/schema/dependencies tidak berubah.
+- Enam live anon RPC dan full GAS export berhasil captured. Local anon key absent
+  di .env.local, retrieved read-only lewat Management API **in-memory saja**.
+  RPC JSON sizes: Projects1381, Team3311, Roles5783, Domains1402, Hods10147,
+  Partners463bytes; budget1MiB per RPC + aggregate cukup untuk baseline.
+- Replay hybrid dan source baru memakai exact captured sixRPC inputs;
+  **deep-value identical**, bukan comparison dua capture yang dapat drift.
+  Generated JSON top-level order mengikuti Zod schema pada jalur baru; hash file
+  hybrid/supabase dapat berbeda karena serialization order, tanpa content change.
+- Snapshot repo tidak ditulis/reseed dan SHA256 tetap
+  4345f1abe445aa2a400c31413ccc058707a77105a7e388dc8d1074e78da94857.
+  Team drift existing dipertahankan. Fresh19 public routes200 baseline tercatat.
+- Fresh counts Projects4/Team25, grant1active, allowlist1, applications0, objects0.
+  Canonical Projects fingerprint8a7d4624d896842800dfd191892df7a8,
+  Team b867f2890c939b410e3e428259082883 dan allowlist
+  2a36dbfe696b9406baabd0cd4de9fb6f cocok checkpoint accepted.
+  Inventory awal row-level Projects hash memakai projection berbeda; jangan
+  membandingkannya dengan canonical `cms_load_projects()->projects` fingerprint.
+- Production env names/scopes/presence verified; CMS_DATA_SOURCE **belum ada**.
+  GAS/Google/hook testing env tetap present; tidak print/change/delete nilainya.
+  Recruitment runtime accepting:false, anonymous Projects/Team/media401.
+
+### B — implemented contract
+
+- `scripts/cms-client.mjs`: source selection §4.1, direct seven-key envelope dari
+  enam RPC, JSON/MIME/size/timeout bounded, errors fixed perRPC, final strict Zod
+  dan aggregate budget1MiB sebelum media/snapshot writes. No GAS/stale fallback.
+  Public content memakai anon, bukan service key. Return `local`/`remote` retained.
+- Team conversion menolak unknown/missing/duplicate groups, orphan member,
+  duplicate supplied IDs/slot order dan invalid content; urutan fixed groups dan
+  sorted member order existing tetap. Valid top-level SQL metadata tidak masuk
+  snapshot dan tidak menyebabkan false rejection.
+- Private media Projects/Team cache tanpa gate env GAS. Storage menggunakan
+  service key build-only, redirect forbidden, response bounded256KiB, MIME WebP,
+  hash/decode/size existing. Warm verified cache dapat dipakai tanpa key;
+  miss/corrupt offline gagal tanpa network. Temp+rename snapshot/cache preserved.
+- Legacy `fetchCmsSnapshot`, exporter/admin GAS sources, generators, tests/mock
+  dan env/resource tetap retained. Active sync tidak memanggil legacy fetch;
+  server unreachable GAS fallbacks belum dihapus. Cleanup tahapF terpisah.
+- Fixture renderer scripts memilih explicit `local` agar incidental Supabase env
+  tidak menggantikan snapshot fixture. Deploy guard tetap menolak local di Vercel.
+- Tidak ada perubahan UI/editor/auth/session, SQL, recruitment, schema snapshot,
+  snapshot repo atau dependency. Tidak ada content/media/grant write/hook live.
+
+### C — fresh QA Node22.23.0
+
+Binary `/tmp/ds-cms-node22/node_modules/node-linux-x64/bin/node`; binary lama
+hilang dan disiapkan ulang di /tmp, tanpa dependency repo baru. Full tests
+memakai allowlisted environment tanpa server keys; .env.local tidak di-source.
+
+| Check                                | Hasil                                                                                                                                                       |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Full test:cms                        | 127 total: **117PASS +10Team liveSKIP /0FAIL**, actual PostgreSQL, duration476173ms                                                                         |
+| Focused CMS source/legacy/media + PG | 75PASS/0FAIL; bukan pengganti full suite                                                                                                                    |
+| New source matrix                    | 12 tests di full suite; sixRPC HTTP/network/JSON/null/shape/MIME/stream-budget/header-budget/header+body timeout, no fallback/atomic/no temporary snapshots |
+| Media                                | Projects+Team synthetic32×32 no-GAS cold/warm/corrupt/missing-key/offline/404/MIME/hash/bytes/timeout PASS; service-key Storage/anon-key RPC assertions     |
+| test:recruitment                     | 24PASS/0FAIL                                                                                                                                                |
+| Build                                | 0errors,23pages                                                                                                                                             |
+| Visual/navbar/VT                     | PASS; browserErrors[]                                                                                                                                       |
+| Responsive/spacing                   | 468/468 combos,39components PASS                                                                                                                            |
+| Format/SEO                           | PASS; SEO23pages                                                                                                                                            |
+| Native/Team/legacy admin             | Each320/390/768/1440 PASS; mock only                                                                                                                        |
+| Local snapshot/public output         | Repo SHA unchanged,19/19HTML exact against fresh local baseline                                                                                             |
+| Same captured sixRPC inputs          | New/hybrid snapshots deep-value identical                                                                                                                   |
+| Isolated full build                  | SixliveRPC, GAS/Google env absent, all non-Supabase fetch hosts blocked;19/19HTML exact against isolated hybrid-input build                                 |
+| Dist server-secret scan              | 52textfiles,0findings in workspace and isolated builds; values in-memory only                                                                               |
+
+Isolated build pertama memakai symlink node_modules dan Astro gagal compile
+ClientRouter dependency metadata. Harness diganti salinan dependency terisolasi;
+local/hybrid-input dan remote Supabase-only builds keduanya PASS. Ini tidak
+memerlukan app/UI/dependency changes. Tidak menghitung attempt gagal sebagai PASS.
+
+### Gate berikutnya dan batas proof
+
+- Fitur+checkpoint commit **lokal saja**; SHA exact cek `git log`/HEAD. Push akan
+  membawa tiga docs commits sebelum fitur juga. Semua izin SHA lama consumed.
+- Minta izin add **CMS_DATA_SOURCE=supabase**, type plain/nonsecret, target
+  **Production**, projectprj_3KbX29t6DYN1RMTy88lKHXd0IUVE. Tidak replace/delete env
+  lain. Currenta042b07 mengabaikan flag, GAS env tetap menopang rollback lama.
+- Preview build sengaja fail closed bila explicit flag belum configured;
+  perubahan scope Preview bukan bagian izin Production. Local QA explicitlocal.
+- Setelah config approved/verified: izin exact HEAD SHA sebelum satu push origin
+  main; READY+primary alias exact SHA dan read-only real-owner/anon/recruitment/
+  public regression production §11. Tidak mengulang auth migration/one-hour
+  expiry/revoke fixtures accepted bila handler/SQL/session tetap byte-identical.
+- Media refs/objects sekarang0: **belum ada positive cold-media live proof baru**.
+  Synthetic tests Projects+Team PASS; Projects E5 accepted645ec06 menjadi proof
+  historical, bukan live fixture pass ini. Fixture32×32 +exact UID/hash+3hooks+
+  cleanup §11E3 butuh izin baru; Team live upload/write tidak diklaim.
+- Belum ada config cutover/push/newdeployment/owner-session acceptance atau
+  observation/backup/resource retirement. Production tetap hybrid dependencyGAS
+  sampai approved deploy+acceptance. Jangan klaim runtime100%GAS-free sekarang.
+
+Ignored proof `artifacts/cms-gas-retirement/`: inventory, captured-input-parity,
+baseline-local/live, catalog-before, live-build-proof, isolated-build-proof,
+local-final, db-after, full-cms/recruitment/gate/admin logs dan qa-summary.
+Captures content publik hanya untuk parity; tidak ada password/token/cookie/
+recruitment PII/secure backup secrets di artifacts. Tracked summary ini cukup
+untuk handoff bila ignored proof/temp directories tidak tersedia.

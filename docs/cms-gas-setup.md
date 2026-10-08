@@ -1,5 +1,15 @@
 # Pemasangan GAS B1
 
+## GAS retirement — implementasi lokal, belum cutover production
+
+User mengaktifkan implementasi Supabase-only pada8Oct2026. Kode build lokal
+memakai `CMS_DATA_SOURCE=local|supabase` dan enam RPC; production masiha042b07
+hybrid hingga env/push/acceptance diizinkan. Untuk QA offline set
+`CMS_DATA_SOURCE=local`; env GAS tidak lagi memilih source pada versi lokal baru.
+Jangan menjalankan installer/setup GAS atau menghapus deployment/Properties/
+Sheet/Drive dari panduan legacy ini sebagai bagian cutover. Gate config, QA,
+backup, rollback dan resource retirement: [Master Work Plan](cms-gas-retirement-plan.md).
+
 ## Status pemasangan — 6 Oct 2026
 
 **Sudah terpasang.** Sheet/folder, export, env kedua Vercel, dua hooks dan editor

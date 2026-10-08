@@ -3,33 +3,129 @@ import { createHash, randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { cmsSnapshotSchema } from '../src/data/cms-schema.mjs';
-import { MEDIA_PATH, verifyProjectMedia } from '../server/cms-media.mjs';
+import {
+  MEDIA_PATH,
+  MEDIA_OUTPUT_LIMIT,
+  verifyProjectMedia,
+} from '../server/cms-media.mjs';
 
-async function supabaseFetch(supabaseUrl, supabaseKey, rpcName, fetchImpl) {
-  const url = supabaseUrl.replace(/\/+$/, '') + '/rest/v1/rpc/' + rpcName;
-  const response = await (fetchImpl || fetch)(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      apikey: supabaseKey,
-      Authorization: 'Bearer ' + supabaseKey,
-    },
-    signal: AbortSignal.timeout(30000),
-  });
-  if (!response.ok) {
-    throw new Error(
-      'Supabase RPC ' + rpcName + ' failed: HTTP ' + response.status,
-    );
+// Public content RPCs always use the anon key; Storage has a separate build key.
+async function supabaseFetch(
+  supabaseUrl,
+  supabaseKey,
+  rpcName,
+  fetchImpl,
+  timeoutMs,
+) {
+  const controller = new AbortController();
+  const timer = setTimeout(
+    () => controller.abort(),
+    Math.min(timeoutMs, 30000),
+  );
+  try {
+    const response = await fetchImpl(supabaseUrl + '/rest/v1/rpc/' + rpcName, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: supabaseKey,
+        Authorization: 'Bearer ' + supabaseKey,
+      },
+      body: '{}',
+      redirect: 'error',
+      signal: controller.signal,
+    });
+    if (
+      !response.ok ||
+      !/^application\/json(?:\s*;|$)/i.test(
+        response.headers.get('content-type') || '',
+      )
+    ) {
+      await response.body?.cancel();
+      throw new Error('Invalid RPC response.');
+    }
+    return JSON.parse(await responseText(response));
+  } catch {
+    // Never expose an upstream URL, body, parser message, or credential.
+    throw new Error('Supabase RPC ' + rpcName + ' failed.');
+  } finally {
+    clearTimeout(timer);
   }
-  return response.json();
+}
+
+function supabaseOrigin(value) {
+  try {
+    const url = new URL(value);
+    if (
+      url.protocol !== 'https:' ||
+      url.username ||
+      url.password ||
+      url.search ||
+      url.hash ||
+      url.pathname !== '/'
+    )
+      throw new Error();
+    return url.origin;
+  } catch {
+    throw new Error('Invalid SUPABASE_URL configuration.');
+  }
+}
+
+export function cmsDataSource(env) {
+  const flag = env.CMS_DATA_SOURCE;
+  const deployed =
+    env.VERCEL === '1' || ['production', 'preview'].includes(env.VERCEL_ENV);
+  if (flag !== undefined && !['local', 'supabase'].includes(flag))
+    throw new Error('CMS_DATA_SOURCE must be local or supabase.');
+  if (deployed && flag !== 'supabase')
+    throw new Error('Vercel builds require CMS_DATA_SOURCE=supabase.');
+  if (flag === 'local') return 'local';
+  const url = Boolean(env.SUPABASE_URL),
+    key = Boolean(env.SUPABASE_ANON_KEY);
+  if (url !== key || (flag === 'supabase' && !url))
+    throw new Error(
+      'CMS build requires SUPABASE_URL and SUPABASE_ANON_KEY together.',
+    );
+  return url && key ? 'supabase' : 'local';
 }
 
 export const CMS_MAX_BYTES = 1024 * 1024;
 export const CMS_TIMEOUT_MS = 60000;
 
 function rebuildTeamSnapshot(data) {
-  const members = data.members || [];
-  const groups = data.groups || [];
+  const members = data.members;
+  const groups = data.groups;
+  const expected = [
+    'leader',
+    'data',
+    'core',
+    'language',
+    'vision',
+    'product',
+    'growth',
+  ];
+  if (
+    !Array.isArray(members) ||
+    !Array.isArray(groups) ||
+    groups.length !== expected.length ||
+    groups.some((g, i) => !g || g.id !== expected[i])
+  )
+    throw new Error('Invalid Team groups.');
+  const ids = new Set(),
+    slots = new Set();
+  for (const m of members) {
+    if (
+      !m ||
+      !expected.includes(m.group) ||
+      !Number.isInteger(m.order) ||
+      m.order < 1 ||
+      m.order > 8 ||
+      slots.has(m.group + ':' + m.order) ||
+      (m.id !== undefined && (typeof m.id !== 'string' || ids.has(m.id)))
+    )
+      throw new Error('Invalid Team members.');
+    slots.add(m.group + ':' + m.order);
+    if (m.id !== undefined) ids.add(m.id);
+  }
 
   const leaderMembers = members
     .filter((m) => m.group === 'leader')
@@ -98,10 +194,11 @@ function googleUrl(value, exportEndpoint = false) {
   return url;
 }
 
-async function responseText(response) {
-  const advertised = Number(response.headers.get('content-length'));
-  if (advertised > CMS_MAX_BYTES)
+async function responseBytes(response, limit = CMS_MAX_BYTES) {
+  if (Number(response.headers.get('content-length')) > limit) {
+    await response.body?.cancel();
     throw new Error('CMS export exceeds the size limit.');
+  }
   if (!response.body) throw new Error('CMS export response is empty.');
   const reader = response.body.getReader();
   const chunks = [];
@@ -111,15 +208,18 @@ async function responseText(response) {
       const { done, value } = await reader.read();
       if (done) break;
       bytes += value.byteLength;
-      if (bytes > CMS_MAX_BYTES)
-        throw new Error('CMS export exceeds the size limit.');
+      if (bytes > limit) throw new Error('CMS export exceeds the size limit.');
       chunks.push(value);
     }
   } finally {
     await reader.cancel().catch(() => {});
     reader.releaseLock();
   }
-  return Buffer.concat(chunks).toString('utf8');
+  return Buffer.concat(chunks);
+}
+
+async function responseText(response) {
+  return (await responseBytes(response)).toString('utf8');
 }
 
 async function fetchCmsSnapshotOnce({
@@ -225,104 +325,45 @@ export async function syncCmsSnapshot({
   timeoutMs = CMS_TIMEOUT_MS,
   mediaRoot = new URL('../public/', import.meta.url),
 }) {
-  const apiUrl = env.CMS_API_URL;
-  const apiToken = env.CMS_API_TOKEN;
-  const supabaseUrl = env.SUPABASE_URL;
-  const supabaseKey = env.SUPABASE_ANON_KEY;
-  if (!apiUrl && !apiToken) {
+  const source = cmsDataSource(env);
+  if (source === 'local') {
     const snapshot = parseSnapshot(await readFile(snapshotPath, 'utf8'));
     await cacheProjectMedia({ snapshot, mediaRoot });
     return 'local';
   }
-  if (!apiUrl || !apiToken)
-    throw new Error(
-      'Configure both CMS_API_URL and CMS_API_TOKEN, or neither for local mode.',
-    );
-  const snapshot = await fetchCmsSnapshot({
-    apiUrl,
-    apiToken,
-    fetchImpl,
-    timeoutMs,
-  });
-
-  if (apiUrl && apiToken) {
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error(
-        'CMS migration requires SUPABASE_URL and SUPABASE_ANON_KEY',
-      );
-    }
-
-    const sp = await supabaseFetch(
+  const supabaseUrl = supabaseOrigin(env.SUPABASE_URL);
+  const snapshot = { schemaVersion: 1 };
+  for (const collection of [
+    'projects',
+    'team',
+    'roles',
+    'domains',
+    'hods',
+    'partners',
+  ]) {
+    const rpcName = 'cms_load_' + collection;
+    const data = await supabaseFetch(
       supabaseUrl,
-      supabaseKey,
-      'cms_load_projects',
+      env.SUPABASE_ANON_KEY,
+      rpcName,
       fetchImpl,
+      timeoutMs,
     );
-    snapshot.projects = sp.projects;
-
-    const st = await supabaseFetch(
-      supabaseUrl,
-      supabaseKey,
-      'cms_load_team',
-      fetchImpl,
-    );
-    snapshot.team = rebuildTeamSnapshot(st);
-
-    const sr = await supabaseFetch(
-      supabaseUrl,
-      supabaseKey,
-      'cms_load_roles',
-      fetchImpl,
-    );
-    snapshot.roles = sr.roles;
-
-    // Keep Domains upstream JSON/network errors from exposing private response details.
     try {
-      const sd = await supabaseFetch(
-        supabaseUrl,
-        supabaseKey,
-        'cms_load_domains',
-        fetchImpl,
-      );
-      snapshot.domains = sd.domains;
+      snapshot[collection] =
+        collection === 'team' ? rebuildTeamSnapshot(data) : data[collection];
+      // Validate each content collection without spreading RPC metadata.
+      cmsSnapshotSchema.shape[collection].parse(snapshot[collection]);
     } catch {
-      throw new Error('Supabase RPC cms_load_domains failed.');
+      throw new Error('Supabase RPC ' + rpcName + ' failed.');
     }
-
-    // Hods upstream errors must not expose private response bodies or URLs.
-    try {
-      const sh = await supabaseFetch(
-        supabaseUrl,
-        supabaseKey,
-        'cms_load_hods',
-        fetchImpl,
-      );
-      snapshot.hods = sh.hods;
-    } catch {
-      throw new Error('Supabase RPC cms_load_hods failed.');
-    }
-
-    // Partners upstream errors must not expose private response bodies or URLs.
-    try {
-      const partners = await supabaseFetch(
-        supabaseUrl,
-        supabaseKey,
-        'cms_load_partners',
-        fetchImpl,
-      );
-      snapshot.partners = partners.partners;
-    } catch {
-      throw new Error('Supabase RPC cms_load_partners failed.');
-    }
-
-    validateCmsSnapshot(snapshot);
   }
-
+  const validated = validateCmsSnapshot(snapshot);
+  if (Buffer.byteLength(JSON.stringify(validated)) > CMS_MAX_BYTES)
+    throw new Error('CMS snapshot exceeds the size limit.');
   await cacheProjectMedia({
-    snapshot,
+    snapshot: validated,
     mediaRoot,
-    apiUrl,
-    apiToken,
     fetchImpl,
     timeoutMs,
     supabaseUrl,
@@ -334,7 +375,7 @@ export async function syncCmsSnapshot({
       : pathToFileURL(resolve(snapshotPath));
   const temp = new URL(`.cms-${randomUUID()}.tmp`, target);
   try {
-    await writeFile(temp, `${JSON.stringify(snapshot, null, 2)}\n`, {
+    await writeFile(temp, `${JSON.stringify(validated, null, 2)}\n`, {
       flag: 'wx',
       mode: 0o600,
     });
@@ -350,8 +391,6 @@ export async function syncCmsSnapshot({
 export async function cacheProjectMedia({
   snapshot,
   mediaRoot,
-  apiUrl,
-  apiToken,
   fetchImpl = fetch,
   timeoutMs = CMS_TIMEOUT_MS,
   supabaseUrl,
@@ -387,52 +426,45 @@ export async function cacheProjectMedia({
     } catch {
       /* Refetch a missing or corrupt cache entry; never silently use stale bytes. */
     }
-    if (!apiUrl || !apiToken)
+    if (!supabaseUrl || !supabaseMediaKey)
       throw new Error(
-        'CMS project media cache is missing or invalid. Configure remote CMS access.',
+        'CMS media cache is missing or invalid. Media fetch requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.',
       );
+    const origin = supabaseOrigin(supabaseUrl);
+    const storagePath = image.replace(/^\/images\/cms\//, '');
+    const controller = new AbortController();
+    const timer = setTimeout(
+      () => controller.abort(),
+      Math.min(timeoutMs, 15000),
+    );
     let bytes;
-    if (
-      image.startsWith('/images/cms/team/') ||
-      image.startsWith('/images/cms/projects/')
-    ) {
-      if (!supabaseUrl || !supabaseMediaKey)
-        throw new Error(
-          'Media fetch requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY',
-        );
-      const storagePath = image.replace(/^\/images\/cms\//, '');
-      const storageUrl =
-        supabaseUrl.replace(/\/+$/, '') +
-        '/storage/v1/object/cms-media/' +
-        storagePath;
-      const sres = await fetchImpl(storageUrl, {
-        headers: {
-          Authorization: 'Bearer ' + supabaseMediaKey,
+    try {
+      const response = await fetchImpl(
+        origin + '/storage/v1/object/cms-media/' + storagePath,
+        {
+          headers: { Authorization: 'Bearer ' + supabaseMediaKey },
+          redirect: 'error',
+          signal: controller.signal,
         },
-        signal: AbortSignal.timeout(15000),
-      });
-      if (!sres.ok) throw new Error('Storage media fetch failed: ' + image);
-      const buf = Buffer.from(await sres.arrayBuffer());
-      const media = {
-        image,
-        mimeType: 'image/webp',
-        data: buf.toString('base64'),
-      };
-      bytes = await verifyProjectMedia(media, image);
-    } else {
-      try {
-        const media = await fetchCmsSnapshot({
-          apiUrl,
-          apiToken,
-          fetchImpl,
-          timeoutMs,
-          action: 'media',
-          image,
-        });
-        bytes = await verifyProjectMedia(media, image);
-      } catch {
-        throw new Error('CMS project media fetch or validation failed.');
+      );
+      if (
+        !response.ok ||
+        !/^image\/webp(?:\s*;|$)/i.test(
+          response.headers.get('content-type') || '',
+        )
+      ) {
+        await response.body?.cancel();
+        throw new Error('Invalid Storage response.');
       }
+      const buffer = await responseBytes(response, MEDIA_OUTPUT_LIMIT);
+      bytes = await verifyProjectMedia(
+        { image, mimeType: 'image/webp', data: buffer.toString('base64') },
+        image,
+      );
+    } catch {
+      throw new Error('CMS project media fetch or validation failed.');
+    } finally {
+      clearTimeout(timer);
     }
     await mkdir(new URL('./', target), { recursive: true });
     const temp = new URL(`.media-${randomUUID()}.tmp`, target);

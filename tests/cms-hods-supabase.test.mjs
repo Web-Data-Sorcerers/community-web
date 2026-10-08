@@ -54,7 +54,7 @@ for (const failure of [
   'metadata',
   'gas-invalid',
 ]) {
-  test(`hybrid Hods source and atomic failure: ${failure || 'success'}`, async () => {
+  test(`Supabase-only Hods source and atomic failure: ${failure || 'success'}`, async () => {
     const dir = await mkdtemp(join(tmpdir(), 'ds-hods-'));
     try {
       const path = join(dir, 'snapshot.json');
@@ -79,7 +79,11 @@ for (const failure of [
         env,
         fetchImpl: async (url, options) => {
           const u = new URL(url);
-          if (u.hostname === 'script.google.com') return Response.json(gas);
+          assert.equal(
+            u.hostname,
+            'example.supabase.co',
+            'GAS must never be called',
+          );
           assert.equal(options.headers.apikey, env.SUPABASE_ANON_KEY);
           assert.equal(options.method, 'POST');
           if (u.pathname.endsWith('cms_load_partners'))
@@ -106,7 +110,7 @@ for (const failure of [
           );
         },
       });
-      if (failure) {
+      if (failure && failure !== 'gas-invalid') {
         await assert.rejects(run, (error) => {
           assert(!error.message.includes('PRIVATE'));
           return true;
@@ -119,7 +123,7 @@ for (const failure of [
           hods,
         });
       }
-      assert.equal(calls, failure === 'gas-invalid' ? 0 : 1);
+      assert.equal(calls, 1);
       assert.deepEqual((await readdir(dir)).sort(), ['snapshot.json']);
     } finally {
       await rm(dir, { recursive: true, force: true });
@@ -145,8 +149,8 @@ test('Hods sync local mode and partial remote configuration', async () => {
       'local',
     );
     for (const config of [
-      { CMS_API_URL: env.CMS_API_URL },
-      { CMS_API_TOKEN: env.CMS_API_TOKEN },
+      { SUPABASE_URL: env.SUPABASE_URL },
+      { SUPABASE_ANON_KEY: env.SUPABASE_ANON_KEY },
     ])
       await assert.rejects(
         syncCmsSnapshot({

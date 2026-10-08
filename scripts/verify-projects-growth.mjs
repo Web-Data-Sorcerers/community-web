@@ -13,7 +13,7 @@ const original = await readFile(snapshotPath, 'utf8');
 const baseline = JSON.parse(original);
 const output = new URL('artifacts/cms-growth/', root);
 await mkdir(output, { recursive: true });
-const env = { ...process.env };
+const env = { ...process.env, CMS_DATA_SOURCE: 'local' };
 delete env.CMS_API_URL;
 delete env.CMS_API_TOKEN;
 const build = async (label) => {

@@ -1,7 +1,7 @@
 import { setDefaultResultOrder } from 'node:dns';
 import { syncCmsSnapshot } from './cms-client.mjs';
 
-// Prefer IPv4 for Google hosts; native Node 22 failed with the default DNS order.
+// Preserve the established build DNS order for upstream content requests.
 setDefaultResultOrder('ipv4first');
 
 const snapshotUrl = new URL('../src/data/cms-snapshot.json', import.meta.url);

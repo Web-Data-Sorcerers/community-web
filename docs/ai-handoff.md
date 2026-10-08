@@ -1,5 +1,40 @@
 # AI handoff — current context
 
+## Eksekusi GAS retirement lokal — 8 Oct 2026
+
+Faiz mengaktifkan eksekusi lokal (`gass eksekusi`). Build lokal sekarang memilih
+`CMS_DATA_SOURCE=local|supabase`; mode remote menyusun schemaVersion1 langsung
+dari enam RPC anon tanpa export GAS. Deploy Vercel production/preview wajib flag
+`supabase` eksplisit dan pasangan URL/anon lengkap; invalid/partial config gagal.
+Mode local tidak fetch network, termasuk saat cache media miss. Media Projects/
+Team memakai private Storage dengan service key build/server-only, tanpa gate
+atau fallback GAS; ukuran/MIME/hash/decode dan snapshot atomic tetap diperiksa.
+
+Production **masih a042b07**, READY exact SHA + primary alias fresh verified;
+HEAD lokal sebelum fitur27a158b, origin satu push URL community-web. Testing
+absent404 dan tiga retained deployments READY verified. Tidak ada env mutation,
+push, hook, fixture/upload, content write, SQL/grant/bucket/provider/recruitment
+mutation atau penghapusan resource. Auth A–E accepted tetap baseline; handlers,
+SQL, schema snapshot, dependency, UI dan snapshot repo tidak diubah.
+
+Fresh enam RPC + full GAS export captured; jalur hybrid dan Supabase-only memakai
+**input RPC yang sama**, value-identik. Fresh DB Projects4/Team25, grant1active,
+allowlist1, applications0, media objects0; fingerprint content sesuai checkpoint.
+Team drift existing dipertahankan; snapshot repo SHA256 tetap
+`4345f1abe445aa2a400c31413ccc058707a77105a7e388dc8d1074e78da94857`.
+Node22.23.0 dipasang ulang di `/tmp/ds-cms-node22/node_modules/node-linux-x64/bin/node`.
+Anon key lokal retrieved read-only in-memory; credential tidak disimpan.
+
+QA/proof final dicatat di [GAS retirement plan](cms-gas-retirement-plan.md) §17 sebelum commit fitur.
+NEXT: hasil lokal+QA → izin konkret **CMS_DATA_SOURCE=supabase Production** pada
+prj_3KbX29t6DYN1RMTy88lKHXd0IUVE → izin exact HEAD SHA untuk satu push origin main →
+READY/read-only acceptance production. Preview tetap fail closed bila flag belum
+configured; perubahan scope Preview memerlukan keputusan terpisah. Izin lama
+consumed. Fixture/tiga hooks/cleanup dan pensiun env/GAS/Sheet/Drive/resource
+memerlukan izin baru sesuai §11E3/§12; kode/env legacy tetap retained sampai
+acceptance+backup+observasi+approval. Work order terbaru ini mengalahkan PLAN
+ONLY GAS historis di bawah; arsip auth/dua-domain tidak dijalankan ulang.
+
 ## Work order aktif — GAS retirement PLAN ONLY (8 Oct 2026)
 
 Faiz meminta plan rinci lalu pindah AI untuk eksekusi. Baca

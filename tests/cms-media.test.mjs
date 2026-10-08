@@ -161,8 +161,11 @@ test('prebuild caches verified private media before atomic snapshot write, refet
           mediaCalls++;
           return bad
             ? new Response(null, { status: 404 })
-            : new Response(Buffer.from(media.data, 'base64'));
+            : new Response(Buffer.from(media.data, 'base64'), {
+                headers: { 'Content-Type': 'image/webp' },
+              });
         }
+        assert.fail('Unexpected non-Supabase request');
         const parsed = new URL(href);
         if (parsed.searchParams.get('action') === 'media') {
           mediaCalls++;
@@ -578,8 +581,6 @@ test('Team photos use separate namespace, private owner upload/read and active-r
       snapshotPath: path,
       mediaRoot: join(dir, 'public'),
       env: {
-        CMS_API_URL: 'https://script.google.com/macros/s/test/exec',
-        CMS_API_TOKEN: 'test-token',
         SUPABASE_URL: 'https://placeholder.supabase.co',
         SUPABASE_ANON_KEY: 'placeholder',
         SUPABASE_SERVICE_ROLE_KEY: 'private-build-test',
@@ -608,8 +609,11 @@ test('Team photos use separate namespace, private owner upload/read and active-r
             requestOptions.headers.Authorization,
             'Bearer private-build-test',
           );
-          return new Response(Buffer.from(media.data, 'base64'));
+          return new Response(Buffer.from(media.data, 'base64'), {
+            headers: { 'Content-Type': 'image/webp' },
+          });
         }
+        assert.fail('Unexpected non-Supabase request');
         return Response.json(
           new URL(href).searchParams.get('action') === 'media'
             ? media

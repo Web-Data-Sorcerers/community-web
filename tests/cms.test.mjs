@@ -100,7 +100,7 @@ async function withSnapshot(run) {
   }
 }
 
-test('offline validates locally without calling fetch; partial config fails', async () => {
+test('offline validates locally without calling fetch; partial Supabase config fails', async () => {
   await withSnapshot(async ({ path, original }) => {
     const fetchImpl = () => {
       throw new Error('Network must not be used offline');
@@ -112,16 +112,16 @@ test('offline validates locally without calling fetch; partial config fails', as
     await assert.rejects(
       syncCmsSnapshot({
         snapshotPath: path,
-        env: { CMS_API_TOKEN: token },
+        env: { SUPABASE_ANON_KEY: token },
         fetchImpl,
       }),
-      /both/,
+      /together/,
     );
     assert.equal(await readFile(path, 'utf8'), original);
   });
 });
 
-test('GAS redirects return a valid payload and atomically replace the snapshot', async () => {
+test('Supabase RPCs atomically replace the snapshot without calling GAS', async () => {
   await withSnapshot(async ({ path, directory }) => {
     const changed = structuredClone(baseline);
     changed.projects[0].title = 'Updated project';
@@ -162,7 +162,7 @@ test('GAS redirects return a valid payload and atomically replace the snapshot',
       'remote',
     );
     assert.deepEqual(JSON.parse(await readFile(path, 'utf8')), changed);
-    assert.equal(calls.length, 2);
+    assert.equal(calls.length, 0);
     assert.deepEqual(await readdir(directory), ['snapshot with spaces.json']);
   });
 });
@@ -205,12 +205,7 @@ test('failed remote responses preserve the snapshot and hide credentials', async
   for (const fetchImpl of cases)
     await withSnapshot(async ({ path, directory, original }) => {
       await assert.rejects(
-        syncCmsSnapshot({
-          snapshotPath: path,
-          env: { CMS_API_URL: endpoint, CMS_API_TOKEN: token, ...supabaseEnv },
-          fetchImpl: async (url, opts) =>
-            supabaseMock(url) || fetchImpl(url, opts),
-        }),
+        fetchCmsSnapshot({ apiUrl: endpoint, apiToken: token, fetchImpl }),
         (error) => !error.message.includes(token),
       );
       assert.equal(await readFile(path, 'utf8'), original);
@@ -320,26 +315,14 @@ test('timeouts retry once from the export endpoint; exhausted retries preserve t
             { headers: { 'content-type': 'application/json' } },
           );
         };
-        const sync = syncCmsSnapshot({
-          snapshotPath: path,
-          env: { CMS_API_URL: endpoint, CMS_API_TOKEN: token, ...supabaseEnv },
+        const sync = fetchCmsSnapshot({
+          apiUrl: endpoint,
+          apiToken: token,
           timeoutMs: 10,
-          fetchImpl: async (url, opts) => {
-            const href = typeof url === 'string' ? url : url.href;
-            if (
-              href.includes('/rest/v1/rpc/cms_load_projects') ||
-              href.includes('/rest/v1/rpc/cms_load_roles') ||
-              href.includes('/rest/v1/rpc/cms_load_domains') ||
-              href.includes('/rest/v1/rpc/cms_load_hods') ||
-              href.includes('/rest/v1/rpc/cms_load_partners')
-            )
-              return jsonResponse(baseline);
-            if (href.includes('/database/query')) return jsonResponse([]);
-            return supabaseMock(url) || fetchImpl(url, opts);
-          },
+          fetchImpl,
         });
         if (recover) {
-          assert.equal(await sync, 'remote');
+          assert.deepEqual(await sync, baseline);
           assert.deepEqual(JSON.parse(await readFile(path, 'utf8')), baseline);
         } else {
           await assert.rejects(sync, /timed out/);
@@ -432,25 +415,14 @@ test('redirect 404 retries with a fresh export request; exhaustion leaves snapsh
         if (recover && calls.length === 4) return jsonResponse();
         return new Response('expired redirect', { status: 404 });
       };
-      const sync = syncCmsSnapshot({
-        snapshotPath: path,
-        env: { CMS_API_URL: endpoint, CMS_API_TOKEN: token, ...supabaseEnv },
-        fetchImpl: async (url, opts) => {
-          const href = typeof url === 'string' ? url : url.href;
-          if (
-            href.includes('/rest/v1/rpc/cms_load_projects') ||
-            href.includes('/rest/v1/rpc/cms_load_roles') ||
-            href.includes('/rest/v1/rpc/cms_load_domains') ||
-            href.includes('/rest/v1/rpc/cms_load_hods') ||
-            href.includes('/rest/v1/rpc/cms_load_partners')
-          )
-            return jsonResponse(baseline);
-          if (href.includes('/database/query')) return jsonResponse([]);
-          return supabaseMock(url) || fetchImpl(url, opts);
-        },
+      const sync = fetchCmsSnapshot({
+        apiUrl: endpoint,
+        apiToken: token,
+        timeoutMs: 10,
+        fetchImpl,
       });
       if (recover) {
-        assert.equal(await sync, 'remote');
+        assert.deepEqual(await sync, baseline);
         assert.deepEqual(JSON.parse(await readFile(path, 'utf8')), baseline);
       } else {
         await assert.rejects(sync, /404 at script.googleusercontent.com/);

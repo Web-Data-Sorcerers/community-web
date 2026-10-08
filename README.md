@@ -2,15 +2,20 @@
 
 ## Checkpoint CMS / handoff AI baru
 
-Projects, Team, Roles sudah Supabase dan live pada `53f92f8`; kedua Vercel
-SUCCESS, Roles acceptance selesai. NEXT **pass 4 Domains** (plan only),
-kemudian Hods → Partners → auth CMS terakhir. UI/geometri/auth tetap.
+Auth CMS A–E dan keenam content sources Supabase sudah accepted; production
+runtime `a042b07` masih memvalidasi full GAS export sebelum RPC overrides.
+Implementasi **Supabase-only build sudah selesai lokal** dengan QA lengkap,
+belum env cutover/push/acceptance production. Origin satu push URL community-web;
+testing project sudah absent404. UI/geometri/editor/auth tetap.
 
-Mulai dari [kickoff migrasi + prompt siap copy](docs/cms-migration-kickoff.md),
-[Master Work Plan Domains](docs/cms-pass4-domains-plan.md) dan
-[TODO/status](docs/cms-migration-todo.md). Dokumen aktif sudah disiapkan;
-implementasi Domains belum dimulai. Baca checkpoint terbaru AGENTS/ai-handoff
-sebelum mengikuti NEXT historis. Push baru tetap perlu konfirmasi.
+Mulai dari [kickoff migrasi](docs/cms-migration-kickoff.md),
+[Master Work Plan GAS retirement](docs/cms-gas-retirement-plan.md) §17 dan
+[TODO/status](docs/cms-migration-todo.md). Build lokal baru memakai
+`CMS_DATA_SOURCE=local|supabase`; deploy Vercel wajib flag `supabase` eksplisit.
+QA offline memakai `local` tanpa network content/media fetch. NEXT izin concrete
+flag Production → izin exact SHA push → READY/read-only acceptance.
+Env/resource/code GAS retained untuk rollback; pensiun memerlukan backup dan
+izin terpisah. Jangan ulang SQL/grant/auth acceptance atau cleanup testing.
 
 Website komunitas **Data Sorcerers**: landing page + 6 halaman detail domain
 (HoDS) + halaman **Recruitment** lengkap beserta 6 halaman **detail role**.

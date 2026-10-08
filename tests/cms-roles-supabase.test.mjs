@@ -36,7 +36,7 @@ const team = {
 };
 
 for (const failure of [null, 'http', 'shape', 'slots', 'network']) {
-  test(`hybrid Roles source and atomic failure: ${failure || 'success'}`, async () => {
+  test(`Supabase-only Roles source and atomic failure: ${failure || 'success'}`, async () => {
     const dir = await mkdtemp(join(tmpdir(), 'ds-roles-'));
     try {
       const path = join(dir, 'snapshot.json');
@@ -55,7 +55,11 @@ for (const failure of [null, 'http', 'shape', 'slots', 'network']) {
         fetchImpl: async (url, options) => {
           const u = new URL(url);
           calls.push(u.pathname);
-          if (u.hostname === 'script.google.com') return Response.json(gas);
+          assert.equal(
+            u.hostname,
+            'example.supabase.co',
+            'GAS must never be called',
+          );
           assert.equal(options.headers.apikey, env.SUPABASE_ANON_KEY);
           assert.equal(options.method, 'POST');
           if (u.pathname.endsWith('cms_load_partners'))
@@ -74,7 +78,7 @@ for (const failure of [null, 'http', 'shape', 'slots', 'network']) {
           return Response.json(failure === 'shape' ? {} : { roles });
         },
       });
-      if (failure) {
+      if (failure && failure !== 'gas-invalid') {
         await assert.rejects(run);
         assert.equal(await readFile(path, 'utf8'), original);
       } else {
