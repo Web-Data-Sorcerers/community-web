@@ -1,5 +1,17 @@
 # CMS → Supabase — TODO dan status penerimaan
 
+## Actual Admin Properties backed up — 8 Oct 2026
+
+Owner saved481bytes/exact7Admin Properties; authenticated decrypt/file600 PASS.
+ADMIN_EMAILS array and PUBLICATION_PENDING boolean-string valid; both deploy
+hook URLs structurally valid, neither invoked. Sheet/Drive/owner values match
+encrypted Export Properties. Exact Production env equality remains unverified.
+SHA2566eaa72585a0e815d7e4178f8e1588cc561d131cf65d09af095ee4f5fd74a2575.
+NEXT complete source-file lists for both GAS projects, then exact deployment/
+version/access/ownership inventory and remaining rollback backups/observation.
+Local encrypted backup only; no live resource/env/content mutation or push.
+Proof ignored f1/admin-properties-proof.json.
+
 ## Admin Properties collector ready — 8 Oct 2026
 
 Owner screenshot confirms7Admin Property names: ADMIN_EMAILS,
