@@ -1,5 +1,20 @@
 # CMS Supabase-only build dan pensiun GAS — Master Work Plan
 
+## Production source flag approved — push pending (8 Oct 2026)
+
+Faiz (`gasss`) mengizinkan tepat add `CMS_DATA_SOURCE=supabase` type plain,
+target **Production only**, projectprj_3KbX29t6DYN1RMTy88lKHXd0IUVE.
+API add + read-back PASS; envIDF4kxmkHW29dFwUX6, existing env IDs/names/scopes/types
+unchanged. GAS/Google/Supabase/hook env tetap retained. Tidak redeploy/hook/push.
+Current tetap a042b07/dpl_EGG8a3RDz3mxB2BFsgL8hdNMTr2f READY; recruitment closed,
+Projects/Team/media anonymous401 fresh. Feature lokal4d5f8d5 sudah QA117CMSPASS+
+10Team liveSKIP, recruitment24PASS dan gates/parity/secrets PASS.
+
+NEXT: **izin exact HEAD SHA baru** (termasuk checkpoint config ini) → satu push
+origin main/community-web → READY+primary alias exact SHA → read-only acceptance.
+Izin flag consumed; bukan izin push, fixture/hook atau retirement resource.
+Detail terbaru: [GAS retirement plan](cms-gas-retirement-plan.md) §18; proof ignored config-source-set.json.
+
 ## 0. Status, tujuan, dan batas izin
 
 Disusun 8 Oct 2026 atas permintaan Faiz: **PLAN ONLY sesi ini**, eksekusi oleh
@@ -751,3 +766,36 @@ local-final, db-after, full-cms/recruitment/gate/admin logs dan qa-summary.
 Captures content publik hanya untuk parity; tidak ada password/token/cookie/
 recruitment PII/secure backup secrets di artifacts. Tracked summary ini cukup
 untuk handoff bila ignored proof/temp directories tidak tersedia.
+
+## 18. Approved config C2 selesai — exact SHA push approval pending
+
+User `gasss` menjawab pertanyaan spesifik add CMS_DATA_SOURCE Production setelah
+feature4d5f8d5978b7d97a81d9566835311338299f8f61 dan seluruh local QA siap.
+Ini **bukan izin push** atau mutation lain. HEAD/tree/origin single push URL,
+production Current READY exacta042b07 dan required env presence diperiksa sebelum
+satu POST config. Source flag sebelumnya absent; tidak menimpa scope existing.
+
+Hasil: `CMS_DATA_SOURCE=supabase`, typeplain/nonsecret, target[production],
+envIDF4kxmkHW29dFwUX6 pada projectprj_3KbX29t6DYN1RMTy88lKHXd0IUVE. Read-back value,
+type dan exact scope PASS; nama/ID/scope/type seluruh env lain identik pre/post.
+Tidak print nilai env lain atau mengganti Supabase/auth/GAS/Google/hook env.
+Preview/Development tidak diubah. Tidak ada redeploy/hook/push/content write,
+SQL/grant/bucket/provider/recruitment mutation atau delete resource.
+
+Current sebelum/sesudah tetapdpl_EGG8a3RDz3mxB2BFsgL8hdNMTr2f, READY exact
+a042b071e438a5fec59a644c938144158a007602; versi lama mengabaikan source flag.
+Runtime recruitment accepting:false dan GETProjects/Team/media anonymous401.
+Config approval consumed; push izin exact HEAD SHA baru wajib. Checkpoint docs
+config ini commit lokal; SHA lihatgitlog. Source/tests tidak berubah setelah
+QA§17; format check fresh setelah docs update, tanpa mengulang fullCMS/PG.
+
+Satu approved push akan membawa docs255d190/e9079e3/27a158b, feature4d5f8d5 dan
+checkpoint config ini ke community-web saja. Recheck approved SHA=HEAD, satu
+origin push URL, lalu `git push origin main` **sekali**. Fresh READY+primaryalias
+exactSHA, read-only owner/anon/recruitment/public acceptance §11 masih pending.
+Fixture upload/UID/hash/3hooks/cleanup memerlukan izin baru; GAS/env/resource
+retirement tetap tahapF terpisah. Tidak klaim deployed runtime bebasGAS dari
+config presence saja.
+
+Proof ignored `artifacts/cms-gas-retirement/config-source-set.json`; checkedAt
+workspace 2026-10-08T01:45:38.808Z, bukan provider deployment timestamp.

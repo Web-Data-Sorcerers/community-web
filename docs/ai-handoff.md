@@ -1,5 +1,20 @@
 # AI handoff — current context
 
+## Production source flag approved — push pending (8 Oct 2026)
+
+Faiz (`gasss`) mengizinkan tepat add `CMS_DATA_SOURCE=supabase` type plain,
+target **Production only**, projectprj_3KbX29t6DYN1RMTy88lKHXd0IUVE.
+API add + read-back PASS; envIDF4kxmkHW29dFwUX6, existing env IDs/names/scopes/types
+unchanged. GAS/Google/Supabase/hook env tetap retained. Tidak redeploy/hook/push.
+Current tetap a042b07/dpl_EGG8a3RDz3mxB2BFsgL8hdNMTr2f READY; recruitment closed,
+Projects/Team/media anonymous401 fresh. Feature lokal4d5f8d5 sudah QA117CMSPASS+
+10Team liveSKIP, recruitment24PASS dan gates/parity/secrets PASS.
+
+NEXT: **izin exact HEAD SHA baru** (termasuk checkpoint config ini) → satu push
+origin main/community-web → READY+primary alias exact SHA → read-only acceptance.
+Izin flag consumed; bukan izin push, fixture/hook atau retirement resource.
+Detail terbaru: [GAS retirement plan](cms-gas-retirement-plan.md) §18; proof ignored config-source-set.json.
+
 ## Eksekusi GAS retirement lokal — 8 Oct 2026
 
 Faiz mengaktifkan eksekusi lokal (`gass eksekusi`). Build lokal sekarang memilih
