@@ -1,4 +1,5 @@
 ---
+import AdminNavigation from '../../components/admin/AdminNavigation.astro';
 const title = 'Recruitment Applications | Data Sorcerers';
 const description =
   'Halaman privat owner Data Sorcerers untuk meninjau pendaftaran recruitment.';
@@ -185,7 +186,7 @@ const image = new URL('/og/og-default.jpg', Astro.site).href;
 
       .search-bar {
         display: flex;
-        gap: 12px;
+        gap: 16px;
         flex-wrap: wrap;
         margin-bottom: 16px;
       }
@@ -199,6 +200,15 @@ const image = new URL('/og/og-default.jpg', Astro.site).href;
         min-width: 0;
       }
 
+      .applicant-detail {
+        border: 0;
+        padding: 0;
+        text-align: left;
+        text-decoration: underline;
+      }
+      #table-wrapper {
+        overflow-x: auto;
+      }
       table {
         width: 100%;
         border-collapse: collapse;
@@ -207,7 +217,7 @@ const image = new URL('/og/og-default.jpg', Astro.site).href;
       }
       th,
       td {
-        padding: 10px 12px;
+        padding: 8px 16px;
         border-bottom: 1px solid #393344;
         text-align: left;
         overflow-wrap: anywhere;
@@ -223,7 +233,7 @@ const image = new URL('/og/og-default.jpg', Astro.site).href;
       .stats-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: 12px;
+        gap: 16px;
         margin-bottom: 24px;
       }
       .stat-card {
@@ -241,7 +251,6 @@ const image = new URL('/og/og-default.jpg', Astro.site).href;
       .stat-card .label {
         color: var(--muted);
         font-size: 12px;
-        text-transform: uppercase;
         letter-spacing: 1px;
       }
 
@@ -265,7 +274,6 @@ const image = new URL('/og/og-default.jpg', Astro.site).href;
       .detail-panel .field-label {
         font-size: 11px;
         color: var(--muted);
-        text-transform: uppercase;
         letter-spacing: 0.5px;
       }
 
@@ -281,7 +289,7 @@ const image = new URL('/og/og-default.jpg', Astro.site).href;
         }
         th,
         td {
-          padding: 6px 8px;
+          padding: 8px;
           font-size: 12px;
         }
       }
@@ -289,8 +297,9 @@ const image = new URL('/og/og-default.jpg', Astro.site).href;
   </head>
   <body>
     <main>
+      <AdminNavigation active="recruitment" />
       <header>
-        <p class="brand">Data Sorcerers · Recruitment</p>
+        <p class="brand">Data Sorcerers · Admin</p>
         <h1>Pendaftaran</h1>
         <p>
           Tinjau pendaftar recruitment, filter berdasarkan domain atau kata
@@ -325,8 +334,6 @@ const image = new URL('/og/og-default.jpg', Astro.site).href;
           <button id="logout" type="button" hidden>
             Keluar
           </button>
-          <a href="/admin/">Kelola Projects</a>
-          <a href="/admin/team/">Kelola Team</a>
           <a href="/">Kembali ke situs</a>
         </div>
       </header>
@@ -334,6 +341,9 @@ const image = new URL('/og/og-default.jpg', Astro.site).href;
         Memeriksa akses…
       </p>
       <div id="workspace" hidden>
+        <p id="intake-status" style="margin-bottom: 24px" role="status">
+          Memeriksa status pendaftaran…
+        </p>
         <div class="stats-grid" id="stats"></div>
         <div class="search-bar">
           <input

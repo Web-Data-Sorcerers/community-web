@@ -9,6 +9,8 @@
   const PAGE_SIZE = 50;
   const REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes
   let refreshTimer = null;
+  let csrf;
+  let sessionGeneration = 0;
   const hodsDivisions = [
     'data',
     'core',
@@ -18,7 +20,8 @@
     'growth',
   ];
   const errors = {
-    UNAUTHORIZED: 'Akses ditolak. Login diperlukan.',
+    UNAUTHORIZED: 'Sesi admin berakhir. Silakan masuk lagi.',
+    FORBIDDEN: 'Akun ini belum memiliki izin melihat pendaftar.',
     CONFIGURATION: 'Konfigurasi server belum lengkap.',
     INVALID_INPUT: 'Permintaan tidak valid.',
     NOT_FOUND: 'Data tidak ditemukan.',
@@ -44,11 +47,21 @@
     byId('logout').hidden = false;
   };
 
+  const clearApplicantData = () => {
+    byId('detail-area').hidden = true;
+    byId('detail-panel').replaceChildren();
+    byId('applications-body').replaceChildren();
+    byId('stats').replaceChildren();
+    applications = [];
+  };
+
   const expire = () => {
+    sessionGeneration++;
+    clearApplicantData();
     byId('workspace').hidden = true;
     byId('login-form').hidden = false;
     byId('logout').hidden = true;
-    byId('detail-area').hidden = true;
+    csrf = undefined;
     byId('table-wrapper').hidden = false;
     message('Sesi berakhir. Silakan login ulang.', true);
     if (refreshTimer) {
@@ -59,10 +72,11 @@
 
   const refreshToken = async () => {
     try {
-      const response = await fetch(api + '/refresh', {
+      const response = await fetch('/api/admin/auth/refresh', {
         method: 'POST',
         credentials: 'same-origin',
         cache: 'no-store',
+        headers: { 'X-CSRF-Token': csrf || '' },
       });
       if (!response.ok) {
         expire();
@@ -80,6 +94,7 @@
   };
 
   const apiFetch = async (route, params = {}) => {
+    const generation = sessionGeneration;
     const url = new URL(api + '/' + route, location.origin);
     for (const [k, v] of Object.entries(params)) {
       if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, v);
@@ -89,11 +104,22 @@
         credentials: 'same-origin',
         cache: 'no-store',
       });
+      if (generation !== sessionGeneration) return null;
       if (response.status === 401) {
         expire();
         return null;
       }
       const result = await response.json();
+      if (generation !== sessionGeneration) return null;
+      if (response.status === 403) {
+        sessionGeneration++;
+        clearApplicantData();
+        byId('workspace').hidden = true;
+        byId('login-form').hidden = true;
+        byId('logout').hidden = false;
+        message(errors.FORBIDDEN, true);
+      }
+      if (result.csrf) csrf = result.csrf;
       if (result.ok) loggedIn();
       return result;
     } catch {
@@ -116,12 +142,13 @@
     for (const card of cards) {
       const div = document.createElement('div');
       div.className = 'stat-card';
-      div.innerHTML =
-        '<span class="number">' +
-        card.value +
-        '</span><span class="label">' +
-        card.label +
-        '</span>';
+      const number = document.createElement('span');
+      number.className = 'number';
+      number.textContent = String(card.value);
+      const label = document.createElement('span');
+      label.className = 'label';
+      label.textContent = card.label;
+      div.append(number, label);
       container.appendChild(div);
     }
   };
@@ -172,6 +199,11 @@
         '</td><td style="font-family:monospace;font-size:12px">' +
         (app.receipt || '').slice(0, 8) +
         '…</td>';
+      const detailButton = document.createElement('button');
+      detailButton.type = 'button';
+      detailButton.className = 'applicant-detail';
+      detailButton.textContent = app.full_name || 'Lihat detail';
+      tr.firstElementChild.replaceChildren(detailButton);
       tr.addEventListener('click', () => loadDetail(app.receipt));
       tbody.appendChild(tr);
     }
@@ -230,25 +262,47 @@
       const panel = byId('detail-panel');
       panel.innerHTML = '';
       const fields = data.fields || {};
-      const allKeys = [
-        'full_name',
-        'preferred_name',
-        'email',
-        'whatsapp',
-        'institution',
-        'city_region',
-        'current_status',
-        'current_level',
-        'primary_hods',
-        'most_relevant_work',
-        'real_world_problem',
-        'explore_or_build',
-        'why_join',
-        'time_commitment',
-        'team_comfort',
-        'independent_learning',
-        'cross_hods_willingness',
-      ];
+      const labels = {
+        full_name: 'Nama lengkap',
+        preferred_name: 'Nama panggilan',
+        email: 'Email',
+        whatsapp: 'WhatsApp',
+        institution: 'Institusi',
+        city_region: 'Kota / wilayah',
+        current_status: 'Status saat ini',
+        current_level: 'Tingkat pengalaman',
+        currently_exploring: 'Sedang dipelajari',
+        primary_hods: 'Domain utama',
+        secondary_interest: 'Minat lain',
+        most_relevant_work: 'Karya paling relevan',
+        portfolio_link: 'Tautan portofolio',
+        alternative_evidence: 'Bukti karya alternatif',
+        real_world_problem: 'Masalah yang ingin diselesaikan',
+        technology_approach: 'Pendekatan teknologi',
+        explore_or_build: 'Eksplorasi atau membangun',
+        skill_to_improve: 'Kemampuan yang ingin ditingkatkan',
+        six_months_goal: 'Target enam bulan',
+        team_story: 'Pengalaman bekerja dalam tim',
+        why_join: 'Alasan bergabung',
+        what_to_contribute: 'Kontribusi yang ditawarkan',
+        what_to_build_together: 'Yang ingin dibangun bersama',
+        learning_methods: 'Cara belajar',
+        project_experience: 'Pengalaman project',
+        desired_output: 'Hasil yang diinginkan',
+        team_comfort: 'Kenyamanan dalam tim',
+        team_roles: 'Peran dalam tim',
+        time_commitment: 'Komitmen waktu',
+        contribution_types: 'Jenis kontribusi',
+        cross_hods_willingness: 'Kolaborasi lintas domain',
+        best_description: 'Deskripsi diri',
+        independent_learning: 'Belajar mandiri',
+        agreement_1: 'Persetujuan 1',
+        agreement_2: 'Persetujuan 2',
+        agreement_3: 'Persetujuan 3',
+        specific_area: 'Bidang spesifik',
+        foundation_skills: 'Kemampuan dasar',
+      };
+      const allKeys = Object.keys(fields);
       for (const key of allKeys) {
         const val = fields[key];
         if (val === undefined || val === null || val === '') continue;
@@ -256,7 +310,7 @@
         div.className = 'field';
         div.innerHTML =
           '<div class="field-label">' +
-          escapeHtml(key) +
+          escapeHtml(labels[key] || key.replaceAll('_', ' ')) +
           '</div><div>' +
           escapeHtml(Array.isArray(val) ? val.join(', ') : String(val)) +
           '</div>';
@@ -299,8 +353,25 @@
       select.appendChild(opt);
     }
 
-    byId('logout').addEventListener('click', () => {
-      location.href = '/api/admin/recruitment/logout';
+    byId('logout').addEventListener('click', async () => {
+      if (busy) return;
+      setBusy(true);
+      try {
+        const response = await fetch('/api/admin/auth/logout', {
+          method: 'POST',
+          credentials: 'same-origin',
+          cache: 'no-store',
+          headers: { 'X-CSRF-Token': csrf || '' },
+        });
+        if (response.ok || response.status === 401) {
+          expire();
+          message('Sudah keluar dari admin.');
+        } else message('Belum berhasil keluar. Coba lagi.', true);
+      } catch {
+        message('Koneksi terputus. Coba keluar lagi.', true);
+      } finally {
+        setBusy(false);
+      }
     });
 
     byId('login-form').addEventListener('submit', async (event) => {
@@ -312,7 +383,7 @@
       setBusy(true);
       message('Masuk…');
       try {
-        const response = await fetch(api + '/login', {
+        const response = await fetch('/api/admin/auth/login', {
           method: 'POST',
           credentials: 'same-origin',
           cache: 'no-store',
@@ -334,6 +405,9 @@
           return;
         }
         byId('login-password').value = '';
+        sessionGeneration++;
+        csrf = result.csrf;
+        loggedIn();
         startRefreshTimer();
         await loadList();
         await loadStats();
@@ -374,6 +448,21 @@
       message(filtered + ' dari ' + total + ' pendaftar');
     });
 
+    fetch('/api/recruitment/application', { cache: 'no-store' })
+      .then(async (response) => {
+        if (!response.ok) throw new Error();
+        return response.json();
+      })
+      .then((result) => {
+        byId('intake-status').textContent =
+          result.accepting === true
+            ? 'Pendaftaran dibuka. Pendaftar baru akan tersimpan di sini.'
+            : 'Pendaftaran belum dibuka. Form belum menerima kiriman baru.';
+      })
+      .catch(() => {
+        byId('intake-status').textContent =
+          'Status pendaftaran belum bisa diperiksa.';
+      });
     loadList();
     loadStats();
     startRefreshTimer();

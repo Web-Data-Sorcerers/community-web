@@ -1,5 +1,32 @@
 # AGENTS.md — instructions for AI agents
 
+## Admin bersama CMS + Recruitment — implementasi lokal, belum deploy (8 Oct 2026)
+
+Faiz meminta satu dashboard admin dan recruitment siap dibuka. Menu bersama
+Projects/Team/Pendaftar memakai satu sesi Supabase Auth sealed existing. API
+Recruitment memverifikasi trusted CMS identity + CMS grant lalu allowlist
+recruitment setiap request; kedua izin tetap terpisah, tanpa perubahan SQL/grant.
+Legacy sb-* cookies tidak memberi akses; POST logout dengan Origin+CSRF menutup
+sesi bersama dan membersihkan cookie legacy. Kontrak isolation historis sengaja
+berubah menjadi shared-login dan shared-logout; bukan regression yang ditutupi.
+
+UI custom memakai existing fonts/logo/palette, tanpa Figma node/reference baru.
+Detail pendaftar menampilkan seluruh canonical answers, text-safe; revoked access
+atau logout membersihkan data dari UI. Intake backend tetap Supabase, live masih
+accepting:false. Read-only audit: applications0, CMS grant1active, allowlist1active,
+intersection trusted owner1. Tidak ada provider/SQL/grant/Storage mutation, live
+fixture, pembukaan env, push, redeploy, hook atau GAS resource deletion.
+
+QA/release checklist: [Admin bersama plan](docs/admin-unified-recruitment-plan.md).
+QA final: CMS117PASS+10Team liveSKIP, recruitment28PASS, ephemeral intakeDB13/13,
+7gate+SEO,3existing admin mocks4widths dan unified mock4widths PASS. Public19HTML
+exact/snapshot unchanged/dist52textfiles secrets0. Mock bukan owner live proof.
+
+NEXT hasil lokal+QA → commit/exact SHA push approval → READY + owner shared-session
+acceptance → izin konkret synthetic applicant/cleanup + Production
+RECRUITMENT_OPEN=true dan redeploy approved SHA → live persistence acceptance.
+GAS retirement resource tetap terpisah; code/env legacy retained.
+
 ## Supabase-only build deployed72c36bd — owner acceptance pending (8 Oct 2026)
 
 Faiz (`gasss`) approved exact72c36bd18f98705706b2fa4b50c183679a4674c1;

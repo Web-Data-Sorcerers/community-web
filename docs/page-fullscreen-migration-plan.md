@@ -1,5 +1,12 @@
 # Page Full-Screen Migration Plan — Hero Gambar + Section 100svh
 
+## Admin bersama — pass custom terpisah (8 Oct 2026)
+
+User mengotorisasi penyatuan dashboard admin CMS+Recruitment. Surface admin
+custom menggunakan natural document scroll, tanpa hero/artwork/fullscreen
+baru. Work plan admin-unified-recruitment-plan.md mencatat inventaris dan strict
+8pt. Seluruh section publik/Figma/reference di checklist bawah tetap terkunci.
+
 ## Work order CMS berikutnya — auth, UI tetap terkunci
 
 [Master Work Plan auth CMS](cms-auth-supabase-plan.md) rinci **PLAN ONLY**;

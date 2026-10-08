@@ -1,4 +1,5 @@
 ---
+import AdminNavigation from '../../components/admin/AdminNavigation.astro';
 const title = 'Projects Editor | Data Sorcerers';
 const description =
   'Halaman privat owner Data Sorcerers untuk mengelola Projects dan meminta penerbitan perubahan ke situs.';
@@ -273,6 +274,7 @@ const image = new URL('/og/og-default.jpg', Astro.site).href;
   </head>
   <body>
     <main>
+      <AdminNavigation active="projects" />
       <header>
         <img
           class="brand-logo"
@@ -317,7 +319,6 @@ const image = new URL('/og/og-default.jpg', Astro.site).href;
           <button id="logout" type="button" hidden>
             Keluar
           </button>
-          <a href="/admin/team/">Kelola Team</a>
           <a href="/">Kembali ke situs</a>
         </div>
       </header>

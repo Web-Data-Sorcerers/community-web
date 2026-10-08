@@ -1,0 +1,66 @@
+---
+interface Props {
+  active: 'projects' | 'team' | 'recruitment';
+}
+const { active } = Astro.props;
+const modules = [
+  { id: 'projects', label: 'Projects', href: '/admin/' },
+  { id: 'team', label: 'Team', href: '/admin/team/' },
+  { id: 'recruitment', label: 'Pendaftar', href: '/admin/recruitment/' },
+];
+---
+
+<nav class="admin-navigation" aria-label="Menu admin">
+  <span class="admin-name">Admin Data Sorcerers</span>
+  <div class="admin-modules">
+    {modules.map((module) => (
+      <a
+        href={module.href}
+        aria-current={active === module.id ? 'page' : undefined}
+      >
+        {module.label}
+      </a>
+    ))}
+  </div>
+</nav>
+
+<style>
+  .admin-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #393344;
+    font:
+      400 16px/24px Manrope,
+      sans-serif;
+  }
+  .admin-name {
+    color: #bcb7cb;
+  }
+  .admin-modules {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .admin-modules a {
+    padding: 8px 16px;
+    border-radius: 8px;
+    color: #bcb7cb;
+    text-decoration: none;
+  }
+  .admin-modules a[aria-current='page'] {
+    background: #16141f;
+    color: #fff;
+  }
+  .admin-modules a:hover {
+    color: #fff;
+  }
+  .admin-modules a:focus-visible {
+    outline: 2px solid #9b7bff;
+    outline-offset: 2px;
+  }
+</style>

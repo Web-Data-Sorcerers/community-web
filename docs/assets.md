@@ -2909,3 +2909,14 @@ Projects status copy tested first at4widths; Team status copy follows the same
 response target count. Custom admin surfaces have no Figma node. Existing logo,
 Bluu Next700/Manrope, palette,8pt spacing and editor layout remain. Public section
 geometry/reference/artwork/fullscreen unchanged. Master plan: cms-testing-retirement-plan.md.
+
+## Admin navigation bersama — 8 Oct 2026
+
+Custom admin diotorisasi Faiz untuk Projects/Team/Pendaftar. Tidak ada node Figma
+atau reference PNG; tidak mengklaim pixel accuracy Figma. Component
+AdminNavigation menggunakan logo/fonts/palette admin existing, navigasi normal
+HTML dengan aria-current, gap8/16, padding8/16, margin-bottom32, wraps mobile.
+Public artwork/fonts/reference/geometry tetap. Recruitment detail menampilkan
+semua canonical fields secara text-safe, tabel scroll hanya di wrapper.
+Target320/390/768/1440. Lihat admin-unified-recruitment-plan.md untuk work order,
+auth shared-session, QA dan batas acceptance live.

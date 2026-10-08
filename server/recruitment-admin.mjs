@@ -1,3 +1,5 @@
+import { createCmsAuth } from './cms-auth.mjs';
+
 const headers = {
   'Cache-Control': 'no-store',
   'X-Content-Type-Options': 'nosniff',
@@ -7,28 +9,6 @@ const headers = {
 const json = (body, status = 200) => Response.json(body, { status, headers });
 const error = (code, status) => json({ ok: false, error: { code } }, status);
 
-function readCookie(request, name) {
-  return (
-    (request.headers.get('cookie') || '')
-      .split(';')
-      .map((s) => s.trim())
-      .find((s) => s.startsWith(name + '='))
-      ?.slice(name.length + 1) ?? null
-  );
-}
-function cookie(name, value, maxAge, secure) {
-  return (
-    `${name}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}` +
-    (secure ? '; Secure' : '')
-  );
-}
-// Response.redirect() returns immutable headers, so build the 303 manually to
-// be able to attach Set-Cookie headers.
-function redirectWithCookies(location, cookies = []) {
-  const h = new Headers({ ...headers, Location: location });
-  cookies.forEach((c) => h.append('Set-Cookie', c));
-  return new Response(null, { status: 303, headers: h });
-}
 async function boundedJson(request, limit) {
   const reader = request.body?.getReader();
   if (!reader) throw new Error();
@@ -54,21 +34,18 @@ function config(env) {
     !/^[a-z0-9-]+\.supabase\.co$/.test(url.hostname)
   )
     throw new Error();
-  const origin = new URL(env.CMS_ADMIN_ORIGIN || env.SITE_URL || '').origin;
   return {
     rpc: url.origin + '/rest/v1/rpc',
-    authBase: url.origin,
     key: env.SUPABASE_SERVICE_ROLE_KEY,
-    anon: env.SUPABASE_ANON_KEY || '',
-    origin,
-    secure: origin.startsWith('https://'),
   };
 }
 
 export function createRecruitmentAdminHandler({
   env = process.env,
   fetchImpl = fetch,
+  clock = Date.now,
 } = {}) {
+  const auth = createCmsAuth({ env, fetchImpl, clock });
   async function callRpc(name, params) {
     const cfg = config(env);
     const response = await fetchImpl(`${cfg.rpc}/${name}`, {
@@ -83,31 +60,7 @@ export function createRecruitmentAdminHandler({
       body: JSON.stringify(params),
     });
     if (!response.ok) throw new Error();
-    return response.json();
-  }
-
-  async function verifyIdentity(request) {
-    const cfg = config(env);
-    const accessToken = readCookie(request, 'sb-access-token');
-    if (!accessToken || !cfg.anon) return null;
-
-    const response = await fetchImpl(`${cfg.authBase}/auth/v1/user`, {
-      headers: {
-        apikey: cfg.anon,
-        Authorization: `Bearer ${accessToken}`,
-      },
-      signal: AbortSignal.timeout(10000),
-    });
-    if (!response.ok) return null;
-    const user = await response.json();
-    if (!user?.id) return null;
-
-    const identity = await callRpc('admin_verify_identity', {
-      p_auth_id: user.id,
-    });
-    if (!identity?.ok) return null;
-
-    return { id: user.id, email: identity.email || user.email || '' };
+    return boundedJson(response, 1024 * 1024);
   }
 
   async function audit(action, actor, targetId, details) {
@@ -124,214 +77,50 @@ export function createRecruitmentAdminHandler({
     }
   }
 
-  async function loginWithPassword(request, cfg) {
-    if (request.headers.get('origin') !== cfg.origin)
-      return error('FORBIDDEN', 403);
-    if (
-      !(request.headers.get('content-type') || '').startsWith(
-        'application/json',
-      )
-    )
-      return error('INVALID_INPUT', 400);
-    if (!cfg.anon) return error('CONFIGURATION', 503);
-
-    let body;
-    try {
-      body = await boundedJson(request, 4096);
-    } catch {
-      return error('INVALID_INPUT', 400);
-    }
-    if (
-      !body ||
-      typeof body !== 'object' ||
-      Array.isArray(body) ||
-      Object.keys(body).some((k) => !['email', 'password'].includes(k)) ||
-      typeof body.email !== 'string' ||
-      typeof body.password !== 'string' ||
-      !body.email ||
-      !body.password ||
-      body.email.length > 320 ||
-      body.password.length > 256
-    )
-      return error('INVALID_INPUT', 400);
-
-    const ip =
-      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-      request.headers.get('x-real-ip') ||
-      '127.0.0.1';
-
-    try {
-      const rateCheck = await callRpc('admin_rate_limit_check', {
-        p_ip: ip,
-        p_email: body.email,
-        p_max: 5,
-        p_window: 60,
-      });
-      if (rateCheck?.limited) return error('LIMIT', 429);
-    } catch {
-      // Rate limit failure must not block login; continue without it.
-    }
-
-    try {
-      const response = await fetchImpl(
-        `${cfg.authBase}/auth/v1/token?grant_type=password`,
-        {
-          method: 'POST',
-          redirect: 'error',
-          signal: AbortSignal.timeout(15000),
-          headers: {
-            'Content-Type': 'application/json',
-            apikey: cfg.anon,
-          },
-          body: JSON.stringify({
-            email: body.email,
-            password: body.password,
-          }),
-        },
-      );
-      if (!response.ok) return error('UNAUTHORIZED', 401);
-      const token = await response.json();
-      if (
-        typeof token.access_token !== 'string' ||
-        !token.access_token ||
-        typeof token.refresh_token !== 'string' ||
-        !Number.isFinite(token.expires_in)
-      )
-        return error('UNAUTHORIZED', 401);
-
-      // Reset rate limit on success
-      try {
-        await callRpc('admin_rate_limit_reset', {
-          p_ip: ip,
-          p_email: body.email,
-        });
-      } catch {
-        // Non-critical
-      }
-
-      const accessAge = Math.min(Math.floor(token.expires_in), 3600);
-      const refreshAge = 60 * 60 * 24 * 30;
-      const result = json({ ok: true });
-      result.headers.append(
-        'Set-Cookie',
-        cookie('sb-access-token', token.access_token, accessAge, cfg.secure),
-      );
-      result.headers.append(
-        'Set-Cookie',
-        cookie('sb-refresh-token', token.refresh_token, refreshAge, cfg.secure),
-      );
-      return result;
-    } catch {
-      return error('UNCONFIRMED', 502);
-    }
-  }
-
-  async function refreshSession(request, cfg) {
-    const refreshToken = readCookie(request, 'sb-refresh-token');
-    if (!refreshToken || !cfg.anon) return error('UNAUTHORIZED', 401);
-
-    try {
-      const response = await fetchImpl(
-        `${cfg.authBase}/auth/v1/token?grant_type=refresh_token`,
-        {
-          method: 'POST',
-          redirect: 'error',
-          signal: AbortSignal.timeout(15000),
-          headers: {
-            'Content-Type': 'application/json',
-            apikey: cfg.anon,
-          },
-          body: JSON.stringify({ refresh_token: refreshToken }),
-        },
-      );
-      if (!response.ok) {
-        // Clear expired tokens on failure
-        return redirectWithCookies(cfg.origin + '/admin/recruitment/', [
-          cookie('sb-access-token', '', 0, cfg.secure),
-          cookie('sb-refresh-token', '', 0, cfg.secure),
-        ]);
-      }
-      const token = await response.json();
-      if (
-        typeof token.access_token !== 'string' ||
-        !token.access_token ||
-        typeof token.refresh_token !== 'string' ||
-        !Number.isFinite(token.expires_in)
-      )
-        return error('UNAUTHORIZED', 401);
-
-      const accessAge = Math.min(Math.floor(token.expires_in), 3600);
-      const refreshAge = 60 * 60 * 24 * 30;
-      const result = json({ ok: true, refreshed: true });
-      result.headers.append(
-        'Set-Cookie',
-        cookie('sb-access-token', token.access_token, accessAge, cfg.secure),
-      );
-      result.headers.append(
-        'Set-Cookie',
-        cookie('sb-refresh-token', token.refresh_token, refreshAge, cfg.secure),
-      );
-      return result;
-    } catch {
-      return error('UNCONFIRMED', 502);
-    }
-  }
-
   return async (request, route) => {
-    let cfg;
     try {
-      cfg = config(env);
+      config(env);
     } catch {
       return error('CONFIGURATION', 503);
     }
 
-    if (route === 'login') {
-      if (request.method === 'GET')
-        return redirectWithCookies(cfg.origin + '/admin/recruitment/');
-      if (request.method === 'POST') return loginWithPassword(request, cfg);
-      return error('METHOD_NOT_ALLOWED', 405);
-    }
-
-    if (route === 'refresh') {
-      if (request.method === 'POST') return refreshSession(request, cfg);
-      return error('METHOD_NOT_ALLOWED', 405);
-    }
-
-    if (route === 'logout') {
-      return redirectWithCookies(cfg.origin + '/admin/recruitment/', [
-        cookie('sb-access-token', '', 0, cfg.secure),
-        cookie('sb-refresh-token', '', 0, cfg.secure),
-      ]);
-    }
-
-    if (['GET', 'POST'].includes(request.method) === false)
+    // Compatibility routes share the same sealed admin lifecycle. No sb-* fallback.
+    if (route === 'login') return auth.login(request);
+    if (route === 'refresh') return auth.refresh(request);
+    if (route === 'logout') return auth.logout(request);
+    if (!['list', 'detail', 'stats'].includes(route))
+      return error('NOT_FOUND', 404);
+    if (!['GET', 'POST'].includes(request.method))
       return error('METHOD_NOT_ALLOWED', 405);
 
-    if (route === 'detail') {
-      const url = new URL(request.url);
-      const receipt = url.searchParams.get('receipt');
-      if (
-        !receipt ||
-        !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-          receipt,
-        )
-      )
-        return error('INVALID_INPUT', 400);
-    }
-
-    const actor = await verifyIdentity(request);
-    if (!actor) return error('UNAUTHORIZED', 401);
-
+    let finish = json;
     try {
+      const authorized = await auth.authorize(request);
+      if (authorized.error) return authorized.error;
+      finish = (body, status = 200) => {
+        const response = json(
+          { ...body, csrf: authorized.session.csrf },
+          status,
+        );
+        if (authorized.setCookie)
+          response.headers.append('Set-Cookie', authorized.setCookie);
+        return response;
+      };
+      const identity = await callRpc('admin_verify_identity', {
+        p_auth_id: authorized.actor.id,
+      });
+      if (identity?.ok !== true)
+        return finish({ ok: false, error: { code: 'FORBIDDEN' } }, 403);
+      const actor = authorized.actor;
       if (route === 'list') {
         let filters = {};
         if (
           request.method === 'POST' &&
           request.headers.get('content-type')?.startsWith('application/json')
         ) {
-          filters = await boundedJson(request, 32768).catch(() => ({}));
-          if (typeof filters !== 'object' || Array.isArray(filters))
-            return error('INVALID_INPUT', 400);
+          filters = await boundedJson(request, 32768).catch(() => null);
+          if (!filters || typeof filters !== 'object' || Array.isArray(filters))
+            return finish({ ok: false, error: { code: 'INVALID_INPUT' } }, 400);
         } else if (request.method === 'GET') {
           const url = new URL(request.url);
           const search = url.searchParams.get('search');
@@ -351,7 +140,7 @@ export function createRecruitmentAdminHandler({
           p_filters: filters,
         });
         await audit('admin_read_list', actor, null, { filters });
-        return json({ ok: true, data: result });
+        return finish({ ok: true, data: result });
       }
 
       if (route === 'detail') {
@@ -363,24 +152,25 @@ export function createRecruitmentAdminHandler({
             receipt,
           )
         )
-          return error('INVALID_INPUT', 400);
+          return finish({ ok: false, error: { code: 'INVALID_INPUT' } }, 400);
         const result = await callRpc('admin_get_application', {
           p_receipt: receipt,
         });
-        if (!result?.found) return error('NOT_FOUND', 404);
+        if (!result?.found)
+          return finish({ ok: false, error: { code: 'NOT_FOUND' } }, 404);
         await audit('admin_read_detail', actor, receipt, {});
-        return json({ ok: true, data: result });
+        return finish({ ok: true, data: result });
       }
 
       if (route === 'stats') {
         const result = await callRpc('admin_get_stats', {});
         await audit('admin_stats', actor, null, {});
-        return json({ ok: true, data: result });
+        return finish({ ok: true, data: result });
       }
 
       return error('NOT_FOUND', 404);
     } catch {
-      return error('SERVER_ERROR', 502);
+      return finish({ ok: false, error: { code: 'SERVER_ERROR' } }, 502);
     }
   };
 }

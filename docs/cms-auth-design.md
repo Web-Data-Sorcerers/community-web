@@ -1,5 +1,17 @@
 # Auth CMS → Supabase — Design final (pass B1)
 
+## Perubahan lokal — sesi admin bersama (8 Oct 2026)
+
+Faiz meminta satu login untuk CMS dan Recruitment. Pending deploy;
+[design/release baru](admin-unified-recruitment-plan.md) mengalahkan kontrak
+pemisahan cookie/logout recruitment di design historis di bawah. Sealed cookie,
+trusted getUser, CMS permission, CSRF dan password lifecycle tetap. Recruitment
+API sekarang memakai authorize yang sama lalu admin_verify_identity dengan
+trusted actor.id; grant recruitment tetap wajib dan tidak dimutasi. Cookie sb-*
+legacy diabaikan untuk akses dan dibersihkan saat logout bersama. Tidak ada
+fallback atau enrollment/permission otomatis. QA dan acceptance live baru wajib;
+proof isolation645ec06 tidak dipakai untuk mengklaim kontrak shared-login baru.
+
 ## Production-only LIVE a042b07 — testing siap dipensiunkan
 
 Dengan izin exact SHA Faiz (`oke gas`), origin fetch/push sekarang hanya

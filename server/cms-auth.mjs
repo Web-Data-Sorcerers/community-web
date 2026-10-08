@@ -4,7 +4,7 @@
 // The browser never holds a Supabase token: access + refresh + CSRF live inside
 // one AES-256-GCM sealed, origin-bound cookie in a CMS-only namespace, and every
 // request re-verifies trusted Auth identity + CMS permission before privileged
-// work. Recruitment cookies/allowlist are never touched.
+// work. Recruitment reads share this session but check their own allowlist.
 import {
   createCipheriv,
   createDecipheriv,
@@ -367,7 +367,7 @@ export function createCmsAuth({
       !equal(session.csrf, request.headers.get('x-csrf-token') || '')
     )
       return authError('UNAUTHORIZED', 403);
-    // Best-effort local sign-out; recruitment session is never affected.
+    // Best-effort local sign-out of the shared admin session.
     if (session.refresh && cfg.anon) {
       try {
         await client(cfg, cfg.anon).auth.admin.signOut(session.access, 'local');
@@ -377,6 +377,11 @@ export function createCmsAuth({
     }
     const response = json({ ok: true });
     response.headers.append('Set-Cookie', cookie(cfg, 'session', '', 0));
+    for (const name of ['sb-access-token', 'sb-refresh-token'])
+      response.headers.append(
+        'Set-Cookie',
+        `${name}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${cfg.secure ? '; Secure' : ''}`,
+      );
     return response;
   }
 
