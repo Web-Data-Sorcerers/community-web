@@ -1,5 +1,17 @@
 # CMS → Supabase — kickoff aktif untuk AI baru
 
+## Owner requests direct GAS retirement — 8 Oct 2026
+
+Owner asks to skip remaining manual inventory and remove unused GAS. Proceed
+with reversible archive of4previously inspected active CMS deployments as the
+concrete retirement action: Export second deploy v2; Admin untitled v4,
+second commit v2, first deploy admin v1. This is deployment retirement, not
+project/Sheet/Drive/GCP deletion or Vercel env mutation. Remaining backup/ownership/
+observation proof limits stay recorded. Agent browser has only about:blank;
+owner Google session is in personal browser and cannot be controlled by agent.
+No archive/delete executed yet. NEXT owner archive these4exact visible entries,
+then screenshot0active/read-only production regression. No new push authorization.
+
 ## Admin first deployment ID backed up — 8 Oct 2026
 
 Owner saved exact ID for admin-first-v1 through local masked form; authenticated
