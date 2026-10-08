@@ -235,3 +235,13 @@ Export Properties/source/manifest +Sheet/Drive now archived; deployed version/
 ownership/full completeness still pending. NEXT actual CMS Admin Code.gs via
 local source form, then Index.html/manifest/Properties. No live mutation/push.
 Proof ignored f1/export-manifest-proof.json.
+
+## Actual Admin Code.gs backed up — 8 Oct 2026
+
+Owner pasted15822bytes/520lines Admin source; authenticated decrypt/file600/
+syntax compile +6required Projects/auth functions PASS. Media helper present;
+adminLoadTeam absent from this copied file, other GAS file inventory unverified.
+Preserve actual backup; do not substitute newer generated repo code. SHA256
+5e9b0b228ad52206b2287803bc8f4cbbd7c119d1a10e35766a0ec7557027fed4.
+No code execution/live change/push. NEXT Admin Index.html then manifest/Properties
+and complete file/deployment/ownership inventory. Proof f1/admin-code-proof.json.
