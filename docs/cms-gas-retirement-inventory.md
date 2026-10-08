@@ -289,3 +289,13 @@ NEXT complete source-file lists for both GAS projects, then exact deployment/
 version/access/ownership inventory and remaining rollback backups/observation.
 Local encrypted backup only; no live resource/env/content mutation or push.
 Proof ignored f1/admin-properties-proof.json.
+
+## Owner GAS file lists confirmed — 8 Oct 2026
+
+Owner editor-sidebar screenshots show Admin appsscript.json/Kode.gs/Index.html
+and Export appsscript.json/Kode.gs. All5visible files have authenticated encrypted
+backups; Kode.gs is the editor label for owner source archived under Code.gs.
+This proves visible current editor file coverage, not deployed version equality,
+sharing/ownership, or full resource restore. NEXT read-only Manage deployments
+inventory for both projects, then exact IDs/config/remaining rollback/observation.
+No live mutation/push. Proof ignored f1/source-file-inventory-proof.json.
