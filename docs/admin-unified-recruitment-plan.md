@@ -107,3 +107,39 @@ Proof ignored artifacts/admin-unified/{qa-summary,browser-proof,parity-secrets,
 state-audit,env-audit}.json; QA logs artifacts/cms-gas-retirement/unified-*.log.
 NEXT exact SHA approval untuk push kode → READY + real shared-owner acceptance
 → concrete opening/fixture/cleanup approval. Detail commit cek git log.
+
+## F. Deploy dan read-only regression — 8 Oct 2026
+
+User approved exact00ac70a03516507db7d6618b23bf117856c79539 (`okee gas ajaa`).
+Satu push origin/community-web selesai; izin consumed. Main/origin/main/
+production/main exact00ac70a sebelum checkpoint docs lokal. Tidak ada second push,
+env mutation/redeploy/hook/content write atau SQL/grant mutation.
+
+Production deployment dpl_6QoWfvLG2BMAijeMrqhLWn2Z22FA READY exact00ac70a dan
+primaryalias data-sorcerers-community-sigma.vercel.app assigned; provider readyAt
+1791434271858 = 8Oct2026 04:37:51.858UTC/11:37:51.858WIB. Workspace clock terpisah.
+Actual logs prebuild scripts/fetch-cms.mjs, remote snapshot validated, Astro23pages.
+Public19/19 HTML hashes exact baseline. Actual anonymous Projects/Team/media401,
+Recruitment stats/list401; intake GET200/accepting:false. Live3admin shells×390/1440
+6cases PASS, login labels/password empty/workspace hidden/nav3modules/overflow0/
+pageerrors0. Initial networkidle wait timed out Recruitment; use DOMContentLoaded
+then explicit actual session-ended readiness; no application code changed for it.
+Ini anonymous browser proof, bukan owner access proof.
+
+DB fresh: Projects4, owner grant1active, applications0/media0; canonical fingerprints
+Projects8a7d4624d896842800dfd191892df7a8,
+Teamb867f2890c939b410e3e428259082883,
+recruitment allowlist2a36dbfe696b9406baabd0cd4de9fb6f unchanged. Read-only intersection
+owner1 dari audit sebelum push; tidak dimutasi. RECRUITMENT_OPEN metadata tetap
+idVlf93j1vLtXTaDFP/type sensitive/Production; Supabase env present. Tidak menyatakan
+nilai sensitive terbaca; live status membuktikan closed.
+
+Owner diminta login sendiri dan berpindah Team/Pendaftar tanpa login ulang;
+respons/owner shared-session read/refresh/logout belum ada. Cookie/credential tidak
+tersedia di agent; browser terhubung restart lagi. Jangan menganggap login lama
+sebagai proof00ac70a. Tidak mengambil data applicant atau credential. NEXT tetap
+§D: owner acceptance, concrete synthetic fixture+cleanup dan pembukaan Production
+approval. Full rollout/pembukaan recruitment belum accepted. GAS retirement
+resource juga pending dan terpisah. Checkpoint ini lokal saja, push baru exactSHA.
+Proof ignored artifacts/admin-unified/{deployments-current,build-log-proof,
+public-after-push,admin-anonymous-shells,state-after-push,env-audit}.json.

@@ -1,5 +1,31 @@
 # AI handoff — current context
 
+## Dashboard admin bersama LIVE00ac70a — owner acceptance pending (8 Oct 2026)
+
+Faiz (`okee gas ajaa`) approved exact00ac70a03516507db7d6618b23bf117856c79539;
+satu push origin main/community-web selesai, izin consumed. Main/origin/main/
+production/main sinkron00ac70a sebelum checkpoint lokal ini. Production READY
+exactSHA+primaryalias dpl_6QoWfvLG2BMAijeMrqhLWn2Z22FA; provider READY
+8Oct2026 **04:37:51.858UTC /11:37:51.858WIB**. Workspace checkedAt berbeda clock.
+Actual build log prebuild+remote snapshot+23pages PASS; CMS_DATA_SOURCE tetap
+Supabase. Projects/Team/Pendaftar memakai satu sealed admin session, grant
+Recruitment tetap diverifikasi terpisah. Logout bersama mengganti isolation lama.
+
+Fresh public19/19HTML exact, anonymous Projects/Team/media/Recruitment stats/list
+401;3admin shells×390/1440 (6cases) PASS/0pageerrors, menu bersama terlihat.
+Browser networkidle awal timeout pada Recruitment; readiness diganti dengan
+DOMContentLoaded+actual status session-ended,6cases PASS. Ini anonymous shell
+proof, bukan owner login. Projects4 dan fingerprints Projects/Team/allowlist
+unchanged, grant1active, applications0/media0. Tidak ada SQL/grant/content write,
+fixture/upload/hook/env mutation atau GAS resource deletion.
+
+**Recruitment tetap accepting:false.** Owner diminta cek satu login dan pindah
+menu Team/Pendaftar; belum ada respons/proof owner deployment baru. Tidak klaim
+shared-owner acceptance atau live submit baru PASS. NEXT owner acceptance →
+concrete fixture/cleanup + RECRUITMENT_OPEN=true Production/redeploy approval →
+real persistence acceptance. Push berikutnya termasuk docs perlu exactSHA baru.
+Detail: [Unified admin plan](admin-unified-recruitment-plan.md) §F.
+
 ## Admin bersama CMS + Recruitment — implementasi lokal, belum deploy (8 Oct 2026)
 
 Faiz meminta satu dashboard admin dan recruitment siap dibuka. Menu bersama
