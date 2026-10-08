@@ -1,5 +1,18 @@
 # CMS → Supabase — kickoff aktif untuk AI baru
 
+## Drive archive backed up — 8 Oct 2026
+
+Owner uploaded39714byte Drive ZIP; decrypt/file600/ZIP CRC/path safety PASS.
+Archive contains1WebP,39152bytes,1456×821, full decode PASS; private filename
+inventory encrypted outside repo. ZIP SHA256aa9884a4ccef75f351a0f1a0528501604aa3cb1094235846047aae4ebaae1cd0.
+Live folder completeness/ownership/sharing still unverified; do not claim all
+Google resources ready for deletion. Sheet+Export Properties backups done.
+Local collector4389 now includes paste-source form;10synthetic checks PASS.
+Only owned collector process restarted; existing encrypted archives retained.
+NEXT owner copy actual Export Code.gs into local form (export-code), then
+manifest/Admin code/HTML/manifest/Properties + deployed version/resource inventory.
+No resource/env/content/SQL/grant mutation, hook, deploy or push. Proof f1/drive-proof.json.
+
 ## Sheet XLSX backed up — 8 Oct 2026
 
 Owner uploaded25285byte workbook, AES256GCM decrypt verified/file600. Workbook
