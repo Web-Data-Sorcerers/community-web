@@ -240,7 +240,7 @@ try {
       buffer: Buffer.from('<svg/>'),
     });
     await page.waitForFunction(() =>
-      document.getElementById('status').textContent.includes('maksimal 2 MB'),
+      document.getElementById('status').textContent.includes('Pilih JPG'),
     );
     assert.equal(await page.evaluate(() => window.adminMock.uploads), 0);
     await page.locator('#image-upload').setInputFiles({

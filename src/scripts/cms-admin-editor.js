@@ -1,3 +1,4 @@
+import { prepareImageForUpload } from './admin-image.js';
 (() => {
   const byId = (id) => document.getElementById(id);
   const form = byId('project-form');
@@ -242,38 +243,59 @@
   byId('image-upload').addEventListener('change', async () => {
     const file = byId('image-upload').files[0];
     if (!file || locked() || scopes.upload) return;
-    if (
-      file.size > 2 * 1024 * 1024 ||
-      !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)
-    ) {
-      message('Pilih JPG, PNG atau WebP maksimal 2 MB.', true);
-      byId('image-upload').value = '';
-      return;
-    }
     setScope('upload', true);
-    message('Mengupload gambar…');
+    message('Menyiapkan gambar…');
     try {
+      const prepared = await prepareImageForUpload(file);
+      if (prepared.error === 'type') {
+        message('Pilih JPG, PNG atau WebP.', true);
+        return;
+      }
+      if (prepared.error === 'decode') {
+        message(
+          'Gambar tidak bisa dibaca. Coba file JPG, PNG atau WebP lain.',
+          true,
+        );
+        return;
+      }
+      if (prepared.error === 'size') {
+        message(
+          'Gambar terlalu besar untuk diunggah. Coba gambar yang lebih kecil.',
+          true,
+        );
+        return;
+      }
+      message(
+        prepared.converted
+          ? 'Gambar dikecilkan otomatis agar sesuai batas. Mengupload…'
+          : 'Mengupload gambar…',
+      );
       const response = await fetch('/api/admin/media', {
         method: 'POST',
         credentials: 'same-origin',
-        headers: { 'Content-Type': file.type, 'X-CSRF-Token': csrf },
-        body: file,
+        headers: { 'Content-Type': prepared.type, 'X-CSRF-Token': csrf },
+        body: prepared.blob,
       });
       const result = await response.json();
       if (result.error?.code === 'UNAUTHORIZED') {
         expire();
         return;
       }
-      if (!result.ok) {
+      if (
+        !result.ok ||
+        !/^\/images\/cms\/projects\/[a-f0-9]{64}\.webp$/.test(
+          result.data?.image || '',
+        )
+      ) {
         message(
-          'Gambar belum berhasil diupload. Periksa format dan ukuran, lalu coba lagi.',
+          result.error?.code === 'INVALID_INPUT'
+            ? 'Gambar tidak didukung server. Coba JPG, PNG atau WebP lain.'
+            : 'Gambar belum berhasil diupload. Coba lagi.',
           true,
         );
         return;
       }
-      const image = result.data?.image;
-      if (!/^\/images\/cms\/projects\/[a-f0-9]{64}\.webp$/.test(image || ''))
-        throw new Error('Invalid media response');
+      const image = result.data.image;
       if (
         ![...byId('image').options].some((option) => option.value === image)
       ) {

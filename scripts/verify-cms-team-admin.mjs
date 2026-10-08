@@ -24,6 +24,13 @@ const png = await sharp({
 })
   .png()
   .toBuffer();
+// 20 MP flat-colour PNG: small bytes but above the server 16 MP decode limit,
+// so the browser must downscale before uploading.
+const hugePng = await sharp({
+  create: { width: 5000, height: 4000, channels: 3, background: '#9b7bff' },
+})
+  .png()
+  .toBuffer();
 const media = await normalizeProjectImage(png, 'image/png', 'team');
 const output = new URL('artifacts/cms-team/', root);
 await mkdir(output, { recursive: true });
@@ -170,6 +177,14 @@ try {
     await page.getByText('Foto siap.', { exact: false }).waitFor();
     assert.equal(uploads, 1);
     assert.equal(saved, 1);
+    // Oversized (20 MP) photo is downscaled client-side then uploaded.
+    await page.locator('#image-upload').setInputFiles({
+      name: 'huge.png',
+      mimeType: 'image/png',
+      buffer: hugePng,
+    });
+    await page.getByText('Foto siap.', { exact: false }).waitFor();
+    assert.equal(uploads, 2);
     await page.locator('#save').click();
     await page.getByText('Penerbitan dimulai', { exact: false }).waitFor();
     assert.equal(records[0].photo, media.image);

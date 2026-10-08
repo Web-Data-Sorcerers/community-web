@@ -250,6 +250,7 @@ test('native media route enforces session/CSRF, normalizes Storage uploads and s
             Buffer.from(options.body),
             Buffer.from(expected.data, 'base64'),
           );
+          assert.equal(options.headers['x-upsert'], 'true');
           calls.push({ storageUpload: url });
         }
         return new Response(Buffer.from(expected.data, 'base64'), {
@@ -471,6 +472,7 @@ test('native Team media route enforces session/CSRF, normalizes Storage uploads 
             Buffer.from(options.body),
             Buffer.from(expected.data, 'base64'),
           );
+          assert.equal(options.headers['x-upsert'], 'true');
           calls.push({ storageUpload: url });
         }
         return new Response(Buffer.from(expected.data, 'base64'), {

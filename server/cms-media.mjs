@@ -40,6 +40,9 @@ export async function normalizeProjectImage(
     [1600, 1200, 82],
     [1280, 960, 76],
     [960, 720, 72],
+    [800, 600, 68],
+    [640, 480, 64],
+    [480, 360, 60],
   ]) {
     output = await image
       .clone()

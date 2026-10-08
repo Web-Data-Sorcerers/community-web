@@ -1,3 +1,4 @@
+import { prepareImageForUpload } from './admin-image.js';
 (() => {
   const el = (id) => document.getElementById(id);
   const form = el('project-form');
@@ -312,22 +313,38 @@
   el('image-upload').addEventListener('change', async () => {
     const file = el('image-upload').files[0];
     if (!file || locked() || scopes.upload) return;
-    if (
-      file.size > 2 * 1024 * 1024 ||
-      !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)
-    ) {
-      message('Pilih JPG, PNG atau WebP maksimal 2 MB.', true);
-      el('image-upload').value = '';
-      return;
-    }
     setScope('upload', true);
-    message('Mengupload foto…');
+    message('Menyiapkan foto…');
     try {
+      const prepared = await prepareImageForUpload(file);
+      if (prepared.error === 'type') {
+        message('Pilih JPG, PNG atau WebP.', true);
+        return;
+      }
+      if (prepared.error === 'decode') {
+        message(
+          'Foto tidak bisa dibaca. Coba file JPG, PNG atau WebP lain.',
+          true,
+        );
+        return;
+      }
+      if (prepared.error === 'size') {
+        message(
+          'Foto terlalu besar untuk diunggah. Coba gambar yang lebih kecil.',
+          true,
+        );
+        return;
+      }
+      message(
+        prepared.converted
+          ? 'Foto dikecilkan otomatis agar sesuai batas. Mengupload…'
+          : 'Mengupload foto…',
+      );
       const response = await fetch('/api/admin/media?collection=team', {
         method: 'POST',
         credentials: 'same-origin',
-        headers: { 'Content-Type': file.type, 'X-CSRF-Token': csrf },
-        body: file,
+        headers: { 'Content-Type': prepared.type, 'X-CSRF-Token': csrf },
+        body: prepared.blob,
       });
       const result = await response.json();
       if (result.error?.code === 'UNAUTHORIZED') {
@@ -340,7 +357,9 @@
         !/^\/images\/cms\/team\/[a-f0-9]{64}\.webp$/.test(result.data?.image)
       ) {
         message(
-          'Foto belum berhasil diupload. Periksa format dan ukuran, lalu coba lagi.',
+          result.error?.code === 'INVALID_INPUT'
+            ? 'Gambar tidak didukung server. Coba JPG, PNG atau WebP lain.'
+            : 'Foto belum berhasil diupload. Coba lagi.',
           true,
         );
         return;

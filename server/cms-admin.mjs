@@ -553,6 +553,7 @@ export function createAdminHandler({
             headers: {
               Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
               'Content-Type': 'image/webp',
+              'x-upsert': 'true',
             },
             body: Buffer.from(media.data, 'base64'),
             signal: AbortSignal.timeout(30000),
@@ -574,6 +575,7 @@ export function createAdminHandler({
             headers: {
               Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
               'Content-Type': 'image/webp',
+              'x-upsert': 'true',
             },
             body: Buffer.from(media.data, 'base64'),
             signal: AbortSignal.timeout(30000),
