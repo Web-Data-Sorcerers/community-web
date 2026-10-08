@@ -1,5 +1,17 @@
 # CMS → Supabase — kickoff aktif untuk AI baru
 
+## All visible active GAS deployment details inspected — 8 Oct 2026
+
+Owner screenshots verify last Admin active first deploy admin : setup admin v1,
+execute as owner account/access Hanya saya sendiri. All3Admin active versions
+4/2/1 now inspected with owner-only access; Export1active v2 access Siapa saja.
+Exact deployment IDs still not backed up; screenshots contain truncated values.
+Collector4389 restarted after process loss, now has4target masked deployment-ID
+form; synthetic security/encryption QA14PASS. Durable copy updated outside repo.
+NEXT owner copy exact4IDs to local form (not chat), then sharing/deployed-source/
+remaining rollback/observation audit. No live Google/env/content mutation/push.
+Proof ignored f1/deployments-owner-partial-proof.json and collector-qa.json.
+
 ## Admin second commit deployment inspected — 8 Oct 2026
 
 Owner screenshots verify Admin active second commit: version2, execute as owner
