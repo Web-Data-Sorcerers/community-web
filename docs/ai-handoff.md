@@ -1,18 +1,26 @@
 # AI handoff — current context
 
-## Dashboard performance/loading/feedback — A–D LOKAL + QA PASS (8 Oct 2026)
+## Dashboard performance/loading/feedback — LIVE + QA PASS (8 Oct 2026)
 
-Faiz authorize kickoff A–D lokal; implementasi+QA selesai, **belum deployed**.
-Master [plan](admin-performance-feedback-plan.md) + [kickoff](admin-performance-feedback-kickoff.md).
-Perubahan: helper `src/scripts/admin-request.js` (bounded fetch, klasifikasi,
-deadline15s read, slow-notice3s, abort generation) dipakai modul Pendaftar;
-bootstrap **GET applications dulu** (validasi sesi + CSRF dari response) lalu
-**satu** filtered stats pakai as_of → **3→2 private read**; tabel tampil sebelum
-stats (panel stats/notes/history independen, partial error per panel); mutation
-ack (`Perubahan tersimpan.`) tampil segera lalu reconcile background
-(`revisionPending` menjaga write control sampai revisi fresh); Team & Projects
-global busy → **scoped busy** + nav guard draft. Tanpa ubah kontrak
-server/RPC/ACL/audit, dependency, PII cache, SQL/env/provider.
+Faiz authorize kickoff A–D lokal lalu `pyush`. Implementasi+QA selesai dan
+**deployed** exact HEAD `a9da4ffceb0e10fa180b218bd6c3e96a6218beb3` (satu push
+origin community-web). Production Current+primaryalias READY
+`dpl_8VToJboQvughDxU7mpreWREmzptx`, alias
+`data-sorcerers-community-sigma.vercel.app`, provider READY 08 Oct 2026
+14:31:49.984 UTC / 21:31:49.984 WIB. Read-only live: 5 shell 200; 4 anonymous
+admin endpoint 401; intake `accepting:true`. Master [plan](admin-performance-feedback-plan.md)
+
+- [kickoff](admin-performance-feedback-kickoff.md).
+  Master [plan](admin-performance-feedback-plan.md) + [kickoff](admin-performance-feedback-kickoff.md).
+  Perubahan: helper `src/scripts/admin-request.js` (bounded fetch, klasifikasi,
+  deadline15s read, slow-notice3s, abort generation) dipakai modul Pendaftar;
+  bootstrap **GET applications dulu** (validasi sesi + CSRF dari response) lalu
+  **satu** filtered stats pakai as_of → **3→2 private read**; tabel tampil sebelum
+  stats (panel stats/notes/history independen, partial error per panel); mutation
+  ack (`Perubahan tersimpan.`) tampil segera lalu reconcile background
+  (`revisionPending` menjaga write control sampai revisi fresh); Team & Projects
+  global busy → **scoped busy** + nav guard draft. Tanpa ubah kontrak
+  server/RPC/ACL/audit, dependency, PII cache, SQL/env/provider.
 
 QA Node22.23.0 `CMS_DATA_SOURCE=local`: build0errors/23pages; `test:cms`94PASS+
 10TeamSKIP/0FAIL; `test:recruitment`42PASS; recruitment-review+native-admin+
@@ -20,8 +28,8 @@ team-admin mock 320/390/768/1440 PASS; verify.mjs+navbar+responsive468/468+
 spacing+SEO PASS; snapshot `4345f1…4857`; 20 HTML non-admin byte-identik;
 dist48textfiles secrets0; `git diff --check` bersih. `verify-vt` pageerror
 `Transition was skipped` **juga di build baseline HEAD** (environmental, bukan
-regresi). Timing live belum diukur; push butuh izin exact HEAD SHA baru.
-Ledger: [plan §23](admin-performance-feedback-plan.md).
+regresi). Timing live belum diukur; owner read timing/fixture butuh approval
+konkret baru. Ledger: [plan §23](admin-performance-feedback-plan.md).
 
 ## NEXT lama (superseded oleh checkpoint A–D lokal di atas) — MASTER PLAN ONLY (8 Oct 2026)
 

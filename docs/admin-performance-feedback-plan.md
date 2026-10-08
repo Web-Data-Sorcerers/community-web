@@ -787,3 +787,16 @@ admin-performance.mjs` (runner p50/p95) belum dibuat.
 
 Live gates tetap: push butuh izin exact HEAD SHA baru (izin14e62af consumed);
 owner read-only timing & fixture/cleanup mutation perlu approval konkret baru.
+
+### 23.1 Deploy (8 Oct 2026)
+
+Faiz (`pyush`) menyetujui push exact HEAD `a9da4ffceb0e10fa180b218bd6c3e96a
+6218beb3`. Satu `git push origin main` ke community-web; refs main/origin/main/
+production/main sinkron `a9da4ff`. Production Current+primaryalias READY
+`dpl_8VToJboQvughDxU7mpreWREmzptx`, alias `data-sorcerers-community-sigma.
+vercel.app`; provider READY **08 Oct 2026 14:31:49.984 UTC / 21:31:49.984 WIB**
+(workspace clock terpisah). Read-only live: `/`,`/recruitment/`,`/admin/`,
+`/admin/team/`,`/admin/recruitment/` 200; `/api/admin/{projects,team,recruitment/
+stats,recruitment/applications}` anonymous 401; `/api/recruitment/application`
+`{ok:true,accepting:true}`. Izin `pyush` consumed; tidak ada SQL/env/provider/
+content/hook mutation. Deployed `a9da4ff`; checkpoint docs sesudah ini lokal saja.

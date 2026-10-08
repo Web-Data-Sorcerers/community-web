@@ -1,8 +1,16 @@
 # AGENTS.md — instructions for AI agents
 
-## Dashboard performance/loading/feedback — A–D LOKAL + QA PASS (8 Oct 2026)
+## Dashboard performance/loading/feedback — LIVE + QA PASS (8 Oct 2026)
 
-Faiz authorize kickoff A–D lokal; implementasi+QA selesai, **belum deployed**.
+Faiz authorize kickoff A–D lokal lalu `pyush`. Implementasi+QA selesai dan
+**deployed** owner-approved exact HEAD `a9da4ffceb0e10fa180b218bd6c3e96a6218beb3`
+(satu push origin community-web; izin `pyush` consumed). Production Current+
+primaryalias READY `dpl_8VToJboQvughDxU7mpreWREmzptx`, alias
+`data-sorcerers-community-sigma.vercel.app`; provider READY **08 Oct 2026
+14:31:49.984 UTC / 21:31:49.984 WIB**. Read-only live: `/`,`/recruitment/`,
+`/admin/`,`/admin/team/`,`/admin/recruitment/` 200; 4 anonymous admin endpoint
+401; intake `accepting:true` (recruitment OPEN).
+
 Master [plan](docs/admin-performance-feedback-plan.md) + [kickoff](docs/admin-performance-feedback-kickoff.md).
 Perubahan: helper [admin-request.js](src/scripts/admin-request.js) (bounded fetch,
 klasifikasi success/rejected/unauthorized/conflict/network/timeout/cancelled,
@@ -25,8 +33,8 @@ PASS; snapshot tetap `4345f1…4857`; **20 HTML non-admin byte-identik** pre/pos
 Batasan: `verify-vt` pageerror `Transition was skipped` **juga terjadi di build
 baseline HEAD** (bukan regresi, environmental). Target100msfeedback/1–2sdata
 **belum** diukur live (mock hanya membuktikan sequencing/request-count); timing
-authenticated, E-backend/SQL/region tetap pending. Push perlu izin exact HEAD SHA
-baru; izin14e62af consumed. Live owner login/fixture terpisah. Detail ledger:
+authenticated, E-backend/SQL/region tetap pending. Live owner login/read timing
+atau fixture mutation tetap butuh approval konkret baru. Detail ledger:
 [plan §23](docs/admin-performance-feedback-plan.md).
 
 ## NEXT lama (superseded oleh checkpoint A–D lokal di atas) — MASTER PLAN ONLY (8 Oct 2026)
