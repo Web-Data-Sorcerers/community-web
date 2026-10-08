@@ -1,5 +1,26 @@
 # CMS Supabase-only build dan pensiun GAS — Master Work Plan
 
+## Supabase-only build deployed72c36bd — owner acceptance pending (8 Oct 2026)
+
+Faiz (`gasss`) approved exact72c36bd18f98705706b2fa4b50c183679a4674c1;
+tepat satu push origin main ke community-web selesai, izin consumed. Production
+READY exactSHA+primaryalias dpl_2mHnXoNYJo7WpGLUxbnL1sEnFQCn; provider READY
+8Oct2026 **01:51:02.209UTC /08:51:02.209WIB**. Origin/main dan production/main
+fresh72c36bd; checkpoint sesudah push ini lokal saja, SHA cekgitlog.
+
+FlagProduction supabase verified; actual build log prebuild+remote snapshot+
+23pages PASS. Public19/19HTML exact; browser38pages/42tab checks/24entry-back
+cases390/1440 PASS,0pageerrors. Anonymous CMS401, recruitment closed;
+Projects4/Team25/grant1active/allowlist1/apps0/media0 dan fingerprints unchanged.
+Testing404; kini4READY: Current72 +retaineda042/645/7e17. GAS/env/code retained.
+
+**Owner session/read/refresh/logout + actual recruitment isolation pending**:
+credential tidak tersedia di sesi baru; tab/admin/ siap untuk owner login manual.
+Tidak mengklaim full cutover accepted atau positive cold-media live baru.
+Auth/server/SQL/schema/dependencies unchanged; tidak ulang migration/expiry/revoke.
+NEXT owner read-only acceptance§11; fixture/3hooks/cleanup atau resource retirement
+butuh izin baru. Proof/checkpoint: [GAS plan](cms-gas-retirement-plan.md) §19.
+
 ## Production source flag approved — push pending (8 Oct 2026)
 
 Faiz (`gasss`) mengizinkan tepat add `CMS_DATA_SOURCE=supabase` type plain,
@@ -799,3 +820,81 @@ config presence saja.
 
 Proof ignored `artifacts/cms-gas-retirement/config-source-set.json`; checkedAt
 workspace 2026-10-08T01:45:38.808Z, bukan provider deployment timestamp.
+
+## 19. Exact SHA push + READY + public read-only accepted — owner pending
+
+Faiz `gasss` approved exact72c36bd18f98705706b2fa4b50c183679a4674c1 setelah
+checkpoint config siap. Prepush: HEAD exact approved, tree clean, origin satu
+production push URL, flag value/scope verified. Tepat satu `git push origin main`
+berhasil a042b07→72c36bd. Read-only fetchproductionmain menyamakan refs kedua
+remote pada72c36bd; tidak push kedua. Approval consumed; docs checkpoint lokal
+sesudah ini perlu izin exact SHA baru bila hendak push.
+
+### Deployment dan actual build proof
+
+- Currentdpl_2mHnXoNYJo7WpGLUxbnL1sEnFQCn READY exact72c36bd pada production
+  prj_3KbX29t6DYN1RMTy88lKHXd0IUVE; primary alias `data-sorcerers-community-sigma.vercel.app` assigned same ID,
+  fresh API proof.
+- Provider READY8Oct2026 **01:51:02.209UTC /08:51:02.209WIB**, readyAt1791424262209.
+  Workspace checkedAt clock berbeda; jangan menyimpulkan chronology dari campuran.
+- Actual deployment logs HTTP200: scripts/fetch-cms.mjs prebuild executed,
+  Snapshot validated(remote mode), Astro build,23pages built. Raw log tidak
+  disimpan/ditampilkan; proof hanya sanitized booleans dan Node version diagnostic.
+- Project setting24.x; **actual log menyatakan engines22.x dipakai sebagai override**.
+  Tidak mutate setting Node. Local QA22.23.0 tetap valid baseline actual.
+- Source/config/READY + actual prebuild success + isolated sixliveRPC network proof
+  §17 mendukung Supabase-only build; browsertrace sendirian bukan build proof.
+  Source active sync/cache tidak mempunyai call ke GAS; retained env diabaikan.
+- Fresh flagCMS_DATA_SOURCE=supabase Production only; other scopes tidak diubah.
+  Testingproject404. Inventory4READY: Current72c36bd, olda042b07 dan rollback
+  645ec06/7e17fc0. Tidak delete deployment/env/resource; tidak klaim GB freed.
+
+### E1 public read-only proof
+
+- Fresh public19routes200, **19/19HTML SHA256 exact** against prepush live baseline.
+- Live browser390/1440:38page cases,42tab checks (=21tabs×2widths),24entry/back
+  cases (6Hods×Home/Recruitment×2widths),0pageerrors/0failures. H1, all img decode,
+  overflow, click/select/ARIA/single panel/focus/keyboard-right+left/wrap PASS;
+  keyboard back/link context and AstroVT JS token persistence PASS. Home/HoF
+  screenshots kedua widths tersedia ignored; tidak mengubah UI/source.
+- Actual anonymous Projects/Team/media401; anonymous admin Projects/Team shells
+  390/1440: keyboard-open password form, labels, empty password field, workspace
+  hidden dan no overflow/pageerrors PASS. **Shell bukan real owner read proof.**
+- Recruitment GET accepting:false. Tidak submission/PII reads atau loginfixture.
+- Fresh canonical DB fingerprints Projects8a7d4624d896842800dfd191892df7a8,
+  Team b867f2890c939b410e3e428259082883, recruitment allowlist
+  2a36dbfe696b9406baabd0cd4de9fb6f unchanged pre/post. Projects4/Team25,
+  grant1active/allowlist1, applications0/mediaobjects0; no content writes/hooks.
+- `git diff a042b07 72c36bd -- server api supabase src/data/cms-schema.mjs
+src/data/cms-snapshot.json package.json package-lock.json` kosong; auth/session/
+  SDK/SQL/grants tidak dikerjakan ulang. Prior auth accepted proof tetap historical.
+
+### Required pending dan batas klaim
+
+Credential login tidak tersedia di secure environment sesi baru. Browser connected
+awalnya about:blank; dibuat isolated production/admin/ tab untuk owner sendiri,
+login form terbuka. User diminta login CMS sendiri melalui async question, tanpa
+password di chat/files. Latest probe sesi itu anonymous401: belum owner proof.
+
+**Pending:** real owner login/readProjects+Team/editor390/1440/refresh-CSRF stable/
+read-after/logout, CMS-only→recruitment401 lalu recruitment login/mixed logout
+isolation dan recruitment-only→CMS401/own logout sesuai§11E1. Semua dependent
+proof tetap pending hingga secure/manual login tersedia; jangan menebak credential,
+mint bypass token atau memakai service readRPC sebagai owner login proof.
+No content writes, uploads, hooks, SQL/grant/provider changes dilakukan.
+Anonymous public/browser contexts ditutup; prepared owner tab belum authenticated.
+
+Positive cold-media live pass baru belum dilakukan: currentrefs0/objects0. Synthetic
+Projects+Team local cold-media proof PASS; E5 accepted645ec06 hanya historical.
+Jika user memilih fixture baru, minta izin exact fixturePNG32×32+UID/hash+3hooks+
+cleanup§11E3. Team arbitrary/live writes tetap tidak diizinkan.
+
+Status **“Supabase-only build deployed; public regression PASS; full cutover
+acceptance pending owner”**. Bukan retirement complete/fully accepted100%GAS-free.
+GAS/env/Sheet/Drive/source tetap retained; backup/observation/resource retirement
+§12 belum dimulai. Checkpoint ini lokal; tidak memakai izin push72c36bd lagi.
+
+Proof ignored: prepush, deployments-current, build-log-proof,node-version-proof,
+public-after-push,live-browser,admin-anonymous-shells,state-after-push,
+postpush-inventory,postpush-summary JSON; live-browser/admin-shell logs dan4screenshots.
+Tidak ada password/cookie/token/PII/raw upstream logs di proof.

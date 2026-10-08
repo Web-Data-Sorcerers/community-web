@@ -1,5 +1,26 @@
 # AGENTS.md — instructions for AI agents
 
+## Supabase-only build deployed72c36bd — owner acceptance pending (8 Oct 2026)
+
+Faiz (`gasss`) approved exact72c36bd18f98705706b2fa4b50c183679a4674c1;
+tepat satu push origin main ke community-web selesai, izin consumed. Production
+READY exactSHA+primaryalias dpl_2mHnXoNYJo7WpGLUxbnL1sEnFQCn; provider READY
+8Oct2026 **01:51:02.209UTC /08:51:02.209WIB**. Origin/main dan production/main
+fresh72c36bd; checkpoint sesudah push ini lokal saja, SHA cekgitlog.
+
+FlagProduction supabase verified; actual build log prebuild+remote snapshot+
+23pages PASS. Public19/19HTML exact; browser38pages/42tab checks/24entry-back
+cases390/1440 PASS,0pageerrors. Anonymous CMS401, recruitment closed;
+Projects4/Team25/grant1active/allowlist1/apps0/media0 dan fingerprints unchanged.
+Testing404; kini4READY: Current72 +retaineda042/645/7e17. GAS/env/code retained.
+
+**Owner session/read/refresh/logout + actual recruitment isolation pending**:
+credential tidak tersedia di sesi baru; tab/admin/ siap untuk owner login manual.
+Tidak mengklaim full cutover accepted atau positive cold-media live baru.
+Auth/server/SQL/schema/dependencies unchanged; tidak ulang migration/expiry/revoke.
+NEXT owner read-only acceptance§11; fixture/3hooks/cleanup atau resource retirement
+butuh izin baru. Proof/checkpoint: [GAS plan](docs/cms-gas-retirement-plan.md) §19.
+
 ## Production source flag approved — push pending (8 Oct 2026)
 
 Faiz (`gasss`) mengizinkan tepat add `CMS_DATA_SOURCE=supabase` type plain,
