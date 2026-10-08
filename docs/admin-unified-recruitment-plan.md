@@ -214,3 +214,18 @@ saja dan push SHA baru memerlukan approval exact SHA baru.
 Proof ignored artifacts/admin-unified/opening-{deployment,config-result,
 build-proof,public,form-result,db-proof,owner-ui,cleanup-proof,final-session,
 final-state}.json dan owner-before-opening.json. Jangan mencetak secret/PII.
+
+## Checkpoint docs pushed eaa61c4 — Production READY (8 Oct 2026)
+
+Faiz (`pushh`) menyetujui push checkpoint eaa61c4d6dafe2b69763e681d27d32fdaeb9ad50.
+Satu push origin/main ke community-web selesai; izin consumed. Production Current
++primaryalias READY exactSHA dpl_EB7uxc3WAV7ehDjvbazLaRmGM8wS; provider READY
+8Oct2026 05:27:06.454UTC/12:27:06.454WIB. Workspace clock terpisah.
+Build prebuild/remote snapshot/23pages PASS; public19/19HTML exact; anonymous
+Projects/Team/media/recruitment stats/list401; intake accepting:true tetap.
+Docs-only deployment; owner+synthetic intake acceptance00ac70a di bawah tetap
+berlaku, tidak mengulang fixture/login. Tidak ada env/content/SQL/grant/resource
+mutation atau second push. Proof ignored artifacts/admin-unified/checkpoint-push-
+{deployment,build-proof,public}.json. Catatan sesudah push ini lokal saja.
+NEXT terpisah: GAS retirement§12 inventory/secure backup/observasi lalu izin
+exact resource/env sebelum retire; retensi/CAPTCHA recruitment tetap pending.
