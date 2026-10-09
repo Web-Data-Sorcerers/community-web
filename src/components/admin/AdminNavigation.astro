@@ -134,6 +134,21 @@ const modules = [
     background: #9b7bff;
     box-shadow: 0 0 8px #9b7bff;
   }
+  .admin-modules a.is-loading .module-indicator {
+    background: #c4b5fd;
+    box-shadow: 0 0 10px #c4b5fd;
+    animation: arcanePulse 1s ease-in-out infinite alternate;
+  }
+  @keyframes arcanePulse {
+    from {
+      opacity: 0.4;
+      transform: scale(0.8);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1.4);
+    }
+  }
   .admin-modules a:hover:not([aria-current='page']):not(.active) {
     color: #ffffff;
     background: rgba(255, 255, 255, 0.05);

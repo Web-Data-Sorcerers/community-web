@@ -36,9 +36,20 @@ export function mount(root, opts = {}) {
     SERVER_ERROR:
       'Operasi belum berhasil. Muat ulang projects untuk memeriksa isi yang tersimpan.',
   };
+  const isLoadingText = (t) =>
+    typeof t === 'string' &&
+    (t.startsWith('Memuat') ||
+      t.startsWith('Memeriksa') ||
+      t.endsWith('…') ||
+      t.endsWith('...'));
   const message = (text, error = false) => {
-    $('status').textContent = text;
-    $('status').dataset.error = String(error);
+    const el = $('status');
+    if (!el) return;
+    el.textContent = text;
+    el.dataset.error = String(error);
+    const loading = !error && isLoadingText(text);
+    el.classList.toggle('is-loading', loading);
+    el.dataset.loading = String(loading);
   };
   const showToast = (type, title, text = '', duration = 4000) => {
     const container =
@@ -140,6 +151,7 @@ export function mount(root, opts = {}) {
   };
   const expire = () => {
     $('workspace').hidden = true;
+    if ($('workspace-skeleton')) $('workspace-skeleton').hidden = true;
     if ($('logout')) $('logout').hidden = true;
     if ($('login')) $('login').hidden = false;
     $('retry').hidden = true;
@@ -239,6 +251,7 @@ export function mount(root, opts = {}) {
       $('image').append(option);
     });
     $('workspace').hidden = false;
+    if ($('workspace-skeleton')) $('workspace-skeleton').hidden = true;
     choose(
       state.projects.some((project) => project.id === selected)
         ? selected
@@ -262,9 +275,12 @@ export function mount(root, opts = {}) {
     setScope('read', true);
     setBtnLoading($('reload'), true, 'Memuat…', 'Muat ulang projects');
     message('Memuat projects…');
+    if ($('workspace').hidden && $('workspace-skeleton'))
+      $('workspace-skeleton').hidden = false;
     try {
       const result = await rpc('adminLoadProjects');
       if (!result.ok) {
+        if ($('workspace-skeleton')) $('workspace-skeleton').hidden = true;
         const errText = errors[result.error.code] || errors.SERVER_ERROR;
         message(errText, true);
         showToast(

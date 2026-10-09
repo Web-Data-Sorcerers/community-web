@@ -1,5 +1,41 @@
 # AGENTS.md — instructions for AI agents
 
+## Tab Switching & Initial Workspace Skeleton Loading States — LOKAL PASS (10 Oct 2026)
+
+Owner meminta indikator loading yang jelas dan profesional saat awal membuka admin dan saat perpindahan tab (agar tidak sekadar teks statis "Memuat Team..."):
+
+1. **Workspace Skeleton Screen Modern (Dark Arcane Shimmer)**:
+   - Menambahkan `#workspace-skeleton` pada ketiga panel (`AdminProjectsPanel.astro`, `AdminTeamPanel.astro`, `AdminRecruitmentPanel.astro`) yang tampil instan saat panel pertama kali diakses atau dimuat ulang.
+   - Panel Projects: Skeleton list kartu proyek, preview frame (16:10), form input field, dan action button.
+   - Panel Team: Skeleton list kelompok tim, preview kartu anggota (3:4 portrait ratio), form input, dan tombol aksi.
+   - Panel Recruitment: Skeleton grid 4 metrik KPI, skeleton header tabel pendaftar, dan skeleton list data.
+   - Animasi shimmer konsisten `@keyframes arcaneShimmer` dengan background obsidian glass dan perataan strict 8-point spacing.
+2. **Animated Arcane Spinner pada Box Status**:
+   - Status bar `#status` saat kondisi memuat kini memiliki kelas `.is-loading` dan atribut `data-loading="true"`, menampilkan animated rotating spinner via CSS pseudo-element `::before` tanpa mengganggu teks string asli sehingga menjaga 100% kompatibilitas asersi Playwright.
+3. **Pulsing Tab Navigation Indicator**:
+   - Di `AdminNavigation.astro` dan `admin-shell.js`, tab link yang sedang berpindah/memuat modul otomatis menerapkan kelas `.is-loading`, memicu animasi `@keyframes arcanePulse` (pulsing glowing ring) pada titik indikator tab hingga `#workspace` atau `#login-form` siap.
+4. **Sinkronisasi Modul JavaScript Shell**:
+   - `cms-admin-editor.js`, `cms-team-editor.js`, dan `recruitment-admin.js` secara otomatis mendeteksi status loading dalam fungsi `message()`, mengaktifkan/menonaktifkan `.is-loading` pada `#status`, menampilkan skeleton saat load awal, dan menyembunyikan skeleton segera setelah konten workspace dirender.
+5. **Zero Emote**: Memastikan 0 emoji/emotikon di seluruh antarmuka, notifikasi, toast, dan komunikasi.
+
+### QA Lengkap (Node 22.23.0, `CMS_DATA_SOURCE=local`):
+
+- `npm run format:check`: **PASS** (Prettier)
+- `npm run build`: **0 error / 23 pages**
+- `npm run test:recruitment`: **42 PASS / 0 FAIL** (42 tests)
+- `npm run test:cms`: **94 PASS + 10 Team SKIP / 0 FAIL** (104 tests)
+- Browser Playwright Mocks (4 widths: 320, 390, 768, 1440 px):
+  - `npm run verify:recruitment-review`: **PASS**
+  - `npm run verify:cms-native-admin`: **PASS**
+  - `npm run verify:cms-team-admin`: **PASS**
+- `npm run verify:visual`: **PASS** (exit 0, `browserErrors: []`)
+- `npm run audit:spacing`: **PASS** (Strict 8-point audit PASS on 39 components)
+- `npm run seo:audit`: **PASS** (23 pages)
+- Snapshot: `4345f1abe445aa2a400c31413ccc058707a77105a7e388dc8d1074e78da94857` (100% byte-matched)
+- Public HTML parity: 20 HTML publik 100% tidak tersentuh
+- Dist secrets: **0**
+- Server endpoints, RPC, SQL, ACL, env: **0 perubahan**
+
 ## Fix Recruitment Login Form Hide & Comprehensive Button Loading Feedback — LOKAL PASS (9 Oct 2026)
 
 Owner melaporkan form login sempat muncul saat berpindah ke tab Pendaftar dan tombol detail pelamar belum memiliki loading state & notifikasi:

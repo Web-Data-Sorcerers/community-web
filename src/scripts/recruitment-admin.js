@@ -119,9 +119,22 @@ export function mount(root, opts = {}) {
       if (defaultText !== undefined) btn.textContent = defaultText;
     }
   };
+  const isLoadingText = (s) =>
+    Boolean(
+      s &&
+      (s.includes('Memuat') ||
+        s.includes('Memeriksa') ||
+        s.includes('Menyimpan') ||
+        s.endsWith('…')),
+    );
   const message = (s, bad = false) => {
-    byId('status').textContent = s;
-    byId('status').dataset.error = String(bad);
+    const st = byId('status');
+    if (!st) return;
+    st.textContent = s;
+    st.dataset.error = String(bad);
+    const loading = !bad && isLoadingText(s);
+    st.classList.toggle('is-loading', loading);
+    st.dataset.loading = String(loading);
     if (bad && s) {
       showToast('error', 'Pemberitahuan Sistem', s);
     }
@@ -189,6 +202,8 @@ export function mount(root, opts = {}) {
     if (code !== 'FORBIDDEN') csrf = undefined;
     saving = false;
     byId('workspace').hidden = true;
+    const sk = byId('workspace-skeleton');
+    if (sk) sk.hidden = true;
     byId('applications-body').replaceChildren();
     byId('stats').replaceChildren();
     for (const id of [
@@ -211,6 +226,8 @@ export function mount(root, opts = {}) {
   }
   function loggedIn() {
     byId('workspace').hidden = false;
+    const sk = byId('workspace-skeleton');
+    if (sk) sk.hidden = true;
     byId('login-form').hidden = true;
     byId('logout').hidden = false;
     if (!refreshTimer) refreshTimer = setInterval(refresh, 30 * 60 * 1000);
@@ -547,6 +564,9 @@ export function mount(root, opts = {}) {
       asOf = undefined;
       activeFilters = readFilters();
     }
+    const ws = byId('workspace');
+    const sk = byId('workspace-skeleton');
+    if (ws && ws.hidden && sk) sk.hidden = false;
     const input = {
       ...activeFilters,
       limit: 50,
@@ -580,6 +600,8 @@ export function mount(root, opts = {}) {
     if (!result.ok) {
       doneSlow();
       byId('table-wrapper').setAttribute('aria-busy', 'false');
+      const sk = byId('workspace-skeleton');
+      if (sk) sk.hidden = true;
       byId('list-error').textContent =
         errors[result.error?.code] ||
         (result.timeout

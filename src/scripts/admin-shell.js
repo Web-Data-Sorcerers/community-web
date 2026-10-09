@@ -70,9 +70,34 @@ function mountIfNeeded(tab) {
   if (mounted[tab]) return;
   const root = getPanelRoot(tab);
   if (!root) return;
+  const link = document.querySelector(`.admin-module-link[data-tab="${tab}"]`);
+  if (link) link.classList.add('is-loading');
   const mod = getModule(tab);
-  const inst = mod.mount(root);
+  mod.mount(root);
   mounted[tab] = true;
+  const ws = root.querySelector('#workspace');
+  const loginForm = root.querySelector('#login-form');
+  if (link) {
+    const isReady = () =>
+      (ws && !ws.hidden) || (loginForm && !loginForm.hidden);
+    if (isReady()) {
+      link.classList.remove('is-loading');
+    } else {
+      const observer = new MutationObserver(() => {
+        if (isReady()) {
+          link.classList.remove('is-loading');
+          observer.disconnect();
+        }
+      });
+      if (ws)
+        observer.observe(ws, { attributes: true, attributeFilter: ['hidden'] });
+      if (loginForm)
+        observer.observe(loginForm, {
+          attributes: true,
+          attributeFilter: ['hidden'],
+        });
+    }
+  }
 }
 
 function updateNav(tab) {

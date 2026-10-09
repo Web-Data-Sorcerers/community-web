@@ -46,9 +46,29 @@
       <a href="/">Kembali ke situs</a>
     </div>
   </header>
-  <p id="status" role="status" aria-live="polite">
+  <p
+    id="status"
+    role="status"
+    aria-live="polite"
+    class="is-loading"
+    data-loading="true"
+  >
     Memeriksa akses&hellip;
   </p>
+  <div id="workspace-skeleton" class="workspace-skeleton" aria-hidden="true">
+    <div class="skeleton-stats-grid">
+      <div class="skeleton-stat-card"></div>
+      <div class="skeleton-stat-card"></div>
+      <div class="skeleton-stat-card"></div>
+      <div class="skeleton-stat-card"></div>
+    </div>
+    <div class="skeleton-table-card">
+      <div class="skeleton-table-header"></div>
+      <div class="skeleton-table-row"></div>
+      <div class="skeleton-table-row"></div>
+      <div class="skeleton-table-row"></div>
+    </div>
+  </div>
   <div id="workspace" hidden>
     <p id="intake-status" style="margin-bottom: 24px" role="status">
       Memeriksa status pendaftaran&hellip;
@@ -494,11 +514,97 @@
     line-height: 1.5;
     overflow-wrap: anywhere;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.25s ease;
+  }
+  #status.is-loading,
+  #status[data-loading='true'] {
+    border-color: rgba(155, 123, 255, 0.45);
+    background: linear-gradient(
+      90deg,
+      rgba(155, 123, 255, 0.12) 0%,
+      rgba(124, 92, 252, 0.06) 50%,
+      rgba(155, 123, 255, 0.12) 100%
+    );
+    background-size: 200% 100%;
+    animation: statusArcaneShimmer 2.5s ease infinite;
+    box-shadow: 0 0 20px rgba(155, 123, 255, 0.16);
+  }
+  #status.is-loading::before,
+  #status[data-loading='true']::before {
+    content: '';
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #c4b5fd;
+    border-radius: 50%;
+    animation: spinArcane 0.7s linear infinite;
   }
   #status[data-error='true'] {
     background: rgba(244, 63, 94, 0.1);
     border-color: rgba(244, 63, 94, 0.3);
     color: #fecdd3;
+    animation: none;
+  }
+  #status[data-error='true']::before {
+    display: none;
+  }
+
+  /* --- Workspace Loading Skeleton --- */
+  .workspace-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-top: 16px;
+    animation: arcaneFadeIn 0.3s ease-out;
+  }
+  .skeleton-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+  }
+  .skeleton-stat-card {
+    height: 96px;
+    border-radius: 16px;
+    background: linear-gradient(
+      90deg,
+      rgba(155, 123, 255, 0.06) 25%,
+      rgba(155, 123, 255, 0.15) 50%,
+      rgba(155, 123, 255, 0.06) 75%
+    );
+    background-size: 200% 100%;
+    animation: arcaneShimmer 1.8s infinite;
+    border: 1px solid rgba(155, 123, 255, 0.16);
+  }
+  .skeleton-table-card {
+    border-radius: 16px;
+    padding: 24px;
+    background: #0d0b16;
+    border: 1px solid rgba(155, 123, 255, 0.16);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .skeleton-table-header {
+    height: 40px;
+    border-radius: 8px;
+    background: rgba(155, 123, 255, 0.12);
+  }
+  .skeleton-table-row {
+    height: 48px;
+    border-radius: 8px;
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.02) 25%,
+      rgba(155, 123, 255, 0.08) 50%,
+      rgba(255, 255, 255, 0.02) 75%
+    );
+    background-size: 200% 100%;
+    animation: arcaneShimmer 1.8s infinite;
   }
   [hidden] {
     display: none !important;
