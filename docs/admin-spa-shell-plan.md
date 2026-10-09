@@ -168,20 +168,26 @@ Regresi wajib:
 - `verify:visual` exit 0 `browserErrors: []`; navbar/seo/spacing PASS.
 - Secrets 0 di dist.
 
-## 7. Keputusan yang perlu owner
+## 7. Keputusan owner (FINAL — 8 Oct 2026)
 
-1. **URL deep-link:** `/admin/team/` dipertahankan sebagai tab alias
-   (`/admin/#team`), atau redirect permanen ke shell? (rekomendasi: alias/
-   `pushState`, tanpa redirect agar bookmark lama tetap bekerja).
-2. **Keep-alive scope:** semua panel tetap hidup selama sesi, atau reset panel
-   yang sudah tidak dipakai X menit? (rekomendasi: keep selama dokumen hidup;
-   tombol "Muat ulang" per panel untuk fresh).
-3. **Dirty-guard lintas tab:** kalau ada draft di Projects lalu buka Team,
-   blokir + konfirmasi, atau izinkan dengan indikator "draft tersimpan"?
-   (rekomendasi: konfirmasi seperti sekarang, karena `beforeunload` sudah ada).
-4. **PII Pendaftar:** panel Pendaftar tetap **tidak** di-cache di storage
-   persisten; keep-alive hanya di **memori dokumen** (reset saat reload/close).
-   Konfirmasi ini OK. (rekomendasi: ya — memori saja).
+Owner memilih **semua rekomendasi** ("pakai semua rekomendasi gw"). Jadi:
+
+1. **URL deep-link:** `/admin/team/` & `/admin/recruitment/` dipertahankan
+   sebagai **alias tab** via `history.pushState`/hash `#team`/`#recruitment`;
+   **tanpa redirect**. Bookmark & deep-link lama tetap valid; route lama harus
+   tetap 200 dan memilih panel yang benar.
+2. **Keep-alive scope:** semua panel tetap hidup **selama dokumen hidup**
+   (satu sesi halaman). Tidak ada auto-reset berbasis waktu; tombol "Muat ulang"
+   per panel tetap ada untuk pengambilan data fresh manual.
+3. **Dirty-guard lintas tab:** **konfirmasi** saat ada draft belum disimpan lalu
+   pindah panel (perilaku sama seperti `beforeunload` sekarang). `beforeunload`
+   tetap aktif saat menutup/refresh dokumen.
+4. **PII Pendaftar:** keep-alive **hanya di memori dokumen**; **tidak ada**
+   cache storage persisten (`localStorage`/`sessionStorage`/IndexedDB) untuk
+   jawaban pendaftar. Reset total saat reload/close/logout/401.
+
+Keputusan ini **mengikat** eksekutor; tidak perlu tanya owner lagi kecuali
+muncul trade-off teknis baru di luar §7.
 
 ## 8. Risiko dan mitigasi
 
