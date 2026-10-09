@@ -133,20 +133,62 @@ export function mount(root, opts = {}) {
     );
   };
   let csrf;
+  const setImageLoading = (loading, text = 'Memuat gambar…') => {
+    const container = $('image-preview-container');
+    const loader = $('image-preview-loader');
+    const loaderText = $('image-preview-loader-text');
+    const image = $('image-preview');
+    if (container) {
+      container.classList.toggle('is-loading', loading);
+      container.dataset.loading = String(loading);
+      container.hidden = !loading && (!image || image.hidden);
+    }
+    if (loaderText) {
+      loaderText.textContent = text;
+    }
+    if (loader) {
+      loader.hidden = !loading;
+    }
+  };
   const preview = () => {
     const image = $('image').value;
     const element = $('image-preview');
-    element.hidden = !image;
+    if (!element) return;
+    let targetSrc = '';
     if (/^\/images\/cms\/projects\/[a-f0-9]{64}\.webp$/.test(image)) {
-      element.src = '/api/admin/media?image=' + encodeURIComponent(image);
+      targetSrc = '/api/admin/media?image=' + encodeURIComponent(image);
     } else if (
       /^\/images\/[a-zA-Z0-9_.\/-]+$/.test(image) &&
       !image.includes('..')
     ) {
-      element.src = image;
+      targetSrc = image;
+    }
+    if (targetSrc) {
+      element.hidden = false;
+      const currentSrc = element.getAttribute('src');
+      if (
+        currentSrc === targetSrc &&
+        element.complete &&
+        element.naturalWidth > 0
+      ) {
+        setImageLoading(false);
+        return;
+      }
+      setImageLoading(true, 'Memuat gambar…');
+      element.onload = () => {
+        setImageLoading(false);
+      };
+      element.onerror = () => {
+        setImageLoading(false);
+      };
+      element.src = targetSrc;
+      if (element.complete && element.naturalWidth > 0) {
+        setImageLoading(false);
+      }
     } else {
       element.removeAttribute('src');
       element.hidden = true;
+      setImageLoading(false);
     }
   };
   const expire = () => {
@@ -156,6 +198,7 @@ export function mount(root, opts = {}) {
     if ($('login')) $('login').hidden = false;
     $('retry').hidden = true;
     $('reload').hidden = false;
+    setImageLoading(false);
     message(
       'Sesi berakhir. Masuk lagi sebelum melanjutkan. Perubahan formulir belum disimpan.',
       true,
@@ -199,7 +242,7 @@ export function mount(root, opts = {}) {
     }
     return result;
   };
-  const choose = (id) => {
+  const choose = (id, isUserClick = false) => {
     if (
       locked() ||
       scopes.upload ||
@@ -229,6 +272,14 @@ export function mount(root, opts = {}) {
       button.setAttribute('aria-current', String(button.dataset.id === id)),
     );
     applyBusy();
+    if (isUserClick && record.title) {
+      showToast(
+        'info',
+        'Pilih Project',
+        'Memuat data ' + record.title + '…',
+        2500,
+      );
+    }
   };
   const render = () => {
     $('project-list').replaceChildren();
@@ -238,7 +289,7 @@ export function mount(root, opts = {}) {
       button.className = 'project-choice';
       button.dataset.id = project.id;
       button.textContent = project.title;
-      button.addEventListener('click', () => choose(project.id));
+      button.addEventListener('click', () => choose(project.id, true));
       $('project-list').append(button);
     });
     $('image').replaceChildren();
@@ -324,21 +375,32 @@ export function mount(root, opts = {}) {
       setScope('read', false);
     }
   };
-  $('image').addEventListener('change', preview);
+  $('image').addEventListener('change', () => {
+    preview();
+    showToast(
+      'info',
+      'Pilihan Gambar',
+      'Memperbarui pratinjau gambar project…',
+      2500,
+    );
+  });
   $('image-upload').addEventListener('change', async () => {
     const file = $('image-upload').files[0];
     if (!file || locked() || scopes.upload) return;
     setScope('upload', true);
+    setImageLoading(true, 'Menyiapkan gambar…');
     message('Menyiapkan gambar…');
     try {
       const prepared = await prepareImageForUpload(file);
       if (prepared.error === 'type') {
+        setImageLoading(false);
         const errText = 'Pilih JPG, PNG atau WebP.';
         message(errText, true);
         showToast('error', 'Format Tidak Didukung', errText);
         return;
       }
       if (prepared.error === 'decode') {
+        setImageLoading(false);
         const errText =
           'Gambar tidak bisa dibaca. Coba JPG, PNG atau WebP lain.';
         message(errText, true);
@@ -346,6 +408,7 @@ export function mount(root, opts = {}) {
         return;
       }
       if (prepared.error === 'size') {
+        setImageLoading(false);
         const errText =
           'Gambar terlalu besar untuk diunggah. Coba gambar yang lebih kecil.';
         message(errText, true);
@@ -355,6 +418,7 @@ export function mount(root, opts = {}) {
       const notice = prepared.converted
         ? 'Gambar dikecilkan otomatis agar sesuai batas. Mengupload…'
         : 'Mengupload gambar…';
+      setImageLoading(true, 'Mengunggah gambar…');
       message(notice);
       showToast('info', 'Memproses Berkas', notice);
       const response = await fetch('/api/admin/media', {
@@ -365,6 +429,7 @@ export function mount(root, opts = {}) {
       });
       const result = await response.json();
       if (result.error?.code === 'UNAUTHORIZED') {
+        setImageLoading(false);
         expire();
         showToast('error', 'Sesi Berakhir', 'Masuk lagi sebelum melanjutkan.');
         return;
@@ -375,6 +440,7 @@ export function mount(root, opts = {}) {
           result.data?.image || '',
         )
       ) {
+        setImageLoading(false);
         const errText =
           result.error?.code === 'INVALID_INPUT'
             ? 'Gambar tidak didukung server. Coba JPG, PNG atau WebP lain.'
@@ -402,6 +468,7 @@ export function mount(root, opts = {}) {
         'Gambar project telah siap digunakan. Klik Simpan dan terbitkan untuk menerapkan.',
       );
     } catch {
+      setImageLoading(false);
       const errText =
         'Koneksi upload terputus. Project belum disimpan. Pilih gambar lagi untuk mencoba ulang.';
       message(errText, true);

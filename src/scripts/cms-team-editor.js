@@ -165,22 +165,63 @@ export function mount(root, opts = {}) {
     }
     return result;
   };
+  const setImageLoading = (loading, text = 'Memuat foto…') => {
+    const container = $('image-preview-container');
+    const loader = $('image-preview-loader');
+    const loaderText = $('image-preview-loader-text');
+    const image = $('image-preview');
+    if (container) {
+      container.classList.toggle('is-loading', loading);
+      container.dataset.loading = String(loading);
+      container.hidden = !loading && (!image || image.hidden);
+    }
+    if (loaderText) {
+      loaderText.textContent = text;
+    }
+    if (loader) {
+      loader.hidden = !loading;
+    }
+  };
   const preview = () => {
     const photo = $('image').value;
     const image = $('image-preview');
+    if (!image) return;
+    let targetSrc = '';
     if (['marchel', 'zidan-rose'].includes(photo)) {
-      image.src = '/images/team/' + photo + '.webp';
-      image.hidden = false;
+      targetSrc = '/images/team/' + photo + '.webp';
     } else if (/^\/images\/cms\/team\/[a-f0-9]{64}\.webp$/.test(photo)) {
-      image.src =
+      targetSrc =
         '/api/admin/media?collection=team&image=' + encodeURIComponent(photo);
+    }
+    if (targetSrc) {
       image.hidden = false;
+      const currentSrc = image.getAttribute('src');
+      if (
+        currentSrc === targetSrc &&
+        image.complete &&
+        image.naturalWidth > 0
+      ) {
+        setImageLoading(false);
+        return;
+      }
+      setImageLoading(true, 'Memuat foto…');
+      image.onload = () => {
+        setImageLoading(false);
+      };
+      image.onerror = () => {
+        setImageLoading(false);
+      };
+      image.src = targetSrc;
+      if (image.complete && image.naturalWidth > 0) {
+        setImageLoading(false);
+      }
     } else {
       image.removeAttribute('src');
       image.hidden = true;
+      setImageLoading(false);
     }
   };
-  const choose = (id) => {
+  const choose = (id, isUserClick = false) => {
     if (
       locked() ||
       scopes.upload ||
@@ -213,6 +254,14 @@ export function mount(root, opts = {}) {
     );
     applyBusy();
     preview();
+    if (isUserClick && record.name) {
+      showToast(
+        'info',
+        'Pilih Anggota',
+        'Memuat data ' + record.name + '…',
+        2500,
+      );
+    }
     return true;
   };
   const render = () => {
@@ -235,7 +284,7 @@ export function mount(root, opts = {}) {
           button.className = 'project-choice';
           button.dataset.id = m.id;
           button.textContent = m.order + '. ' + m.name;
-          button.addEventListener('click', () => choose(m.id));
+          button.addEventListener('click', () => choose(m.id, true));
           $('project-list').append(button);
         });
     });
@@ -325,7 +374,26 @@ export function mount(root, opts = {}) {
   };
   form.addEventListener('input', () => (dirty = true));
   form.addEventListener('change', () => (dirty = true));
-  $('image').addEventListener('change', preview);
+  $('group').addEventListener('change', () => {
+    const selectedGroup = state?.groups?.find((g) => g.id === $('group').value);
+    showToast(
+      'info',
+      'Grup Diperbarui',
+      'Anggota dialihkan ke grup ' +
+        (selectedGroup?.title || $('group').value) +
+        '.',
+      2500,
+    );
+  });
+  $('image').addEventListener('change', () => {
+    preview();
+    showToast(
+      'info',
+      'Pilihan Foto',
+      'Memperbarui pratinjau foto anggota…',
+      2500,
+    );
+  });
   $('add').addEventListener('click', () => {
     if (locked()) return;
     if (
@@ -465,16 +533,19 @@ export function mount(root, opts = {}) {
     const file = $('image-upload').files[0];
     if (!file || locked() || scopes.upload) return;
     setScope('upload', true);
+    setImageLoading(true, 'Menyiapkan foto…');
     message('Menyiapkan foto…');
     try {
       const prepared = await prepareImageForUpload(file);
       if (prepared.error === 'type') {
+        setImageLoading(false);
         const errText = 'Pilih JPG, PNG atau WebP.';
         message(errText, true);
         showToast('error', 'Format Tidak Didukung', errText);
         return;
       }
       if (prepared.error === 'decode') {
+        setImageLoading(false);
         const errText =
           'Foto tidak bisa dibaca. Coba file JPG, PNG atau WebP lain.';
         message(errText, true);
@@ -482,6 +553,7 @@ export function mount(root, opts = {}) {
         return;
       }
       if (prepared.error === 'size') {
+        setImageLoading(false);
         const errText =
           'Foto terlalu besar untuk diunggah. Coba gambar yang lebih kecil.';
         message(errText, true);
@@ -491,6 +563,7 @@ export function mount(root, opts = {}) {
       const notice = prepared.converted
         ? 'Foto dikecilkan otomatis agar sesuai batas. Mengupload…'
         : 'Mengupload foto…';
+      setImageLoading(true, 'Mengunggah foto…');
       message(notice);
       showToast('info', 'Memproses Berkas', notice);
       const response = await fetch('/api/admin/media?collection=team', {
@@ -501,6 +574,7 @@ export function mount(root, opts = {}) {
       });
       const result = await response.json();
       if (result.error?.code === 'UNAUTHORIZED') {
+        setImageLoading(false);
         expire();
         message(messages.UNAUTHORIZED, true);
         showToast('error', 'Sesi Berakhir', 'Masuk lagi sebelum melanjutkan.');
@@ -510,6 +584,7 @@ export function mount(root, opts = {}) {
         !result.ok ||
         !/^\/images\/cms\/team\/[a-f0-9]{64}\.webp$/.test(result.data?.image)
       ) {
+        setImageLoading(false);
         const errText =
           result.error?.code === 'INVALID_INPUT'
             ? 'Gambar tidak didukung server. Coba JPG, PNG atau WebP lain.'
@@ -537,6 +612,7 @@ export function mount(root, opts = {}) {
         'Gambar profil anggota siap digunakan. Klik Simpan untuk menerapkan.',
       );
     } catch {
+      setImageLoading(false);
       const errText =
         'Koneksi upload terputus. Anggota belum disimpan. Pilih foto lagi.';
       message(errText, true);

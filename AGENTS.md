@@ -1,5 +1,40 @@
 # AGENTS.md — instructions for AI agents
 
+## Image Preview & Profile Switch Loading States — LOKAL PASS (10 Oct 2026)
+
+Owner meminta indikator loading saat mengganti foto profil/proyek, upload berkas, maupun saat berpindah anggota/proyek:
+
+1. **Interactive Image Preview Container & Loader Frame**:
+   - Membungkus `#image-preview` dengan `.image-preview-container` dan overlay loader `#image-preview-loader` pada `AdminTeamPanel.astro` (rasio 3:4 portrait) dan `AdminProjectsPanel.astro` (rasio 16:10).
+   - Menampilkan animated rotating Arcane spinner (`.preview-spinner`) dan teks status dinamis ("Memuat foto…", "Mengunggah foto…", "Menyiapkan foto…", "Memuat gambar…") di atas frame preview foto dengan background obsidian glass dan blur backdrop.
+2. **Sinkronisasi Loading pada Lifecycle Pratinjau**:
+   - `preview()` secara reaktif mengaktifkan `.is-loading` dan menampilkan loader saat foto/gambar baru dimuat dari server atau disk, lalu menyembunyikan loader secara otomatis saat `onload` atau `onerror` selesai.
+   - Event `#image-upload` secara bertahap menampilkan status "Menyiapkan foto…", "Mengunggah foto…", hingga foto terverifikasi dan siap digunakan.
+3. **Notifikasi Toast Interaktif saat Mengganti Item/Formulir**:
+   - Saat memilih anggota lain dari daftar tim (`choose`): menampilkan floating toast Dark Arcane `Memuat profil [Nama]…`.
+   - Saat memilih proyek lain dari daftar proyek: menampilkan toast `Memuat data [Judul]…`.
+   - Saat mengganti pilihan dropdown foto (`#image`): menampilkan toast konfirmasi pembaruan pratinjau.
+   - Saat memindahkan grup tim (`#group`): menampilkan toast konfirmasi peralihan grup.
+4. **Zero Emote**: Memastikan 0 emoji/emotikon di seluruh antarmuka, notifikasi, toast, dan komunikasi.
+
+### QA Lengkap (Node 22.23.0, `CMS_DATA_SOURCE=local`):
+
+- `npm run format:check`: **PASS** (Prettier)
+- `npm run build`: **0 error / 23 pages**
+- `npm run test:recruitment`: **42 PASS / 0 FAIL** (42 tests)
+- `npm run test:cms`: **94 PASS + 10 Team SKIP / 0 FAIL** (104 tests)
+- Browser Playwright Mocks (4 widths: 320, 390, 768, 1440 px):
+  - `node scripts/verify-cms-native-admin.mjs`: **PASS**
+  - `node scripts/verify-cms-team-admin.mjs`: **PASS**
+  - `node scripts/verify-recruitment-review.mjs`: **PASS**
+- `node scripts/verify.mjs`: **PASS** (exit 0, `browserErrors: []`)
+- `npm run audit:spacing`: **PASS** (Strict 8-point audit PASS on 39 components)
+- `npm run seo:audit`: **PASS** (23 pages)
+- Snapshot: `4345f1abe445aa2a400c31413ccc058707a77105a7e388dc8d1074e78da94857` (100% byte-matched)
+- Public HTML parity: 20 HTML publik 100% tidak tersentuh
+- Dist secrets: **0**
+- Server endpoints, RPC, SQL, ACL, env: **0 perubahan**
+
 ## Tab Switching & Initial Workspace Skeleton Loading States — LOKAL PASS (10 Oct 2026)
 
 Owner meminta indikator loading yang jelas dan profesional saat awal membuka admin dan saat perpindahan tab (agar tidak sekadar teks statis "Memuat Team..."):
