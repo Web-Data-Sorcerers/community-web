@@ -79,15 +79,9 @@ export function mount(root, opts = {}) {
   function showToast(type, title, text = '', duration = 4000) {
     const container = byId('recruitment-toast-container');
     if (!container) return;
-    const icons = {
-      success: '✓',
-      error: '⚠',
-      warning: '⚡',
-      info: 'ℹ',
-    };
     const toast = create('div', undefined, 'admin-toast toast-' + type);
     toast.setAttribute('role', 'alert');
-    const iconSpan = create('span', icons[type] || '•', 'toast-icon');
+    const dot = create('span', undefined, 'toast-dot');
     const contentDiv = create('div', undefined, 'toast-content');
     const titleDiv = create('div', title, 'toast-title');
     contentDiv.append(titleDiv);
@@ -95,7 +89,7 @@ export function mount(root, opts = {}) {
       const descDiv = create('div', text, 'toast-desc');
       contentDiv.append(descDiv);
     }
-    const closeBtn = create('button', '✕', 'toast-close');
+    const closeBtn = create('button', '×', 'toast-close');
     closeBtn.type = 'button';
     closeBtn.setAttribute('aria-label', 'Tutup notifikasi');
     const dismiss = () => {
@@ -103,7 +97,7 @@ export function mount(root, opts = {}) {
       setTimeout(() => toast.remove(), 300);
     };
     closeBtn.addEventListener('click', dismiss);
-    toast.append(iconSpan, contentDiv, closeBtn);
+    toast.append(dot, contentDiv, closeBtn);
     container.append(toast);
     if (duration > 0) {
       setTimeout(() => {
@@ -248,11 +242,91 @@ export function mount(root, opts = {}) {
     const visuals = byId('analytics-visuals');
     if (!visuals) return;
     visuals.hidden = false;
-
-    // 1. Domain Distribution Bars
-    const domainBars = byId('domain-bars');
+    const svgNS = 'http://www.w3.org/2000/svg';
     const totalFiltered = Math.max(1, stats.filtered);
-    const domainColors = {
+
+    // 1. Domain Donut SVG Chart
+    const donut = byId('domain-donut');
+    if (donut) {
+      donut.replaceChildren();
+      const svg = document.createElementNS(svgNS, 'svg');
+      svg.setAttribute('viewBox', '0 0 140 140');
+      svg.setAttribute('class', 'domain-donut-svg');
+      svg.setAttribute(
+        'aria-label',
+        `Distribusi domain (${stats.filtered} pelamar)`,
+      );
+
+      const bg = document.createElementNS(svgNS, 'circle');
+      bg.setAttribute('cx', '70');
+      bg.setAttribute('cy', '70');
+      bg.setAttribute('r', '50');
+      bg.setAttribute('fill', 'none');
+      bg.setAttribute('stroke', 'rgba(255, 255, 255, 0.05)');
+      bg.setAttribute('stroke-width', '16');
+      svg.appendChild(bg);
+
+      const domainColors = {
+        data: '#c084fc',
+        core: '#60a5fa',
+        language: '#34d399',
+        vision: '#fbbf24',
+        product: '#fb7185',
+        growth: '#38bdf8',
+      };
+
+      const C = 314.159; // 2 * PI * 50
+      let offset = 0;
+      const g = document.createElementNS(svgNS, 'g');
+      g.setAttribute('transform', 'rotate(-90 70 70)');
+
+      if (stats.filtered > 0) {
+        for (const { hods, count } of stats.by_hods) {
+          if (count <= 0) continue;
+          const seg = document.createElementNS(svgNS, 'circle');
+          const dash = (count / stats.filtered) * C;
+          seg.setAttribute('cx', '70');
+          seg.setAttribute('cy', '70');
+          seg.setAttribute('r', '50');
+          seg.setAttribute('fill', 'none');
+          seg.setAttribute('stroke', domainColors[hods] || '#9b7bff');
+          seg.setAttribute('stroke-width', '16');
+          seg.setAttribute('stroke-dasharray', `${dash} ${C}`);
+          seg.setAttribute('stroke-dashoffset', String(-offset));
+          g.appendChild(seg);
+          offset += dash;
+        }
+      }
+      svg.appendChild(g);
+
+      const totalText = document.createElementNS(svgNS, 'text');
+      totalText.setAttribute('x', '70');
+      totalText.setAttribute('y', '66');
+      totalText.setAttribute('text-anchor', 'middle');
+      totalText.setAttribute('fill', '#ffffff');
+      totalText.setAttribute('font-size', '20');
+      totalText.setAttribute('font-weight', '700');
+      totalText.setAttribute('font-family', "'Bluu Next', serif");
+      totalText.textContent = String(stats.filtered);
+
+      const labelText = document.createElementNS(svgNS, 'text');
+      labelText.setAttribute('x', '70');
+      labelText.setAttribute('y', '82');
+      labelText.setAttribute('text-anchor', 'middle');
+      labelText.setAttribute('fill', '#a8a3b8');
+      labelText.setAttribute('font-size', '10');
+      labelText.setAttribute('font-weight', '600');
+      labelText.setAttribute('letter-spacing', '0.8');
+      labelText.textContent = 'PELAMAR';
+
+      svg.appendChild(totalText);
+      svg.appendChild(labelText);
+      donut.appendChild(svg);
+    }
+
+    // 2. Domain Breakdown Progress Bars
+    const domainBars = byId('domain-bars');
+    const domainGradients = {
       data: 'linear-gradient(90deg, #9333ea, #c084fc)',
       core: 'linear-gradient(90deg, #2563eb, #60a5fa)',
       language: 'linear-gradient(90deg, #059669, #34d399)',
@@ -282,7 +356,7 @@ export function mount(root, opts = {}) {
           const track = create('div', undefined, 'domain-bar-track');
           const fill = create('div', undefined, 'domain-bar-fill');
           fill.style.width = `${pct}%`;
-          fill.style.background = domainColors[hods] || 'var(--accent)';
+          fill.style.background = domainGradients[hods] || 'var(--accent)';
           track.append(fill);
           item.append(labelRow, track);
           return item;
@@ -294,38 +368,111 @@ export function mount(root, opts = {}) {
       domainTotalBadge.textContent = `${stats.filtered} dari ${stats.total_global}`;
     }
 
-    // 2. Recruitment Funnel Pipeline
-    const funnel = byId('pipeline-funnel');
-    if (funnel) {
+    // 3. SVG Stepped Pipeline Funnel Chart
+    const pipelineChart = byId('pipeline-chart');
+    if (pipelineChart) {
+      pipelineChart.replaceChildren();
       const inReviewTotal =
         counts.reviewing + counts.shortlisted + counts.interview;
-      const steps = [
-        { label: 'Pendaftar Baru', val: counts.new, color: '#38bdf8' },
-        { label: 'Sedang Ditinjau', val: inReviewTotal, color: '#c4b5fd' },
-        { label: 'Lolos Shortlist', val: counts.shortlisted, color: '#fbbf24' },
-        {
-          label: 'Diterima (Accepted)',
-          val: counts.accepted,
-          color: '#34d399',
-        },
-        {
-          label: 'Daftar Tunggu / Ditolak',
-          val: counts.waitlisted + counts.rejected,
-          color: '#fb7185',
-        },
+      const stages = [
+        { label: 'BARU', count: counts.new, color: '#38bdf8' },
+        { label: 'DITINJAU', count: inReviewTotal, color: '#c4b5fd' },
+        { label: 'SHORTLIST', count: counts.shortlisted, color: '#fbbf24' },
+        { label: 'DITERIMA', count: counts.accepted, color: '#34d399' },
       ];
-      funnel.replaceChildren(
-        ...steps.map((st) => {
-          const row = create('div', undefined, 'funnel-step-row');
-          row.style.borderLeftColor = st.color;
-          const left = create('div', undefined, 'funnel-step-left');
-          left.append(create('span', st.label));
-          const valSpan = create('span', String(st.val), 'funnel-step-val');
-          row.append(left, valSpan);
-          return row;
-        }),
-      );
+
+      const svg = document.createElementNS(svgNS, 'svg');
+      svg.setAttribute('viewBox', '0 0 380 84');
+      svg.setAttribute('class', 'pipeline-chart-svg');
+      svg.setAttribute('aria-label', 'Visual alur seleksi');
+
+      stages.forEach((st, idx) => {
+        const x = 6 + idx * 96;
+        const width = 80;
+
+        const rect = document.createElementNS(svgNS, 'rect');
+        rect.setAttribute('x', String(x));
+        rect.setAttribute('y', '4');
+        rect.setAttribute('width', String(width));
+        rect.setAttribute('height', '74');
+        rect.setAttribute('rx', '8');
+        rect.setAttribute('fill', 'rgba(255, 255, 255, 0.03)');
+        rect.setAttribute('stroke', st.color);
+        rect.setAttribute('stroke-opacity', '0.35');
+        rect.setAttribute('stroke-width', '1.5');
+        svg.appendChild(rect);
+
+        const accent = document.createElementNS(svgNS, 'line');
+        accent.setAttribute('x1', String(x + 12));
+        accent.setAttribute('y1', '4');
+        accent.setAttribute('x2', String(x + width - 12));
+        accent.setAttribute('y2', '4');
+        accent.setAttribute('stroke', st.color);
+        accent.setAttribute('stroke-width', '2.5');
+        accent.setAttribute('stroke-linecap', 'round');
+        svg.appendChild(accent);
+
+        const txtLabel = document.createElementNS(svgNS, 'text');
+        txtLabel.setAttribute('x', String(x + width / 2));
+        txtLabel.setAttribute('y', '26');
+        txtLabel.setAttribute('text-anchor', 'middle');
+        txtLabel.setAttribute('fill', st.color);
+        txtLabel.setAttribute('font-size', '10');
+        txtLabel.setAttribute('font-weight', '700');
+        txtLabel.setAttribute('letter-spacing', '0.6');
+        txtLabel.textContent = st.label;
+        svg.appendChild(txtLabel);
+
+        const txtCount = document.createElementNS(svgNS, 'text');
+        txtCount.setAttribute('x', String(x + width / 2));
+        txtCount.setAttribute('y', '56');
+        txtCount.setAttribute('text-anchor', 'middle');
+        txtCount.setAttribute('fill', '#ffffff');
+        txtCount.setAttribute('font-size', '19');
+        txtCount.setAttribute('font-weight', '700');
+        txtCount.setAttribute('font-family', "'Bluu Next', serif");
+        txtCount.textContent = String(st.count);
+        svg.appendChild(txtCount);
+
+        if (idx < stages.length - 1) {
+          const arrowX = x + width + 8;
+          const arrow = document.createElementNS(svgNS, 'path');
+          arrow.setAttribute(
+            'd',
+            `M${arrowX} 35 L${arrowX + 4} 41 L${arrowX} 47`,
+          );
+          arrow.setAttribute('stroke', 'rgba(155, 123, 255, 0.45)');
+          arrow.setAttribute('stroke-width', '2');
+          arrow.setAttribute('stroke-linecap', 'round');
+          arrow.setAttribute('stroke-linejoin', 'round');
+          arrow.setAttribute('fill', 'none');
+          svg.appendChild(arrow);
+        }
+      });
+      pipelineChart.appendChild(svg);
     }
+
+    // 4. Pipeline Terminal Outcomes (Pills)
+    const funnel = byId('pipeline-funnel');
+    if (funnel) {
+      funnel.replaceChildren();
+      const terminalRow = create('div', undefined, 'pipeline-terminal-pills');
+      const terminalItems = [
+        ['Daftar Tunggu', counts.waitlisted],
+        ['Ditolak', counts.rejected],
+        ['Mundur', counts.withdrawn],
+      ];
+      terminalItems.forEach(([label, val]) => {
+        const pill = create('div', undefined, 'terminal-pill');
+        pill.append(
+          create('span', label + ': '),
+          create('strong', String(val)),
+        );
+        terminalRow.append(pill);
+      });
+      funnel.append(terminalRow);
+    }
+
     const funnelConversionBadge = byId('pipeline-stats-conversion');
     if (funnelConversionBadge) {
       const acceptedPct = Math.round((counts.accepted / totalFiltered) * 100);
@@ -614,8 +761,8 @@ export function mount(root, opts = {}) {
 
     const groups = [
       {
-        title: 'Profil & Identitas Pelamar',
-        icon: '👤',
+        num: '01',
+        title: 'Identitas & Informasi Pribadi',
         keys: [
           'full_name',
           'preferred_name',
@@ -623,24 +770,27 @@ export function mount(root, opts = {}) {
           'whatsapp',
           'institution',
           'city_region',
-          'current_status',
         ],
       },
       {
-        title: 'Peminatan Domain & Spesialisasi',
-        icon: '🎯',
+        num: '02',
+        title: 'Profil & Pemahaman Diri',
+        keys: ['current_status', 'current_level', 'best_description'],
+      },
+      {
+        num: '03',
+        title: 'Peminatan Domain HoDS & Keahlian',
         keys: [
           'primary_hods',
           'specific_area',
-          'current_level',
           'currently_exploring',
           'foundation_skills',
           'secondary_interest',
         ],
       },
       {
+        num: '04',
         title: 'Bukti Karya & Portofolio',
-        icon: '💼',
         keys: [
           'portfolio_link',
           'most_relevant_work',
@@ -649,33 +799,46 @@ export function mount(root, opts = {}) {
         ],
       },
       {
-        title: 'Visi, Esai & Kesiapan Tim',
-        icon: '💡',
+        num: '05',
+        title: 'Riset, Masalah & Rencana Karya',
         fullWidth: true,
         keys: [
-          'why_join',
           'real_world_problem',
           'technology_approach',
           'explore_or_build',
           'what_to_contribute',
           'what_to_build_together',
-          'time_commitment',
+          'desired_output',
+        ],
+      },
+      {
+        num: '06',
+        title: 'Kolaborasi & Dinamika Tim',
+        fullWidth: true,
+        keys: [
           'team_comfort',
           'team_roles',
           'team_story',
           'cross_hods_willingness',
-          'learning_methods',
-          'independent_learning',
-          'desired_output',
-          'best_description',
-          'skill_to_improve',
-          'six_months_goal',
-          'contribution_types',
         ],
       },
       {
+        num: '07',
+        title: 'Komitmen, Motivasi & Pembelajaran',
+        fullWidth: true,
+        keys: [
+          'time_commitment',
+          'contribution_types',
+          'why_join',
+          'skill_to_improve',
+          'six_months_goal',
+          'learning_methods',
+          'independent_learning',
+        ],
+      },
+      {
+        num: '08',
         title: 'Persetujuan & Kebijakan',
-        icon: '📋',
         keys: ['agreement_1', 'agreement_2', 'agreement_3'],
       },
     ];
@@ -685,7 +848,13 @@ export function mount(root, opts = {}) {
       const groupFields = [];
       for (const key of grp.keys) {
         const value = data.fields[key];
-        if (value === null || value === undefined || value === '') continue;
+        if (
+          value === null ||
+          value === undefined ||
+          value === '' ||
+          (Array.isArray(value) && value.length === 0)
+        )
+          continue;
         renderedKeys.add(key);
         const field = create('div', undefined, 'field');
         const labelDiv = create(
@@ -707,7 +876,7 @@ export function mount(root, opts = {}) {
           valElement.append(link);
         } else if (key.startsWith('agreement_')) {
           valElement = create('div', undefined, 'field-value agreement-badge');
-          valElement.append(create('span', '✓ Disetujui (' + value + ')'));
+          valElement.append(create('span', 'Disetujui (' + value + ')'));
         } else {
           valElement = create(
             'div',
@@ -725,7 +894,7 @@ export function mount(root, opts = {}) {
         );
         const head = create('div', undefined, 'detail-group-header');
         head.append(
-          create('span', grp.icon, 'detail-group-icon'),
+          create('span', grp.num, 'detail-group-num'),
           create('h3', grp.title, 'detail-group-title'),
         );
         const grid = create('div', undefined, 'detail-group-grid');
@@ -741,7 +910,8 @@ export function mount(root, opts = {}) {
         renderedKeys.has(key) ||
         value === null ||
         value === undefined ||
-        value === ''
+        value === '' ||
+        (Array.isArray(value) && value.length === 0)
       )
         continue;
       const field = create('div', undefined, 'field');
@@ -755,8 +925,8 @@ export function mount(root, opts = {}) {
       const card = create('div', undefined, 'detail-group-card');
       const head = create('div', undefined, 'detail-group-header');
       head.append(
-        create('span', '📝', 'detail-group-icon'),
-        create('h3', 'Informasi Lainnya', 'detail-group-title'),
+        create('span', '+', 'detail-group-num'),
+        create('h3', 'Informasi Tambahan', 'detail-group-title'),
       );
       const grid = create('div', undefined, 'detail-group-grid');
       grid.append(...otherFields);

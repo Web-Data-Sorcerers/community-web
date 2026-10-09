@@ -1,14 +1,16 @@
 # AGENTS.md — instructions for AI agents
 
-## Admin Recruitment Revamp (Kolom Detail, Loading Shimmer, Dark Arcane Toast, Detail Workspace 5 Kategori, & Data Visualization) — LOKAL PASS (9 Oct 2026)
+## Admin Recruitment Revamp v2 (Zero Emote, 8 Kategori Sesuai Jawaban, SVG Donut & Pipeline Chart) — LOKAL PASS (9 Oct 2026)
 
-Owner meminta pembaruan menyeluruh untuk admin pendaftaran (`/admin/recruitment/`):
+Owner meminta pembaruan lanjutan untuk admin pendaftaran (`/admin/recruitment/`):
 
-1. Kolom "Aksi" dengan tombol "Tinjau Detail →" yang jelas dan mudah diakses.
-2. Loading state jelas di semua proses (skeleton shimmer 5 baris di tabel, button spinner berputar saat mutasi status/catatan).
-3. Sistem notifikasi floating toast Dark Arcane (4 status visual semantik: Sukses emerald, Error rose, Warning amber, Info sky).
-4. Layout detail formulir yang rapi: Split 2-column workspace (sticky reviewer console di kiri, 38 field dikelompokkan ke dalam 5 kartu kategori tematik di kanan, portfolio link clickable & aman XSS, badge persetujuan).
-5. Visualisasi dan analisis data: Distribusi Domain (progress bars dengan % dan counters) & Pipeline Alur Seleksi (funnel steps interaktif).
+1. **Zero Emote / Emoji**: Menghapus seluruh emotikon/emoji dari antarmuka (UI), toast, detail group headers, badges, dan respon. Menggunakan badge angka minimalis (`01`, `02`, dst.) dan SVG icons.
+2. **Kategori Jawaban Sesuai Jawaban**: 38 field dikelompokkan ke dalam 8 kategori logis selaras dengan formulir asli (`RecruitmentForm.astro`). Hanya merender field dan kategori yang benar-benar memiliki jawaban (tanpa field kosong atau placeholder tak berguna).
+3. **Visual Chart Interaktif di Dashboard Admin (Native SVG)**:
+   - **SVG Donut Ring Chart**: Menampilkan visualisasi lingkaran proporsi 6 domain dengan total pelamar di tengah Donut.
+   - **SVG Stepped Pipeline Chart**: Visualisasi alur seleksi 4 tahap (Baru ➔ Ditinjau ➔ Shortlist ➔ Diterima) dengan flow chevron dan tag hasil akhir (Daftar Tunggu, Ditolak, Mundur).
+4. **Kolom "Aksi" & Loading State**: Tombol "Tinjau Detail →" Dark Arcane, skeleton shimmer 5 baris di tabel, dan button loading spinners.
+5. **Dark Arcane Floating Toast**: Sistem notifikasi floating toast tanpa emotikon (indikator dot semantik: Sukses emerald, Error rose, Warning amber, Info sky).
 
 ### QA Lengkap (Node 22.23.0, `CMS_DATA_SOURCE=local`):
 

@@ -262,3 +262,14 @@ Implementasi dan seluruh rangkaian gate QA telah selesai dan **100% LOKAL PASS**
   - Snapshot `src/data/cms-snapshot.json` SHA256: `4345f1abe445aa2a400c31413ccc058707a77105a7e388dc8d1074e78da94857` (100% byte-matched)
   - Public HTML Parity: 20 halaman HTML publik 100% utuh tidak tersentuh
   - Database & Server Endpoints: Nol mutasi, no SQL/RPC schema changes, no auth changes.
+
+---
+
+## 6. Update v2: Zero Emote, 8 Kategori Sesuai Jawaban, & SVG Visual Charts
+
+Pembaruan lanjutan mencakup:
+
+1. **Zero Emote**: Menghilangkan seluruh emotikon dari UI (header detail `01`–`08`, notifikasi toast dot semantik, badge persetujuan polos `Disetujui (on)`, dan ikon SVG untuk chart).
+2. **Kategori Sesuai Jawaban**: 38 field dikelompokkan ke dalam 8 kategori logis selaras dengan formulir asli (`RecruitmentForm.astro`). Field yang kosong tidak dirender, dan kategori tanpa jawaban tidak ditampilkan.
+3. **SVG Donut Ring Chart**: Menampilkan visualisasi lingkaran proporsi 6 domain dengan total pelamar di tengah Donut.
+4. **SVG Stepped Pipeline Chart**: Visualisasi alur seleksi 4 tahap dengan flow chevron dan tag hasil akhir (Daftar Tunggu, Ditolak, Mundur).
