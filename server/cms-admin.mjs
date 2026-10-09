@@ -1,4 +1,16 @@
 import { createCmsAuth } from './cms-auth.mjs';
+import { waitUntil } from '@vercel/functions';
+
+// Extend the serverless handler lifetime so the deploy hook is guaranteed to run
+// even though the save response returns before it resolves. Falls back to a
+// no-op when no Vercel request context is available (local Node/tests).
+const runInBackground = (promise) => {
+  try {
+    waitUntil(promise);
+  } catch {
+    /* no Vercel context; promise still runs */
+  }
+};
 
 const ERRORS = new Set([
   'UNAUTHORIZED',
@@ -215,6 +227,8 @@ function sanitize(result) {
     }));
   }
   const mediaPath = /^\/images\/cms\/(?:projects|team)\/[a-f0-9]{64}\.webp$/;
+  // Reset/retry responses carry only the background-publish indicator.
+  if (data.publicationPending === true) out.publicationPending = true;
   if ('image' in data) {
     if (!mediaPath.test(data.image)) fail('SERVER_ERROR');
     out.image = data.image;
@@ -238,7 +252,8 @@ function sanitize(result) {
     !out.projects &&
     !out.publication &&
     !out.image &&
-    !out.media
+    !out.media &&
+    out.publicationPending !== true
   )
     fail('SERVER_ERROR');
   return { ok: true, data: out };
@@ -338,15 +353,17 @@ export function createAdminHandler({
         `select * from public.${fnName}('${escaped}'::jsonb)`,
       );
       if (result.error) return { ok: false, error: result.error };
-      const publication = await callDeployHooks();
-      result.publication = publication;
-      result.publicationPending = publication.some((p) => !p.accepted);
+      // Fire the publish hook in the background (waitUntil keeps the function
+      // alive on Vercel); the save response must not wait for the rebuild.
+      runInBackground(callDeployHooks());
+      delete result.publication;
+      result.publicationPending = true;
       return sanitize({ ok: true, data: result });
     }
 
     if (operation === 'retry') {
-      const publication = await callDeployHooks();
-      return sanitize({ ok: true, data: { publication } });
+      runInBackground(callDeployHooks());
+      return sanitize({ ok: true, data: { publicationPending: true } });
     }
 
     fail('INVALID_INPUT');
@@ -438,15 +455,15 @@ export function createAdminHandler({
         `select * from public.${fnName}('${escaped}'::jsonb)`,
       );
       if (result.error) return { ok: false, error: result.error };
-      const publication = await callDeployHooks();
-      result.publication = publication;
-      result.publicationPending = publication.some((p) => !p.accepted);
+      runInBackground(callDeployHooks());
+      delete result.publication;
+      result.publicationPending = true;
       return sanitize({ ok: true, data: result });
     }
 
     if (operation === 'retry') {
-      const publication = await callDeployHooks();
-      return sanitize({ ok: true, data: { publication } });
+      runInBackground(callDeployHooks());
+      return sanitize({ ok: true, data: { publicationPending: true } });
     }
 
     fail('INVALID_INPUT');

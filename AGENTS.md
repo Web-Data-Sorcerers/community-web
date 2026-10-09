@@ -1,5 +1,34 @@
 # AGENTS.md — instructions for AI agents
 
+## Admin save background publish (waitUntil) — LOKAL, QA PASS (8 Oct 2026)
+
+Owner pilih **A2b** (`gasss`): klik Simpan/terbitkan Team/Projects balik cepat,
+`callDeployHooks` (deploy hook Vercel) jalan di belakang pakai `waitUntil()` dari
+`@vercel/functions@^3.9.11` (dependency baru, owner-approved). Plan lengkap +
+hasil: [plan](docs/admin-background-publish-plan.md).
+
+Perubahan: [`server/cms-admin.mjs`](server/cms-admin.mjs) import `waitUntil` +
+helper `runInBackground` (fallback no-op tanpa konteks Vercel); Team + Projects
+`save/add/delete/retry` panggil `runInBackground(callDeployHooks())`, hapus
+`result.publication`, set `publicationPending:true`, return sebelum hook resolve;
+`sanitize` menerima response hanya-`publicationPending`. UI
+[`cms-admin-editor.js`](src/scripts/cms-admin-editor.js) +
+[`cms-team-editor.js`](src/scripts/cms-team-editor.js): pesan "Perubahan
+tersimpan. Penerbitan dimulai di belakang layar...", tombol retry tetap sebagai
+recovery. Persis checkpoint: **`accepted` hilang dari response save** (breaking,
+server+UI satu deploy) — kegagalan hook tidak terlihat langsung.
+
+QA Node22.23.0 `CMS_DATA_SOURCE=local`: `test:cms` **94 PASS + 10 Team SKIP / 0
+FAIL**; build0errors/23pages; `verify:cms-native-admin` + `verify:cms-team-admin`
+**PASS 4 widths**; `verify:visual` exit0 `browserErrors[]`; navbar/vt/seo/spacing
+PASS; **hanya 2 HTML admin berubah**, 21 HTML publik + aset byte-identik;
+snapshot `4345f1…4857` tetap; dist secrets0; prettier bersih. Mock **bukan**
+bukti `waitUntil` jalan di Vercel — live acceptance (Simpan production →
+deployment Vercel tetap menambah rebuild) wajib pasca-deploy. **Belum
+push/deploy**; production tetap `6fc5085`. Push butuh izin exact HEAD SHA baru.
+
+Masalah foto Team bagian B (kepala tidak kepotong garis frame) **ditunda** owner.
+
 ## Fix upload foto/gambar admin (Team & Projects) — QA PASS (8 Oct 2026)
 
 Owner lapor gagal ganti foto Team dengan pesan “Foto belum berhasil diupload.

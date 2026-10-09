@@ -191,15 +191,14 @@ import { prepareImageForUpload } from './admin-image.js';
         : state.projects[0].id,
     );
   };
-  const publicationMessage = (publication, saved) => {
-    const accepted = publication.every((item) => item.accepted);
-    byId('retry').hidden = accepted;
+  // The save response returns before the publish hook resolves (the hook runs
+  // in the background via waitUntil), so there is no synchronous `accepted`
+  // result. Keep the retry button available to recover a missed rebuild.
+  const publicationMessage = (saved) => {
+    byId('retry').hidden = false;
     message(
-      accepted
-        ? (saved ? 'Perubahan tersimpan. ' : '') +
-            `Penerbitan dimulai untuk ${publication.length === 1 ? 'production' : 'testing dan production'}. Tunggu beberapa menit sebelum memeriksa situs.`
-        : 'Perubahan tersimpan, tetapi penerbitan belum berhasil untuk semua situs. Klik Coba terbitkan lagi.',
-      !accepted,
+      (saved ? 'Perubahan tersimpan. ' : '') +
+        'Penerbitan dimulai di belakang layar. Tunggu beberapa menit sebelum memeriksa situs.',
     );
   };
   const load = async () => {
@@ -357,7 +356,7 @@ import { prepareImageForUpload } from './admin-image.js';
       setScope('mutation', false);
       render();
       byId('reload').hidden = true;
-      publicationMessage(result.data.publication, true);
+      publicationMessage(true);
     } catch (_error) {
       message(
         'Koneksi terputus. Muat ulang projects sebelum menyimpan lagi untuk memeriksa perubahan terakhir.',
@@ -403,7 +402,7 @@ import { prepareImageForUpload } from './admin-image.js';
       setScope('mutation', false);
       render();
       byId('reload').hidden = true;
-      publicationMessage(result.data.publication, true);
+      publicationMessage(true);
       byId('title').focus();
     } catch (_error) {
       message(
@@ -423,7 +422,7 @@ import { prepareImageForUpload } from './admin-image.js';
       const result = await rpc('adminRetryPublication');
       if (!result.ok)
         message(errors[result.error.code] || errors.SERVER_ERROR, true);
-      else publicationMessage(result.data.publication, false);
+      else publicationMessage(false);
     } catch (_error) {
       message('Koneksi terputus. Coba terbitkan lagi.', true);
     } finally {

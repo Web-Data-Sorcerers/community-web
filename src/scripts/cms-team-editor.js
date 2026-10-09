@@ -192,14 +192,12 @@ import { prepareImageForUpload } from './admin-image.js';
         : state.members[0].id,
     );
   };
-  const publication = (results) => {
-    const success = results.every((p) => p.accepted);
-    el('retry').hidden = success;
+  // Save returns before the background publish hook resolves (waitUntil), so
+  // there is no synchronous accepted result; keep retry available as recovery.
+  const publication = () => {
+    el('retry').hidden = false;
     message(
-      success
-        ? `Perubahan tersimpan. Penerbitan dimulai untuk ${results.length === 1 ? 'production' : 'testing dan production'}. Periksa situs setelah ${results.length === 1 ? 'build' : 'kedua build'} selesai.`
-        : 'Perubahan tersimpan, tetapi penerbitan belum berhasil untuk semua situs. Klik Coba terbitkan lagi.',
-      !success,
+      'Perubahan tersimpan. Penerbitan dimulai di belakang layar. Periksa situs setelah beberapa menit.',
     );
   };
   const load = async () => {
@@ -264,7 +262,7 @@ import { prepareImageForUpload } from './admin-image.js';
       setScope('mutation', false);
       render();
       el('reload').hidden = true;
-      publication(result.data.publication);
+      publication();
     } catch {
       message(
         'Koneksi terputus. Muat ulang Team sebelum mengulang untuk memeriksa data tersimpan.',
@@ -301,7 +299,7 @@ import { prepareImageForUpload } from './admin-image.js';
     setScope('publication', true);
     try {
       const result = await rpc('retry');
-      if (result.ok) publication(result.data.publication);
+      if (result.ok) publication();
       else message(messages[result.error.code] || messages.SERVER_ERROR, true);
     } catch {
       message('Koneksi terputus. Coba terbitkan lagi.', true);

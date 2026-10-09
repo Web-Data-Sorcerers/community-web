@@ -49,7 +49,6 @@ try {
     page.on('pageerror', (e) => errors.push(e.message));
     let records = structuredClone(original),
       revision = 'initial',
-      partial = true,
       conflict = false,
       unauthorized = false,
       saved = 0,
@@ -68,7 +67,6 @@ try {
       maxMembers: 8,
       publicationPending: false,
     });
-    const publication = () => [{ target: 'production', accepted: !partial }];
     await page.route('http://team-admin.test/**', async (route) => {
       const request = route.request(),
         url = new URL(request.url());
@@ -84,7 +82,7 @@ try {
           result = { ok: true, data: state() };
         else if (body.operation === 'retry') {
           retry++;
-          result = { ok: true, data: { publication: publication() } };
+          result = { ok: true, data: { publicationPending: true } };
         } else if (conflict)
           result = { ok: false, error: { code: 'CONFLICT' } };
         else {
@@ -103,7 +101,11 @@ try {
           revision = 'saved-' + saved;
           result = {
             ok: true,
-            data: { ...state(), affectedId: id, publication: publication() },
+            data: {
+              ...state(),
+              affectedId: id,
+              publicationPending: true,
+            },
           };
         }
         return route.fulfill({ json: { ...result, csrf: 'mock-csrf' } });
@@ -153,21 +155,13 @@ try {
     await page.locator('#name').fill('<b>Literal name</b>');
     await page.locator('#save').click();
     await page
-      .getByText('Perubahan tersimpan, tetapi', { exact: false })
+      .getByText('Perubahan tersimpan. Penerbitan dimulai', { exact: false })
       .waitFor();
     assert.equal(await page.locator('.project-choice b').count(), 0);
     assert.equal(saved, 1);
-    partial = false;
     await page.locator('#retry').click();
     await page.getByText('Penerbitan dimulai', { exact: false }).waitFor();
     assert.equal(retry, 1);
-    assert.equal(
-      await page
-        .locator('#status')
-        .textContent()
-        .then((t) => t.includes('untuk production.')),
-      true,
-    );
     assert.equal(saved, 1);
     await page.locator('#image-upload').setInputFiles({
       name: 'portrait.png',

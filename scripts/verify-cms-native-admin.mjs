@@ -77,7 +77,6 @@ try {
           uploads: 0,
           retries: 0,
           failSave: false,
-          partial: true,
         };
         const state = () => ({
           projects: structuredClone(records),
@@ -132,12 +131,7 @@ try {
                                   name === 'add'
                                     ? records.at(-1).id
                                     : payload.project?.id,
-                                publication: [
-                                  {
-                                    target: 'production',
-                                    accepted: !window.adminMock.partial,
-                                  },
-                                ],
+                                publicationPending: true,
                               },
                             };
                           }
@@ -145,11 +139,7 @@ try {
                           window.adminMock.retries++;
                           result = {
                             ok: true,
-                            data: {
-                              publication: [
-                                { target: 'production', accepted: true },
-                              ],
-                            },
+                            data: { publicationPending: true },
                           };
                         }
                         success(result);
@@ -269,7 +259,9 @@ try {
     await page.locator('#title').fill('<img src=x onerror=alert(1)>');
     await page.locator('#save').click();
     await page.waitForFunction(() =>
-      document.getElementById('status').textContent.includes('belum berhasil'),
+      document
+        .getElementById('status')
+        .textContent.includes('Penerbitan dimulai'),
     );
     assert.equal(await page.locator('#project-list img').count(), 0);
     assert.equal(
@@ -282,14 +274,6 @@ try {
       document
         .getElementById('status')
         .textContent.includes('Penerbitan dimulai'),
-    );
-    assert.equal(
-      await page.evaluate(() =>
-        document
-          .getElementById('status')
-          .textContent.includes('untuk production.'),
-      ),
-      true,
     );
     assert.equal(await page.evaluate(() => window.adminMock.saves), 1);
     assert.equal(await page.evaluate(() => window.adminMock.retries), 1);
@@ -322,7 +306,6 @@ try {
     );
     await page.evaluate(() => {
       window.adminMock.failSave = false;
-      window.adminMock.partial = false;
     });
     await page.locator('#add').click();
     assert.equal(await page.locator('#title').inputValue(), '');

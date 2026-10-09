@@ -1,5 +1,27 @@
 # AI handoff — current context
 
+## Admin save background publish (waitUntil) — LOKAL, QA PASS (8 Oct 2026)
+
+Owner pilih A2b: Simpan/terbitkan Team/Projects balik cepat; hook Vercel jalan
+di belakang via `waitUntil()` `@vercel/functions@^3.9.11` (dep baru,
+owner-approved). [Plan + hasil](admin-background-publish-plan.md) §11.
+
+- `server/cms-admin.mjs`: `runInBackground(callDeployHooks())` (fallback no-op
+  tanpa konteks Vercel); buang `result.publication`, `publicationPending:true`;
+  `sanitize` terima response hanya-`publicationPending`.
+- `cms-admin-editor.js` + `cms-team-editor.js`: pesan "Penerbitan dimulai di
+  belakang layar...", retry tetap. **`accepted` hilang dari response save**
+  (breaking, server+UI satu deploy); kegagalan hook tak terlihat langsung.
+- test + 2 mock verify disesuaikan.
+
+QA Node22 `CMS_DATA_SOURCE=local`: test:cms 94 PASS + 10 SKIP/0 FAIL; build
+0err/23pages; native+team admin mock PASS 4 widths; verify:visual exit0
+browserErrors[]; navbar/vt/seo/spacing PASS; hanya 2 HTML admin berubah, publik
+byte-identik; snapshot `4345f1…4857` tetap; dist secrets0. Mock bukan bukti
+`waitUntil` Vercel — live acceptance pasca-deploy wajib. Belum push; production
+`6fc5085`. Push butuh izin exact HEAD SHA baru. Masalah foto Team (bagian B)
+ditunda owner.
+
 ## Fix upload foto/gambar admin (Team & Projects) — QA PASS (8 Oct 2026)
 
 Owner lapor gagal ganti foto Team (“Foto belum berhasil diupload…”). Bukan

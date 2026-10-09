@@ -633,7 +633,7 @@ test('retired callback redirects to a fixed internal path without upstream calls
   assert.equal(await response.text(), '');
 });
 
-test('CMS publication targets production only; failed or missing production hook stays pending', async () => {
+test('CMS publication fires in background; save returns before the hook resolves', async () => {
   for (const route of ['projects', 'team']) {
     for (const mode of ['success', 'failure', 'missing']) {
       const h = harness(
@@ -666,9 +666,12 @@ test('CMS publication targets production only; failed or missing production hook
       );
       assert.equal(response.status, 200);
       const result = await response.json();
-      assert.deepEqual(result.data.publication, [
-        { target: 'production', accepted: mode === 'success' },
-      ]);
+      // The save/retry response no longer carries a synchronous publication
+      // result; the hook runs in the background (waitUntil).
+      assert.equal(result.data.publication, undefined);
+      assert.equal(result.data.publicationPending, true);
+      // Let the background hook settle, then assert it ran exactly once.
+      await new Promise((r) => setTimeout(r, 0));
       assert.equal(
         h.calls.some((c) => c.url === 'https://hooks.example.test/testing'),
         false,
@@ -677,10 +680,6 @@ test('CMS publication targets production only; failed or missing production hook
         h.calls.filter((c) => c.url === 'https://hooks.example.test/production')
           .length,
         mode === 'missing' ? 0 : 1,
-      );
-      assert.equal(
-        h.calls.some((c) => c.url.includes('/database/query')),
-        false,
       );
       if (route === 'projects') {
         const saved = await h.handle(
@@ -702,10 +701,8 @@ test('CMS publication targets production only; failed or missing production hook
         assert.equal(saved.status, 200);
         const result = await saved.json();
         assert.equal(result.data.projects.length, 1);
-        assert.equal(result.data.publicationPending, mode !== 'success');
-        assert.deepEqual(result.data.publication, [
-          { target: 'production', accepted: mode === 'success' },
-        ]);
+        assert.equal(result.data.publicationPending, true);
+        assert.equal(result.data.publication, undefined);
         assert.equal(
           h.calls.some((c) => c.url === 'https://hooks.example.test/testing'),
           false,
