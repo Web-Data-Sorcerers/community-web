@@ -123,6 +123,36 @@ try {
           body: Buffer.from(media.data, 'base64'),
         });
       }
+      if (url.pathname === '/api/admin/projects') {
+        return route.fulfill({
+          json: {
+            ok: true,
+            data: {
+              projects: snapshot.projects,
+              revision: 'initial',
+              imagePresets: snapshot.projects.map((p) => p.image),
+              minProjects: 1,
+              maxProjects: 8,
+              publicationPending: false,
+            },
+            csrf: 'mock-csrf',
+          },
+        });
+      }
+      if (url.pathname === '/api/recruitment/application') {
+        return route.fulfill({ json: { ok: true, accepting: true } });
+      }
+      if (url.pathname.startsWith('/api/admin/recruitment/')) {
+        return route.fulfill({
+          json: {
+            ok: true,
+            data: { applications: [], total_global: 0, filtered: 0, items: [] },
+            csrf: 'mock-csrf',
+          },
+        });
+      }
+      if (url.pathname === '/api/admin/auth/login')
+        return route.fulfill({ json: { ok: true, csrf: 'mock-csrf' } });
       if (url.pathname === '/api/admin/auth/logout')
         return route.fulfill({ json: { ok: true } });
       try {
@@ -149,66 +179,84 @@ try {
       }
     });
     await page.goto('http://team-admin.test/');
-    await page.locator('#workspace').waitFor({ state: 'visible' });
+    const teamPanel = page.locator('#panel-team');
+    await teamPanel.waitFor({ state: 'attached' });
+    await teamPanel.locator('#workspace').waitFor({ state: 'visible' });
     await page.evaluate(() => document.fonts.ready);
-    assert.equal(await page.locator('.project-choice').count(), 25);
-    await page.locator('#name').fill('<b>Literal name</b>');
-    await page.locator('#save').click();
-    await page
+    assert.equal(await teamPanel.locator('.project-choice').count(), 25);
+
+    // Tab test: switch to Projects and back to Team
+    const projectsPanel = page.locator('#panel-projects');
+    assert.equal(await projectsPanel.isHidden(), true);
+    await page.locator('.admin-module-link[data-tab="projects"]').click();
+    await projectsPanel.waitFor({ state: 'visible' });
+    assert.equal(await teamPanel.isHidden(), true);
+    assert.equal(await projectsPanel.locator('.project-choice').count(), 4);
+
+    await page.locator('.admin-module-link[data-tab="team"]').click();
+    await teamPanel.waitFor({ state: 'visible' });
+    assert.equal(await projectsPanel.isHidden(), true);
+    assert.equal(await teamPanel.locator('.project-choice').count(), 25);
+
+    await teamPanel.locator('#name').fill('<b>Literal name</b>');
+    await teamPanel.locator('#save').click();
+    await teamPanel
       .getByText('Perubahan tersimpan. Penerbitan dimulai', { exact: false })
       .waitFor();
-    assert.equal(await page.locator('.project-choice b').count(), 0);
+    assert.equal(await teamPanel.locator('.project-choice b').count(), 0);
     assert.equal(saved, 1);
-    await page.locator('#retry').click();
-    await page.getByText('Penerbitan dimulai', { exact: false }).waitFor();
+    await teamPanel.locator('#retry').click();
+    await teamPanel.getByText('Penerbitan dimulai', { exact: false }).waitFor();
     assert.equal(retry, 1);
     assert.equal(saved, 1);
-    await page.locator('#image-upload').setInputFiles({
+    await teamPanel.locator('#image-upload').setInputFiles({
       name: 'portrait.png',
       mimeType: 'image/png',
       buffer: png,
     });
-    await page.getByText('Foto siap.', { exact: false }).waitFor();
+    await teamPanel.getByText('Foto siap.', { exact: false }).waitFor();
     assert.equal(uploads, 1);
     assert.equal(saved, 1);
     // Oversized (20 MP) photo is downscaled client-side then uploaded.
-    await page.locator('#image-upload').setInputFiles({
+    await teamPanel.locator('#image-upload').setInputFiles({
       name: 'huge.png',
       mimeType: 'image/png',
       buffer: hugePng,
     });
-    await page.getByText('Foto siap.', { exact: false }).waitFor();
+    await teamPanel.getByText('Foto siap.', { exact: false }).waitFor();
     assert.equal(uploads, 2);
-    await page.locator('#save').click();
-    await page.getByText('Penerbitan dimulai', { exact: false }).waitFor();
+    await teamPanel.locator('#save').click();
+    await teamPanel.getByText('Penerbitan dimulai', { exact: false }).waitFor();
     assert.equal(records[0].photo, media.image);
-    await page.locator('#add').click();
-    await page.locator('#group').selectOption('data');
-    await page.locator('#name').fill('New member');
-    await page.locator('#role').fill('Role');
-    await page.locator('#order').fill('2');
-    await page.locator('#save').click();
-    await page.getByText('Penerbitan dimulai', { exact: false }).waitFor();
+    await teamPanel.locator('#add').click();
+    await teamPanel.locator('#group').selectOption('data');
+    await teamPanel.locator('#name').fill('New member');
+    await teamPanel.locator('#role').fill('Role');
+    await teamPanel.locator('#order').fill('2');
+    await teamPanel.locator('#save').click();
+    await teamPanel.getByText('Penerbitan dimulai', { exact: false }).waitFor();
     assert.equal(records.length, 26);
     accept = false;
-    await page.locator('#delete').click();
+    await teamPanel.locator('#delete').click();
     assert.equal(records.length, 26);
     accept = true;
-    await page.locator('#delete').click();
-    await page.getByText('Penerbitan dimulai', { exact: false }).waitFor();
+    await teamPanel.locator('#delete').click();
+    await teamPanel.getByText('Penerbitan dimulai', { exact: false }).waitFor();
     assert.equal(records.length, 25);
     conflict = true;
-    await page.locator('#name').fill('Keep pending');
-    await page.locator('#save').click();
-    await page.getByText('Team sudah berubah.', { exact: false }).waitFor();
-    assert.equal(await page.locator('#name').inputValue(), 'Keep pending');
+    await teamPanel.locator('#name').fill('Keep pending');
+    await teamPanel.locator('#save').click();
+    await teamPanel
+      .getByText('Team sudah berubah.', { exact: false })
+      .waitFor();
+    assert.equal(await teamPanel.locator('#name').inputValue(), 'Keep pending');
     accept = false;
-    await page.locator('#reload').click();
-    assert.equal(await page.locator('#name').inputValue(), 'Keep pending');
+    await teamPanel.locator('#reload').click();
+    assert.equal(await teamPanel.locator('#name').inputValue(), 'Keep pending');
     accept = true;
     conflict = false;
-    await page.locator('#reload').click();
-    await page
+    await teamPanel.locator('#reload').click();
+    await teamPanel
       .locator('#status')
       .filter({ hasText: 'Pilih anggota yang ingin diubah.' })
       .waitFor();
@@ -216,9 +264,9 @@ try {
       () => document.documentElement.scrollWidth > innerWidth,
     );
     assert.equal(overflow, false);
-    await page.locator('#name').focus();
+    await teamPanel.locator('#name').focus();
     assert.equal(
-      await page
+      await teamPanel
         .locator('#name')
         .evaluate((e) => getComputedStyle(e).outlineStyle),
       'solid',
@@ -228,10 +276,12 @@ try {
       fullPage: true,
     });
     unauthorized = true;
-    await page.locator('#reload').evaluate((e) => (e.hidden = false));
-    await page.locator('#reload').click();
-    await page.getByText('Masuk dengan akun owner', { exact: false }).waitFor();
-    assert.equal(await page.locator('#workspace').isVisible(), false);
+    await teamPanel.locator('#reload').evaluate((e) => (e.hidden = false));
+    await teamPanel.locator('#reload').click();
+    await teamPanel
+      .getByText('Masuk dengan akun owner', { exact: false })
+      .waitFor();
+    assert.equal(await teamPanel.locator('#workspace').isVisible(), false);
     assert.deepEqual(errors, []);
     report.push({ width, result: 'PASS', saved, uploads, retry });
     await page.close();

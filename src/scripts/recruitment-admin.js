@@ -88,9 +88,9 @@ export function mount(root, opts = {}) {
   const dirty = () =>
     Boolean(
       byId('review-note').value.trim() ||
-        byId('review-reason').value.trim() ||
-        byId('review-status').value ||
-        mutationPending,
+      byId('review-reason').value.trim() ||
+      byId('review-status').value ||
+      mutationPending,
     );
   const mayLeave = () =>
     !saving &&
@@ -939,9 +939,17 @@ export function mount(root, opts = {}) {
     _root: root,
   };
   INSTANCES.set(id, instance);
+  bootstrap().finally(() => {
+    if (byId('login-submit')) byId('login-submit').disabled = false;
+  });
   return instance;
 }
 
 export function getInstance(id) {
-  return INSTANCES.get(id) || null;
+  return (
+    INSTANCES.get(id) ||
+    INSTANCES.get('panel-' + id) ||
+    INSTANCES.get(id?.replace?.(/^panel-/, '')) ||
+    null
+  );
 }

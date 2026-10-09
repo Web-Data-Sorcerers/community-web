@@ -77,6 +77,7 @@ try {
           uploads: 0,
           retries: 0,
           failSave: false,
+          projectsLoads: 0,
         };
         const state = () => ({
           projects: structuredClone(records),
@@ -175,9 +176,40 @@ try {
             });
           }
           if (url.includes('logout')) return Response.json({ ok: true });
+          if (url.includes('/api/admin/team')) {
+            return Response.json({
+              ok: true,
+              data: {
+                members: [],
+                groups: [],
+                revision: 'initial',
+                photoPresets: [],
+                minMembers: 1,
+                maxMembers: 8,
+                publicationPending: false,
+              },
+              csrf: 'mock-csrf',
+            });
+          }
+          if (url.includes('/api/recruitment/application')) {
+            return Response.json({ ok: true, accepting: true });
+          }
+          if (url.includes('/api/admin/recruitment/')) {
+            return Response.json({
+              ok: true,
+              data: {
+                applications: [],
+                total_global: 0,
+                filtered: 0,
+                items: [],
+              },
+              csrf: 'mock-csrf',
+            });
+          }
           const body = options.body
             ? JSON.parse(options.body)
             : { operation: 'load' };
+          if (body.operation === 'load') window.adminMock.projectsLoads++;
           if (
             options.method === 'POST' &&
             options.headers['X-CSRF-Token'] !== 'mock-csrf'
@@ -206,6 +238,20 @@ try {
     await projectsPanel.waitFor({ state: 'attached' });
     await projectsPanel.locator('#workspace').waitFor({ state: 'visible' });
     assert.equal(await projectsPanel.locator('.project-choice').count(), 4);
+    assert.equal(await page.evaluate(() => window.adminMock.projectsLoads), 1);
+
+    // Tab test: switch to Team and back to Projects without refetching
+    await page.locator('.admin-module-link[data-tab="team"]').click();
+    await page.locator('#panel-team').waitFor({ state: 'visible' });
+    assert.equal(await projectsPanel.isHidden(), true);
+    assert.equal(await projectsPanel.count(), 1);
+
+    await page.locator('.admin-module-link[data-tab="projects"]').click();
+    await projectsPanel.waitFor({ state: 'visible' });
+    assert.equal(await page.locator('#panel-team').isHidden(), true);
+
+    assert.equal(await page.evaluate(() => window.adminMock.projectsLoads), 1);
+    assert.equal(await projectsPanel.locator('.project-choice').count(), 4);
     await page.evaluate(() => document.fonts.ready);
     // Wait a bit for font-display:swap fonts to settle
     await page.waitForTimeout(500);
@@ -222,7 +268,9 @@ try {
         .filter(
           (font) => font.family.includes('Bluu') || font.family === 'Manrope',
         )
-        .every((font) => font.status === 'loaded' || font.status === 'unloaded'),
+        .every(
+          (font) => font.status === 'loaded' || font.status === 'unloaded',
+        ),
     );
     await page.screenshot({
       path: new URL(`editor-${width}.png`, output).pathname,
@@ -234,7 +282,10 @@ try {
       buffer: Buffer.from('<svg/>'),
     });
     await page.waitForFunction(() =>
-      document.getElementById('panel-projects').querySelector('#status').textContent.includes('Pilih JPG'),
+      document
+        .getElementById('panel-projects')
+        .querySelector('#status')
+        .textContent.includes('Pilih JPG'),
     );
     assert.equal(await page.evaluate(() => window.adminMock.uploads), 0);
     await projectsPanel.locator('#image-upload').setInputFiles({
@@ -243,17 +294,25 @@ try {
       buffer: uploadPng,
     });
     await page.waitForFunction(() =>
-      document.getElementById('panel-projects').querySelector('#status').textContent.includes('Gambar siap'),
+      document
+        .getElementById('panel-projects')
+        .querySelector('#status')
+        .textContent.includes('Gambar siap'),
     );
-    assert.equal(await projectsPanel.locator('#image').inputValue(),
+    assert.equal(
+      await projectsPanel.locator('#image').inputValue(),
       uploadedMedia.image,
     );
     assert.equal(await page.evaluate(() => window.adminMock.uploads), 1);
     assert.equal(await page.evaluate(() => window.adminMock.saves), 0);
     await page.waitForFunction(
       () =>
-        document.getElementById('panel-projects').querySelector('#image-preview').complete &&
-        document.getElementById('panel-projects').querySelector('#image-preview').naturalWidth > 0,
+        document
+          .getElementById('panel-projects')
+          .querySelector('#image-preview').complete &&
+        document
+          .getElementById('panel-projects')
+          .querySelector('#image-preview').naturalWidth > 0,
     );
     await page.screenshot({
       path: new URL(`upload-${width}.png`, output).pathname,
@@ -262,7 +321,10 @@ try {
     await projectsPanel.locator('#title').fill('<img src=x onerror=alert(1)>');
     await projectsPanel.locator('#save').click();
     await page.waitForFunction(() =>
-      document.getElementById('panel-projects').querySelector('#status').textContent.includes('Penerbitan dimulai'),
+      document
+        .getElementById('panel-projects')
+        .querySelector('#status')
+        .textContent.includes('Penerbitan dimulai'),
     );
     assert.equal(await projectsPanel.locator('#project-list img').count(), 0);
     assert.equal(
@@ -272,7 +334,10 @@ try {
     assert.equal(await projectsPanel.locator('#retry').isVisible(), true);
     await projectsPanel.locator('#retry').click();
     await page.waitForFunction(() =>
-      document.getElementById('panel-projects').querySelector('#status').textContent.includes('Penerbitan dimulai'),
+      document
+        .getElementById('panel-projects')
+        .querySelector('#status')
+        .textContent.includes('Penerbitan dimulai'),
     );
     assert.equal(await page.evaluate(() => window.adminMock.saves), 1);
     assert.equal(await page.evaluate(() => window.adminMock.retries), 1);
@@ -282,7 +347,10 @@ try {
     await projectsPanel.locator('#title').fill('Unsaved conflict edit');
     await projectsPanel.locator('#save').click();
     await page.waitForFunction(() =>
-      document.getElementById('panel-projects').querySelector('#status').textContent.includes('sudah berubah'),
+      document
+        .getElementById('panel-projects')
+        .querySelector('#status')
+        .textContent.includes('sudah berubah'),
     );
     assert.equal(
       await projectsPanel.locator('#title').inputValue(),
@@ -291,7 +359,10 @@ try {
     assert.equal(await projectsPanel.locator('#reload').isVisible(), true);
     await projectsPanel.locator('#reload').click();
     await page.waitForFunction(() =>
-      document.getElementById('panel-projects').querySelector('#status').textContent.includes('Pilih project'),
+      document
+        .getElementById('panel-projects')
+        .querySelector('#status')
+        .textContent.includes('Pilih project'),
     );
     assert.equal(
       await projectsPanel.locator('#title').inputValue(),
@@ -317,7 +388,10 @@ try {
     await page.waitForFunction(
       () => document.querySelectorAll('.project-choice').length === 5,
     );
-    assert.equal(await projectsPanel.locator('#title').inputValue(), 'New project');
+    assert.equal(
+      await projectsPanel.locator('#title').inputValue(),
+      'New project',
+    );
     acceptDialog = false;
     await projectsPanel.locator('#delete').click();
     assert.equal(await projectsPanel.locator('.project-choice').count(), 5);
@@ -354,10 +428,16 @@ try {
     });
     await projectsPanel.locator('#delete').click();
     await page.waitForFunction(() =>
-      document.getElementById('status').textContent.includes('sudah berubah'),
+      document
+        .getElementById('panel-projects')
+        .querySelector('#status')
+        .textContent.includes('sudah berubah'),
     );
     assert.equal(await projectsPanel.locator('.project-choice').count(), 8);
-    assert.equal(await projectsPanel.locator('#title').inputValue(), 'Growth 6');
+    assert.equal(
+      await projectsPanel.locator('#title').inputValue(),
+      'Growth 6',
+    );
     assert.equal(
       await page.evaluate(
         () => document.documentElement.scrollWidth > innerWidth,
@@ -382,12 +462,18 @@ try {
       window.adminMock.expired = false;
     });
     await page.evaluate(() => {
-      document.getElementById('panel-projects').querySelector('#reload').click();
+      document
+        .getElementById('panel-projects')
+        .querySelector('#reload')
+        .click();
     });
     await projectsPanel.locator('#workspace').waitFor({ state: 'visible' });
     // Logout via JS dispatch to ensure scoped event handler fires
     await page.evaluate(() => {
-      document.getElementById('panel-projects').querySelector('#logout').click();
+      document
+        .getElementById('panel-projects')
+        .querySelector('#logout')
+        .click();
     });
     await projectsPanel.locator('#workspace').waitFor({ state: 'hidden' });
     assert.equal(await projectsPanel.locator('#login').isVisible(), true);

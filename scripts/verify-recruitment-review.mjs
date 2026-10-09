@@ -122,6 +122,75 @@ try {
           });
         if (url.pathname === '/api/recruitment/application')
           return finish({ ok: true, accepting: true });
+        if (url.pathname === '/api/admin/projects')
+          return finish({
+            ok: true,
+            csrf: 'synthetic-csrf',
+            data: {
+              projects: [
+                {
+                  id: '1',
+                  title: 'P1',
+                  description: 'D1',
+                  tags: ['T1', 'T2'],
+                  image: '/images/1.webp',
+                },
+                {
+                  id: '2',
+                  title: 'P2',
+                  description: 'D2',
+                  tags: ['T1', 'T2'],
+                  image: '/images/2.webp',
+                },
+                {
+                  id: '3',
+                  title: 'P3',
+                  description: 'D3',
+                  tags: ['T1', 'T2'],
+                  image: '/images/3.webp',
+                },
+                {
+                  id: '4',
+                  title: 'P4',
+                  description: 'D4',
+                  tags: ['T1', 'T2'],
+                  image: '/images/4.webp',
+                },
+              ],
+              revision: 'initial',
+              imagePresets: [],
+              minProjects: 1,
+              maxProjects: 8,
+              publicationPending: false,
+            },
+          });
+        if (url.pathname === '/api/admin/team')
+          return finish({
+            ok: true,
+            csrf: 'synthetic-csrf',
+            data: {
+              members: Array.from({ length: 25 }, (_, i) => ({
+                id: 'm-' + i,
+                name: 'Member ' + i,
+                role: 'Role',
+                group: 'leader',
+                order: i + 1,
+                photo: 'marchel',
+              })),
+              groups: [{ id: 'leader', title: 'Leader Team' }],
+              revision: 'initial',
+              photoPresets: ['marchel'],
+              minMembers: 1,
+              maxMembers: 8,
+              publicationPending: false,
+            },
+          });
+        if (url.pathname === '/api/admin/media')
+          return finish({
+            ok: true,
+            csrf: 'synthetic-csrf',
+            data: { image: '/images/test.webp' },
+          });
         if (url.pathname === '/api/admin/auth/logout') {
           assert.equal(req.headers()['x-csrf-token'], 'synthetic-csrf');
           if (failLogout)
@@ -274,8 +343,22 @@ try {
         }
         return finish({ ok: true, csrf: 'synthetic-csrf', data });
       }
-      if (url.pathname === '/admin/recruitment/')
-        return route.fulfill({ contentType: 'text/html', body: html });
+      if (
+        url.pathname === '/admin/' ||
+        url.pathname === '/admin/index.html' ||
+        url.pathname === '/admin/team/' ||
+        url.pathname === '/admin/recruitment/'
+      ) {
+        const filePath = url.pathname.endsWith('/')
+          ? 'dist' + url.pathname + 'index.html'
+          : 'dist' + url.pathname;
+        try {
+          const content = await readFile(filePath);
+          return route.fulfill({ contentType: 'text/html', body: content });
+        } catch {
+          return route.fulfill({ contentType: 'text/html', body: html });
+        }
+      }
       try {
         const body = await readFile('dist' + url.pathname);
         return route.fulfill({
@@ -292,21 +375,26 @@ try {
     const waitList = () =>
       page.waitForFunction(
         () =>
-          document.getElementById('status').textContent.includes('pendaftar') &&
-          !document.getElementById('pagination').hidden,
+          document
+            .querySelector('#panel-recruitment #' + 'status')
+            .textContent.includes('pendaftar') &&
+          !document.querySelector('#panel-recruitment #' + 'pagination').hidden,
       );
     const waitDetail = () =>
       page.waitForFunction(
         () =>
-          !document.getElementById('detail-area').hidden &&
-          document.getElementById('notes-list').textContent !==
-            'Memuat catatan…' &&
-          document.getElementById('history-list').textContent !==
-            'Memuat aktivitas…',
+          !document.querySelector('#panel-recruitment #' + 'detail-area')
+            .hidden &&
+          document.querySelector('#panel-recruitment #' + 'notes-list')
+            .textContent !== 'Memuat catatan…' &&
+          document.querySelector('#panel-recruitment #' + 'history-list')
+            .textContent !== 'Memuat aktivitas…',
       );
     const settled = async () => {
       await page.waitForFunction(
-        () => !document.getElementById('save-note').disabled,
+        () =>
+          !document.querySelector('#panel-recruitment #' + 'save-note')
+            .disabled,
       );
     };
     const checkOverflow = async () =>
@@ -318,18 +406,22 @@ try {
       );
     console.log('start ' + width);
     await page.goto('https://review.test/admin/recruitment/');
+    const recPanel = page.locator('#panel-recruitment');
+    await recPanel.waitFor({ state: 'attached' });
     await waitList();
     console.log('list ready ' + width);
     await page.evaluate(() => document.fonts.ready);
-    assert.equal(await page.locator('.applicant-detail').count(), 50);
+    assert.equal(await recPanel.locator('.applicant-detail').count(), 50);
     assert.equal(
-      await page.locator('#page-info').textContent(),
+      await recPanel.locator('#page-info').textContent(),
       'Halaman 1 dari 5',
     );
     // Two private reads on startup (list then filtered stats); no duplicate
     // bootstrap statistics request.
     await page.waitForFunction(
-      () => document.getElementById('stats').children.length > 0,
+      () =>
+        document.querySelector('#panel-recruitment #' + 'stats').children
+          .length > 0,
     );
     const initialReads = requests.filter(
       (r) =>
@@ -344,8 +436,29 @@ try {
     assert.equal(initialReads[1].body.as_of, '2026-10-08T00:00:00Z');
     await page.screenshot({ path: `${out}/list-${width}.png`, fullPage: true });
     await checkOverflow();
+
+    // Tab test: switch to Projects and Team, then back to Recruitment
+    const projectsPanel = page.locator('#panel-projects');
+    const teamPanel = page.locator('#panel-team');
+    assert.equal(await recPanel.isVisible(), true);
+    assert.equal(await projectsPanel.isHidden(), true);
+    assert.equal(await teamPanel.isHidden(), true);
+
+    await page.locator('.admin-module-link[data-tab="projects"]').click();
+    await projectsPanel.waitFor({ state: 'visible' });
+    assert.equal(await recPanel.isHidden(), true);
+
+    await page.locator('.admin-module-link[data-tab="team"]').click();
+    await teamPanel.waitFor({ state: 'visible' });
+    assert.equal(await projectsPanel.isHidden(), true);
+    assert.equal(await recPanel.isHidden(), true);
+
+    await page.locator('.admin-module-link[data-tab="recruitment"]').click();
+    await recPanel.waitFor({ state: 'visible' });
+    assert.equal(await teamPanel.isHidden(), true);
+    assert.equal(await recPanel.locator('.applicant-detail').count(), 50);
     for (let i = 0; i < 4; i++) {
-      await page.locator('#next-page').click();
+      await recPanel.locator('#next-page').click();
       await page.waitForFunction(
         (i) =>
           document
@@ -354,8 +467,8 @@ try {
         i,
       );
     }
-    assert.equal(await page.locator('.applicant-detail').count(), 1);
-    assert(await page.locator('#next-page').isDisabled());
+    assert.equal(await recPanel.locator('.applicant-detail').count(), 1);
+    assert(await recPanel.locator('#next-page').isDisabled());
     const lists = requests.filter((r) => r.path.endsWith('/applications'));
     // Bootstrap is a single private GET that validates the restored session
     // and yields CSRF; later filter/page reads reuse the protected POST path.
@@ -386,43 +499,45 @@ try {
     );
     // Two private reads on startup (list then filtered stats); no duplicate
     // bootstrap statistics request.
-    await page.locator('#search').fill('not-present');
-    await page.locator('#filter-btn').click();
+    await recPanel.locator('#search').fill('not-present');
+    await recPanel.locator('#filter-btn').click();
     await page.waitForFunction(() =>
       document
         .getElementById('applications-body')
         .textContent.includes('Tidak ada'),
     );
-    await page.locator('#reset-filter').click();
+    await recPanel.locator('#reset-filter').click();
     await waitList();
     // Stale filter list/stats must not overwrite latest filter.
     delayList = true;
-    await page.locator('#search').fill('001');
-    await page.locator('#filter-btn').click();
-    await page.locator('#search').fill('002');
-    await page.locator('#filter-btn').click();
+    await recPanel.locator('#search').fill('001');
+    await recPanel.locator('#filter-btn').click();
+    await recPanel.locator('#search').fill('002');
+    await recPanel.locator('#filter-btn').click();
     await page.waitForFunction(() =>
       document.querySelector('.applicant-detail')?.textContent.endsWith('002'),
     );
     await page.waitForTimeout(350);
     assert(
-      (await page.locator('.applicant-detail').textContent()).endsWith('002'),
+      (await recPanel.locator('.applicant-detail').textContent()).endsWith(
+        '002',
+      ),
     );
-    await page.locator('#reset-filter').click();
+    await recPanel.locator('#reset-filter').click();
     await waitList();
     // Stale detail response cannot replace a newer applicant.
     delayDetail = true;
-    await page.locator('.applicant-detail').nth(0).click();
-    await page.locator('.applicant-detail').nth(1).click();
+    await recPanel.locator('.applicant-detail').nth(0).click();
+    await recPanel.locator('.applicant-detail').nth(1).click();
     await waitDetail();
     await page.waitForTimeout(350);
     assert(
-      (await page.locator('#detail-summary').textContent()).includes('001'),
+      (await recPanel.locator('#detail-summary').textContent()).includes('001'),
     );
-    assert.equal(await page.locator('#detail-panel .field').count(), 38);
+    assert.equal(await recPanel.locator('#detail-panel .field').count(), 38);
     assert.equal(await page.evaluate(() => window.piiUnsafe), undefined);
     assert(
-      (await page.locator('#detail-summary').textContent()).includes('WIB'),
+      (await recPanel.locator('#detail-summary').textContent()).includes('WIB'),
     );
     await checkOverflow();
     await page.screenshot({
@@ -433,9 +548,9 @@ try {
     const fixture = apps[1];
     const original = JSON.stringify(fixture.fields);
     // Draft changes alone do not mutate, keyboard submit can change status.
-    await page.locator('#review-status').selectOption('reviewing');
+    await recPanel.locator('#review-status').selectOption('reviewing');
     assert.equal(mutations.length, 0);
-    await page.locator('#save-status').focus();
+    await recPanel.locator('#save-status').focus();
     await page.keyboard.press('Enter');
     await page.waitForFunction(() =>
       document
@@ -445,8 +560,8 @@ try {
     await settled();
     assert.equal(fixture.review.status, 'reviewing');
     forceConflict = true;
-    await page.locator('#review-note').fill('draft preserved');
-    await page.locator('#save-note').click();
+    await recPanel.locator('#review-note').fill('draft preserved');
+    await recPanel.locator('#save-note').click();
     await page.waitForFunction(() =>
       document
         .getElementById('review-feedback')
@@ -454,21 +569,21 @@ try {
     );
     await settled();
     assert.equal(
-      await page.locator('#review-note').inputValue(),
+      await recPanel.locator('#review-note').inputValue(),
       'draft preserved',
     );
     assert.equal(fixture.notes.length, 0);
     // With the statistics reconciliation deliberately slow, the confirmed
     // acknowledgement must appear before secondary reads settle.
     delayStats = true;
-    await page.locator('#save-note').click();
+    await recPanel.locator('#save-note').click();
     await page.waitForFunction(() =>
       document
         .getElementById('review-feedback')
         .textContent.includes('tersimpan'),
     );
     assert(
-      await page.locator('#save-note').isDisabled(),
+      await recPanel.locator('#save-note').isDisabled(),
       'write readiness must stay pending until the fresh revision settles',
     );
     await settled();
@@ -478,15 +593,15 @@ try {
     await page
       .locator('#review-note')
       .fill('<img src=x onerror=alert(1)>\nSynthetic retry');
-    await page.locator('#save-note').click();
+    await recPanel.locator('#save-note').click();
     await page.waitForFunction(() =>
       document
         .getElementById('review-feedback')
         .textContent.includes('belum dikonfirmasi'),
     );
     assert.equal(fixture.notes.length, 2);
-    assert(await page.locator('#review-note').isDisabled());
-    await page.locator('#retry-mutation').click();
+    assert(await recPanel.locator('#review-note').isDisabled());
+    await recPanel.locator('#retry-mutation').click();
     await page.waitForFunction(() =>
       document
         .getElementById('review-feedback')
@@ -495,18 +610,18 @@ try {
     await settled();
     assert.equal(fixture.notes.length, 2);
     assert.deepEqual(mutations.at(-1), mutations.at(-2));
-    assert.equal(await page.locator('#notes-list img').count(), 0);
-    await page.locator('#review-status').selectOption('rejected');
-    await page.locator('#review-reason').fill('Synthetic decision reason');
-    await page.locator('#save-status').click();
+    assert.equal(await recPanel.locator('#notes-list img').count(), 0);
+    await recPanel.locator('#review-status').selectOption('rejected');
+    await recPanel.locator('#review-reason').fill('Synthetic decision reason');
+    await recPanel.locator('#save-status').click();
     await page.waitForFunction(() =>
       document
         .getElementById('review-feedback')
         .textContent.includes('Konfirmasikan'),
     );
     assert.equal(fixture.review.status, 'reviewing');
-    await page.locator('#confirm-status').check();
-    await page.locator('#save-status').click();
+    await recPanel.locator('#confirm-status').check();
+    await recPanel.locator('#save-status').click();
     await page.waitForFunction(() =>
       document
         .getElementById('review-feedback')
@@ -514,11 +629,11 @@ try {
     );
     await settled();
     assert.equal(fixture.review.status, 'rejected');
-    assert.equal(await page.locator('#review-status option').count(), 2);
-    await page.locator('#review-status').selectOption('reviewing');
-    await page.locator('#review-reason').fill('Synthetic reopen reason');
-    await page.locator('#confirm-status').check();
-    await page.locator('#save-status').click();
+    assert.equal(await recPanel.locator('#review-status option').count(), 2);
+    await recPanel.locator('#review-status').selectOption('reviewing');
+    await recPanel.locator('#review-reason').fill('Synthetic reopen reason');
+    await recPanel.locator('#confirm-status').check();
+    await recPanel.locator('#save-status').click();
     await page.waitForFunction(() =>
       document
         .getElementById('review-feedback')
@@ -548,13 +663,13 @@ try {
       });
     }
     fixture.review.note_count = fixture.notes.length;
-    await page.locator('#reload-detail').click();
+    await recPanel.locator('#reload-detail').click();
     await waitDetail();
-    assert.equal(await page.locator('#notes-list .field').count(), 20);
-    assert.equal(await page.locator('#history-list .field').count(), 20);
+    assert.equal(await recPanel.locator('#notes-list .field').count(), 20);
+    assert.equal(await recPanel.locator('#history-list .field').count(), 20);
     await checkOverflow();
     for (const kind of ['notes', 'history']) {
-      await page.locator('#' + kind + '-next').click();
+      await recPanel.locator('#' + kind + '-next').click();
       await page.waitForFunction(
         (kind) =>
           document
@@ -562,8 +677,8 @@ try {
             .textContent.includes('halaman 2'),
         kind,
       );
-      assert(await page.locator('#' + kind + '-next').isDisabled());
-      await page.locator('#' + kind + '-prev').click();
+      assert(await recPanel.locator('#' + kind + '-next').isDisabled());
+      await recPanel.locator('#' + kind + '-prev').click();
       await page.waitForFunction(
         (kind) =>
           document
@@ -577,97 +692,112 @@ try {
         .filter((r) => r.path.endsWith('/notes') || r.path.endsWith('/history'))
         .every((r) => Number(r.body.limit) === 20),
     );
-    await page.locator('#review-note').fill('dirty draft');
-    await page.locator('#back-list').click();
-    assert(await page.locator('#detail-area').isVisible());
+    await recPanel.locator('#review-note').fill('dirty draft');
+    await recPanel.locator('#back-list').click();
+    assert(await recPanel.locator('#detail-area').isVisible());
     await page
       .locator('.admin-navigation a')
       .filter({ hasText: 'Team' })
       .click();
-    assert(page.url().endsWith('/admin/recruitment/'));
+    assert(
+      page.url().endsWith('/admin/recruitment/') ||
+        page.url().endsWith('/admin/#recruitment'),
+    );
+    assert.equal(await recPanel.isVisible(), true);
     accept = true;
-    await page.locator('#back-list').click();
+    await recPanel.locator('#back-list').click();
     await waitList();
     accept = false;
     failList = true;
-    await page.locator('#reload-list').click();
+    await recPanel.locator('#reload-list').click();
     await page.waitForFunction(() =>
-      document.getElementById('list-error').textContent.includes('Data belum'),
+      document
+        .querySelector('#panel-recruitment #' + 'list-error')
+        .textContent.includes('Data belum'),
     );
-    await page.locator('#reload-list').click();
+    await recPanel.locator('#reload-list').click();
     await waitList();
-    await page.locator('.applicant-detail').nth(1).click();
+    await recPanel.locator('.applicant-detail').nth(1).click();
     await waitDetail();
     failHistory = true;
-    await page.locator('#reload-detail').click();
+    await recPanel.locator('#reload-detail').click();
     await page.waitForFunction(() =>
-      document.getElementById('notes-list').textContent.includes('Data belum'),
+      document
+        .querySelector('#panel-recruitment #' + 'notes-list')
+        .textContent.includes('Data belum'),
     );
-    await page.locator('#reload-detail').click();
+    await recPanel.locator('#reload-detail').click();
     await waitDetail();
     // Unauthorized/forbidden must discard all applicant data and drafts.
-    await page.locator('#review-note').fill('private draft');
+    await recPanel.locator('#review-note').fill('private draft');
     deny = true;
-    await page.locator('#reload-detail').click();
+    await recPanel.locator('#reload-detail').click();
     await page.waitForFunction(
-      () => document.getElementById('workspace').hidden,
+      () => document.querySelector('#panel-recruitment #' + 'workspace').hidden,
     );
-    assert.equal(await page.locator('#review-note').inputValue(), '');
-    assert.equal(await page.locator('#notes-list').textContent(), '');
-    assert.equal(await page.locator('#detail-panel').textContent(), '');
-    assert.equal(await page.locator('#confirm-label').textContent(), '');
-    assert.equal(await page.locator('#applications-body').textContent(), '');
-    await page.locator('#logout').click();
+    assert.equal(await recPanel.locator('#review-note').inputValue(), '');
+    assert.equal(await recPanel.locator('#notes-list').textContent(), '');
+    assert.equal(await recPanel.locator('#detail-panel').textContent(), '');
+    assert.equal(await recPanel.locator('#confirm-label').textContent(), '');
+    assert.equal(
+      await recPanel.locator('#applications-body').textContent(),
+      '',
+    );
+    await recPanel.locator('#logout').click();
     await page.waitForFunction(
       () =>
-        document.getElementById('status').textContent ===
-        'Sudah keluar dari admin.',
+        document.querySelector('#panel-recruitment #' + 'status')
+          .textContent === 'Sudah keluar dari admin.',
     );
     deny = false;
     authorized = false;
     await page.reload();
     await page.waitForFunction(
-      () => !document.getElementById('login-form').hidden,
+      () =>
+        !document.querySelector('#panel-recruitment #' + 'login-form').hidden,
     );
-    await page.locator('#login-email').fill('synthetic@example.invalid');
-    await page.locator('#login-password').fill('synthetic-only');
-    await page.locator('#login-submit').click();
+    await recPanel.locator('#login-email').fill('synthetic@example.invalid');
+    await recPanel.locator('#login-password').fill('synthetic-only');
+    await recPanel.locator('#login-submit').click();
     await waitList();
-    assert.equal(await page.locator('#login-password').inputValue(), '');
+    assert.equal(await recPanel.locator('#login-password').inputValue(), '');
     missing = true;
-    await page.locator('.applicant-detail').nth(2).click();
+    await recPanel.locator('.applicant-detail').nth(2).click();
     await page.waitForFunction(
       () =>
-        document.getElementById('status').textContent ===
-        'Data tidak ditemukan.',
+        document.querySelector('#panel-recruitment #' + 'status')
+          .textContent === 'Data tidak ditemukan.',
     );
     missing = false;
     apps.splice(0);
-    await page.locator('#reload-list').click();
+    await recPanel.locator('#reload-list').click();
     await page.waitForFunction(() =>
       document
         .getElementById('applications-body')
         .textContent.includes('Belum ada pendaftar.'),
     );
     delayList = true;
-    await page.locator('#reload-list').click();
+    await recPanel.locator('#reload-list').click();
     await page.waitForTimeout(50);
     failLogout = true;
-    await page.locator('#logout').click();
+    await recPanel.locator('#logout').click();
     await page.waitForFunction(() =>
       document
-        .getElementById('status')
+        .querySelector('#panel-recruitment #status')
         .textContent.includes('Belum berhasil keluar.'),
     );
-    assert(await page.locator('#workspace').isHidden());
+    assert(await recPanel.locator('#workspace').isHidden());
     failLogout = false;
-    await page.locator('#logout').click();
+    await recPanel.locator('#logout').click();
     await page.waitForFunction(
-      () => document.getElementById('workspace').hidden,
+      () => document.querySelector('#panel-recruitment #' + 'workspace').hidden,
     );
     await page.waitForTimeout(350);
-    assert.equal(await page.locator('#stats').textContent(), '');
-    assert.equal(await page.locator('#applications-body').textContent(), '');
+    assert.equal(await recPanel.locator('#stats').textContent(), '');
+    assert.equal(
+      await recPanel.locator('#applications-body').textContent(),
+      '',
+    );
     await checkOverflow();
     assert.deepEqual(errors, []);
     report.push({

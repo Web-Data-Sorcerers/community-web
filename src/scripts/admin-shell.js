@@ -1,9 +1,22 @@
-import { mount as mountProjects, getInstance as getProjects } from './cms-admin-editor.js';
-import { mount as mountTeam, getInstance as getTeam } from './cms-team-editor.js';
-import { mount as mountRecruitment, getInstance as getRecruitment } from './recruitment-admin.js';
+import {
+  mount as mountProjects,
+  getInstance as getProjects,
+} from './cms-admin-editor.js';
+import {
+  mount as mountTeam,
+  getInstance as getTeam,
+} from './cms-team-editor.js';
+import {
+  mount as mountRecruitment,
+  getInstance as getRecruitment,
+} from './recruitment-admin.js';
 
 const TABS = ['projects', 'team', 'recruitment'];
-const PANEL_ID = { projects: 'panel-projects', team: 'panel-team', recruitment: 'panel-recruitment' };
+const PANEL_ID = {
+  projects: 'panel-projects',
+  team: 'panel-team',
+  recruitment: 'panel-recruitment',
+};
 let activeTab = 'projects';
 let mounted = {};
 
@@ -13,9 +26,12 @@ function getPanelRoot(tab) {
 
 function getModule(tab) {
   switch (tab) {
-    case 'projects': return { mount: mountProjects, get: getProjects };
-    case 'team': return { mount: mountTeam, get: getTeam };
-    case 'recruitment': return { mount: mountRecruitment, get: getRecruitment };
+    case 'projects':
+      return { mount: mountProjects, get: getProjects };
+    case 'team':
+      return { mount: mountTeam, get: getTeam };
+    case 'recruitment':
+      return { mount: mountRecruitment, get: getRecruitment };
   }
 }
 
@@ -30,8 +46,12 @@ function isAnyDirty() {
 
 function showTab(tab) {
   if (tab === activeTab) return;
-  if (isAnyDirty() &&
-    !confirm('Ada perubahan yang belum disimpan. Pindah tab dan abaikan perubahan?')) {
+  if (
+    isAnyDirty() &&
+    !confirm(
+      'Ada perubahan yang belum disimpan. Pindah tab dan abaikan perubahan?',
+    )
+  ) {
     return;
   }
   for (const t of TABS) {
@@ -67,7 +87,8 @@ function getTabFromPath() {
   const path = location.pathname;
   const hash = location.hash.replace('#', '');
   if (path.endsWith('/team/') || hash === 'team') return 'team';
-  if (path.endsWith('/recruitment/') || hash === 'recruitment') return 'recruitment';
+  if (path.endsWith('/recruitment/') || hash === 'recruitment')
+    return 'recruitment';
   return 'projects';
 }
 

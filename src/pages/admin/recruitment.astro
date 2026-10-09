@@ -4,7 +4,8 @@ import AdminProjectsPanel from '../../components/admin/AdminProjectsPanel.astro'
 import AdminTeamPanel from '../../components/admin/AdminTeamPanel.astro';
 import AdminRecruitmentPanel from '../../components/admin/AdminRecruitmentPanel.astro';
 const title = 'Recruitment Applications | Data Sorcerers';
-const description = 'Halaman privat owner Data Sorcerers untuk meninjau pendaftaran recruitment.';
+const description =
+  'Halaman privat owner Data Sorcerers untuk meninjau pendaftaran recruitment.';
 const canonical = new URL('/admin/recruitment/', Astro.site).href;
 const image = new URL('/og/og-default.jpg', Astro.site).href;
 ---
@@ -32,11 +33,34 @@ const image = new URL('/og/og-default.jpg', Astro.site).href;
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={image} />
-    <script type="application/ld+json" set:html={JSON.stringify({ '@context': 'https://schema.org', '@type': 'WebPage', name: title, url: canonical })}></script>
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: title,
+        url: canonical,
+      })}
+    ></script>
     <style is:global>
-      @font-face { font-family: Manrope; src: url('/fonts/manrope-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
-      @font-face { font-family: Manrope; src: url('/fonts/manrope-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
-      @font-face { font-family: 'Bluu Next'; src: url('/fonts/bluu-next-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+      @font-face {
+        font-family: Manrope;
+        src: url('/fonts/manrope-400.woff2') format('woff2');
+        font-weight: 400;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: Manrope;
+        src: url('/fonts/manrope-700.woff2') format('woff2');
+        font-weight: 700;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: 'Bluu Next';
+        src: url('/fonts/bluu-next-700.woff2') format('woff2');
+        font-weight: 700;
+        font-display: swap;
+      }
       :root {
         color-scheme: dark;
         --font-display: 'Bluu Next', serif;
@@ -50,10 +74,17 @@ const image = new URL('/og/og-default.jpg', Astro.site).href;
         --accent-glow: rgba(155, 123, 255, 0.28);
         --border-glass: rgba(155, 123, 255, 0.16);
       }
-      * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
       body {
         margin: 0;
-        background: radial-gradient(circle at 50% -10%, #17132b 0%, #090710 45%, #050507 100%);
+        background: radial-gradient(
+          circle at 50% -10%,
+          #17132b 0%,
+          #090710 45%,
+          #050507 100%
+        );
         background-attachment: fixed;
         color: var(--text);
         font: 400 16px/1.5 var(--font-body);
@@ -64,7 +95,9 @@ const image = new URL('/og/og-default.jpg', Astro.site).href;
         margin: 0 auto;
         padding: 32px 24px;
       }
-      [hidden] { display: none !important; }
+      [hidden] {
+        display: none !important;
+      }
     </style>
   </head>
   <body>
@@ -73,15 +106,20 @@ const image = new URL('/og/og-default.jpg', Astro.site).href;
       <AdminProjectsPanel />
       <AdminTeamPanel />
       <AdminRecruitmentPanel />
-      <noscript><p>Aktifkan JavaScript untuk melihat data pendaftaran.</p></noscript>
+      <noscript>
+        <p>Aktifkan JavaScript untuk melihat data pendaftaran.</p>
+      </noscript>
     </main>
     <script>
       import { initShell } from '../../scripts/admin-shell.js';
       import '../../scripts/cms-admin-editor.js';
       import '../../scripts/cms-team-editor.js';
       import '../../scripts/recruitment-admin.js';
-      document.addEventListener('DOMContentLoaded', () => initShell('recruitment'));
-      if (document.readyState === 'complete') setTimeout(() => initShell('recruitment'), 100);
+      document.addEventListener('DOMContentLoaded', () =>
+        initShell('recruitment'),
+      );
+      if (document.readyState === 'complete')
+        setTimeout(() => initShell('recruitment'), 100);
     </script>
   </body>
 </html>

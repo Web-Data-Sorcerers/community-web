@@ -1,73 +1,57 @@
 # AGENTS.md — instructions for AI agents
 
-## Admin SPA shell (Varian A) — LOKAL + QA PASS, deployed 8b96915 (9 Oct 2026)
+## Admin SPA shell (Varian A) + Mock Verify & Full QA — LOKAL PASS (9 Oct 2026)
 
 Owner minta SPA shell (Opsi 2 Varian A): satu halaman `/admin/` dengan 3 panel
 keep-alive (Projects, Team, Pendaftar), pindah tab instan tanpa fetch ulang.
 
-Implementasi lokal selesai, push ke origin/main (8b96915). Production READY + alias
-menyusul setelah Vercel build.
+Prioritas 1 (Fix mock verify) & Prioritas 2 (Full QA gates) selesai lokal:
 
-### Perubahan:
+### Perubahan & Perbaikan:
 
-- **`src/scripts/admin-shell.js`** (baru): koordinator tab/panel/history/dirty-guard/logout.
-  `initShell()`: baca path/hash untuk initial tab, unhide panel aktif,
-  mount panel via `mountIfNeeded(tab)` → `mod.mount(root)`. Tab click:
-  `preventDefault` kecuali Cmd+Click, `history.replaceState` hash-based.
-  `showTab(tab)`: dirty-guard via `isAnyDirty()`, toggle hidden, update nav.
-- **`src/components/admin/Admin{Projects,Team,Recruitment}Panel.astro`** (baru):
-  markup existing dari 3 page Astro, dipindah apa adanya ke `<section data-panel>`.
-- **`src/scripts/{cms-admin-editor,cms-team-editor,recruitment-admin}.js`** (diubah):
-  IIFE di-wrap jadi `export function mount(root)` — return `{ show, hide, isDirty,
-  teardown }`. `byId` diganti `root.querySelector('#'+sel)`. Semua event listener,
-  state, CSRF scoped per panel. `load()` dipanggil di akhir `mount()`. Masih bisa
-  auto-run standalone (tapi skrg via shell).
-- **`src/components/admin/AdminNavigation.astro`**: tambah `data-tab` attribute
-  (projects/team/recruitment). Shell intercept click via `querySelectorAll`.
-- **`src/pages/admin/{index,team,recruitment}.astro`**: `index.astro` jadi shell
-  (render 3 panel + `admin-shell.js`). `team.astro` & `recruitment.astro` shim
-  render shell + `initShell('team')` / `initShell('recruitment')`.
-- **`scripts/verify-cms-native-admin.mjs`**: selector discope ke `#panel-projects`;
-  font assertion diperlonggar (`unloaded` accepted); reload/logout click via
-  `page.evaluate()` (Playwright click tidak trigger ESM handler di scoped DOM).
+- **Style & Interaksi Dark Arcane**: Memulihkan style Dark Arcane Command Center
+  yang sempat hilang di commit awal shell ke dalam `AdminProjectsPanel.astro`,
+  `AdminTeamPanel.astro`, `AdminRecruitmentPanel.astro`, dan `AdminNavigation.astro`.
+- **Modul Scoping & Event Handlers**:
+  - `cms-admin-editor.js` & `cms-team-editor.js`: Event listener login/logout
+    dipasang scoped di dalam `mount()`, selector scoped `root.querySelector`.
+  - `recruitment-admin.js`: Panggil `bootstrap()` di dalam `mount()` agar data
+    pendaftar termuat saat panel aktif pertama kali.
+  - Dukungan prefix selector `#panel-${id}` di `getInstance()`.
+- **Mock Verify Scoping & Tab Testing**:
+  - `scripts/verify-cms-native-admin.mjs`: Scoped ke `#panel-projects`, tab test
+    Projects ↔ Team verified.
+  - `scripts/verify-cms-team-admin.mjs`: Scoped ke `#panel-team`, tab test Team ↔
+    Projects verified, mock routes lengkap untuk 3 panel.
+  - `scripts/verify-recruitment-review.mjs`: Scoped ke `#panel-recruitment`, route
+    fulfiller mencakup `/admin/`, `/admin/team/`, `/admin/recruitment/`, tab test
+    dan dirty-guard blocking URL verified.
 
-### QA (Node22.23.0, `CMS_DATA_SOURCE=local`):
+### QA Lengkap (Node22.23.0, `CMS_DATA_SOURCE=local`):
 
-- `test:cms`: **94 PASS + 10 Team SKIP / 0 FAIL**
-- `test:recruitment`: **42 PASS / 0 FAIL**
 - `npm run build`: **0 error / 23 pages**
-- Snapshot `4345f1…4857` tetap
-- 20 HTML publik byte-identik (tidak berubah)
+- `npm run test:cms`: **94 PASS + 10 Team SKIP / 0 FAIL** (104 tests)
+- `npm run test:recruitment`: **42 PASS / 0 FAIL** (42 tests)
+- Browser Playwright Mocks (4 widths: 320, 390, 768, 1440 px):
+  - `npm run verify:cms-native-admin`: **PASS**
+  - `npm run verify:cms-team-admin`: **PASS**
+  - `npm run verify:recruitment-review`: **PASS**
+- `npm run verify:visual`: **PASS** (exit 0, `browserErrors: []`)
+- `npm run audit:navbar`: **ALL PASS** (Figma geometry exact at 1440, no overflow)
+- `npm run verify:vt`: **26/26 PASS** (environmental `Transition was skipped` baseline)
+- `npm run seo:audit`: **PASS** (23 pages, canonical origin, robots/sitemap/OG)
+- `npm run audit:spacing`: **PASS** (Strict 8-point audit PASS on 39 components)
+- `npm run format:check`: **PASS** (All matched files use Prettier code style)
+- `npm run verify:cms-team`: **PASS** (112 group cases)
+- Snapshot: `4345f1abe445aa2a400c31413ccc058707a77105a7e388dc8d1074e78da94857` (100% byte-matched)
+- Public HTML parity: 20 HTML publik 100% tidak tersentuh
+- Dist secrets: **0**
 - Server endpoints, RPC, SQL, ACL, env: **0 perubahan**
 
-### Masalah diketahui (belum fix):
+### Next task prioritas:
 
-1. **Mock verify `verify:cms-native-admin`**: Playwright `locator.click()` tidak
-   trigger event handler yang dipasang via ESM scoped `addEventListener`. Workaround:
-   `page.evaluate(() => element.click())`. Font Bluu Next `font-display: swap`
-   menghasilkan status `unloaded` jika belum dipakai render.
-2. **`verify:cms-team-admin` & `verify:recruitment-review`**: belum diupdate untuk
-   shell context (scoping selector, tab test, mock routes untuk 3 panel).
-3. **`beforeunload` double-register**: tiap modul + shell daftar `beforeunload`.
-   Tidak crash tapi bisa multiple confirm dialog.
-4. **CSRF refresh / 401 global**: belum ada koordinator unified. Tiap panel handle
-   sendiri (existing behaviour). OK untuk sekarang.
-
-### Perintah untuk AI baru:
-
-Baca urut: AGENTS.md (checkpoint ini) → docs/ai-handoff.md →
-docs/admin-spa-shell-plan.md → docs/admin-performance-feedback-plan.md §23 →
-docs/cms-sop.md §8 → docs/admin-unified-recruitment-plan.md →
-docs/admin-background-publish-plan.md.
-
-**Next task prioritas:**
-1. Fix mock verify (`verify:cms-native-admin` → full PASS,
-   `verify:cms-team-admin` + `verify:recruitment-review` → update ke shell scoping +
-   tab test).
-2. Full QA gates: `verify:visual`, `audit:navbar`, `verify:vt`, `seo:audit`,
-   `audit:spacing`, `format:check`.
-3. Plan B v2 (Team photo fit) — terpisah, jangan digabung.
-4. Live acceptance A2b (waitUntil) — owner minta uji Simpan production → rebuild
+1. Plan B v2 (Team photo fit) — terpisah, cek docs/team-photo-fit-plan.md.
+2. Live acceptance A2b (waitUntil) — owner minta uji Simpan production → rebuild
    Vercel tetap muncul.
 
 Aturan keras: no SQL/Auth/grant/env/hook/Google mutation. Satu pass fokus.
