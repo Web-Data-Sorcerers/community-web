@@ -1,5 +1,38 @@
 # AI handoff — current context
 
+## Revamp UI/UX Admin Dashboard (Projects, Team, Pendaftar) — LOKAL, QA PASS (9 Oct 2026)
+
+Owner memberi izin (`okee gass`) eksekusi plan revamp UI/UX dashboard admin.
+Transformasi menyeluruh dari tampilan raw form/wireframe lama ke tampilan modern
+"Dark Arcane Command Center" yang selaras dengan estetika Data Sorcerers (obsidian
+glass, glowing accents, typography Bluu Next & Manrope, semantic status badges,
+responsive multi-viewport).
+
+Perubahan:
+
+- `src/components/admin/AdminNavigation.astro`: Top navigation modern dengan
+  emblem logo Data Sorcerers, glowing Console chip, dan segmented pill tabs.
+- `src/pages/admin/index.astro`: Projects Editor card layout, styled project choices,
+  framed image preview box, glowing primary button, responsive grid.
+- `src/pages/admin/team.astro`: Team Editor group headers, card-fit 3:4 photo preview,
+  solid outline focus states, responsive layout.
+- `src/pages/admin/recruitment.astro` + `src/scripts/recruitment-admin.js`:
+  Pendaftar dashboard KPI metric cards, integrated filter toolbar, modern table
+  dengan `.status-pill` semantic badges ber-dot glowing, dan focused review panel.
+- Semua DOM ID, form attributes, event listeners, dan kontrak backend 100% terjaga.
+  Nol perubahan pada database, RPC, API, endpoint, batas media, atau halaman publik.
+
+QA Node22.23.0 `CMS_DATA_SOURCE=local`:
+
+- `test:cms`: 94 PASS + 10 Team live SKIP / 0 FAIL.
+- `test:recruitment`: 42 PASS / 0 FAIL.
+- Browser Playwright mocks: `verify:cms-native-admin`, `verify:cms-team-admin`,
+  `verify:recruitment-review` PASS di 4 viewport (320, 390, 768, 1440 px).
+- `audit:spacing`: strict 8-point audit PASS (39 components).
+- `format:check`: Prettier bersih.
+- Build: 0 errors / 23 pages. Snapshot dan 20 HTML publik 100% identik.
+- Status: Lokal commit saja, belum push. Push butuh persetujuan exact HEAD SHA baru.
+
 ## Admin save background publish (waitUntil) — LIVE + QA PASS (8 Oct 2026)
 
 Owner pilih A2b lalu izin push. Simpan/terbitkan Team/Projects balik cepat; hook

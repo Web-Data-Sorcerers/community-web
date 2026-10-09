@@ -1,5 +1,48 @@
 # AGENTS.md — instructions for AI agents
 
+## Revamp UI/UX Admin Dashboard (Projects, Team, Pendaftar) — LOKAL, QA PASS (9 Oct 2026)
+
+Owner memberi izin (`okee gass`) eksekusi plan revamp UI/UX dashboard admin.
+Transformasi menyeluruh dari tampilan raw form/wireframe lama ke tampilan modern
+"Dark Arcane Command Center" yang selaras dengan estetika Data Sorcerers (obsidian
+glass, glowing accents, typography Bluu Next & Manrope, semantic status badges,
+responsive multi-viewport).
+
+Perubahan:
+
+- [`src/components/admin/AdminNavigation.astro`](src/components/admin/AdminNavigation.astro):
+  Top navigation modern dengan brand logo Data Sorcerers, glowing Console chip,
+  segmented pill tab navigation dengan active indicator glowing dot.
+- [`src/pages/admin/index.astro`](src/pages/admin/index.astro):
+  Projects Editor: Glass hero header card, modern `#project-list` choices, framed
+  `#image-preview` container, glowing primary submit button, subtle danger outline
+  untuk tombol hapus, responsive grid layout tanpa overflow pada 320–1440 px.
+- [`src/pages/admin/team.astro`](src/pages/admin/team.astro):
+  Team Editor: Group headers `.group-title` dengan garis pemisah halus, live card
+  preview 3:4 aspect ratio untuk `#image-preview` foto anggota, input focus solid
+  outline (sesuai assertion test), responsive split layout.
+- [`src/pages/admin/recruitment.astro`](src/pages/admin/recruitment.astro) +
+  [`src/scripts/recruitment-admin.js`](src/scripts/recruitment-admin.js):
+  Pendaftar Dashboard: KPI metric cards bergradasi dengan typography kontras,
+  toolbar filter terpadu, modern data table dengan sticky header, baris hover glow,
+  dan `.status-pill` semantic badges (baru, reviewing, shortlisted, accepted,
+  rejected, waitlisted, withdrawn) dengan dot indikator menyala; review detail panel,
+  catatan internal append-only, dan timeline aktivitas audit yang rapi.
+- Semua DOM ID, form attributes, event listeners, dan kontrak backend 100% terjaga.
+  Nol perubahan pada database, RPC, API, endpoint, batas media, atau halaman publik.
+
+QA Node22.23.0 `CMS_DATA_SOURCE=local`:
+
+- `test:cms`: **94 PASS + 10 Team live SKIP / 0 FAIL**.
+- `test:recruitment`: **42 PASS / 0 FAIL**.
+- Browser Playwright mocks: `verify:cms-native-admin`, `verify:cms-team-admin`,
+  dan `verify:recruitment-review` **PASS di 4 viewport (320, 390, 768, 1440 px)**.
+- `audit:spacing`: strict 8-point audit **PASS (39 components)**.
+- `format:check`: Prettier bersih (**All matched files use Prettier code style**).
+- Build: 0 errors / 23 pages generated cleanly.
+- Parity: `cms-snapshot.json` dan 20 HTML publik 100% tidak tersentuh.
+- Status: **Lokal commit saja**, belum push. Push membutuhkan persetujuan exact HEAD SHA baru.
+
 ## Admin save background publish (waitUntil) — LIVE + QA PASS (8 Oct 2026)
 
 Owner pilih **A2b** (`gasss`) lalu izin push. Klik Simpan/terbitkan Team/Projects

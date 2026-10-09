@@ -300,15 +300,21 @@ import {
       button.type = 'button';
       button.addEventListener('click', () => loadDetail(a.receipt));
       name.append(button);
+      const statusTd = create('td');
+      const badge = create(
+        'span',
+        STATUSES[a.review.status] || a.review.status,
+        'status-pill status-' + a.review.status,
+      );
+      statusTd.append(badge);
+
       row.append(
         name,
-        ...[
-          a.email || '—',
-          a.primary_hods || '—',
-          date(a.received_at),
-          STATUSES[a.review.status],
-          String(a.review.note_count),
-        ].map((x) => create('td', x)),
+        create('td', a.email || '—'),
+        create('td', a.primary_hods || '—'),
+        create('td', date(a.received_at)),
+        statusTd,
+        create('td', String(a.review.note_count)),
       );
       byId('applications-body').append(row);
     }
