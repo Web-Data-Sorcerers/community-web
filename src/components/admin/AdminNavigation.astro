@@ -29,6 +29,7 @@ const modules = [
       <a
         href={module.href}
         class="admin-module-link"
+        data-tab={module.id}
         aria-current={active === module.id ? 'page' : undefined}
       >
         <span class="module-indicator" aria-hidden="true" />
@@ -37,106 +38,3 @@ const modules = [
     ))}
   </div>
 </nav>
-
-<style>
-  .admin-navigation {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-bottom: 32px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid rgba(155, 123, 255, 0.16);
-    font:
-      400 16px/24px Manrope,
-      sans-serif;
-  }
-  .admin-brand-bar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .admin-brand-link {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    color: inherit;
-  }
-  .admin-brand-logo {
-    width: 28px;
-    height: auto;
-    filter: drop-shadow(0 0 8px rgba(155, 123, 255, 0.4));
-  }
-  .admin-name {
-    font-family: 'Bluu Next', serif;
-    font-weight: 700;
-    font-size: 18px;
-    color: #ffffff;
-    letter-spacing: 0.5px;
-  }
-  .admin-console-chip {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: #c4b5fd;
-    background: rgba(155, 123, 255, 0.12);
-    border: 1px solid rgba(155, 123, 255, 0.24);
-    padding: 4px 8px;
-    border-radius: 6px;
-  }
-  .admin-modules {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 4px;
-    background: #0e0c16;
-    border: 1px solid rgba(155, 123, 255, 0.14);
-    padding: 4px;
-    border-radius: 12px;
-  }
-  .admin-modules a {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    border-radius: 8px;
-    color: #bcb7cb;
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 600;
-    border: 1px solid transparent;
-    transition: all 0.2s ease;
-  }
-  .module-indicator {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: transparent;
-    transition: background 0.2s ease;
-  }
-  .admin-modules a[aria-current='page'] {
-    background: linear-gradient(
-      135deg,
-      rgba(155, 123, 255, 0.25),
-      rgba(124, 92, 252, 0.15)
-    );
-    border-color: rgba(155, 123, 255, 0.4);
-    color: #ffffff;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  }
-  .admin-modules a[aria-current='page'] .module-indicator {
-    background: #9b7bff;
-    box-shadow: 0 0 8px #9b7bff;
-  }
-  .admin-modules a:hover:not([aria-current='page']) {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.05);
-  }
-  .admin-modules a:focus-visible {
-    outline: 2px solid #9b7bff;
-    outline-offset: 2px;
-  }
-</style>

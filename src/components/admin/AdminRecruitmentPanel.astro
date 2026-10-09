@@ -1,0 +1,234 @@
+---
+// AdminRecruitmentPanel — markup existing dari /admin/recruitment/ page, dipindah apa adanya
+---
+<section data-panel="recruitment" id="panel-recruitment" hidden>
+  <header>
+    <p class="brand">Data Sorcerers &middot; Admin</p>
+    <h1>Pendaftaran</h1>
+    <p>
+      Tinjau pendaftar recruitment, filter berdasarkan domain atau kata
+      kunci.
+    </p>
+    <div class="auth-links">
+      <form id="login-form" class="login-form">
+        <label>
+          Email
+          <input
+            id="login-email"
+            type="email"
+            name="email"
+            autocomplete="username"
+            required
+          />
+        </label>
+        <label>
+          Password
+          <input
+            id="login-password"
+            type="password"
+            name="password"
+            autocomplete="current-password"
+            required
+          />
+        </label>
+        <button id="login-submit" class="primary" type="submit">
+          Masuk
+        </button>
+      </form>
+      <button id="logout" type="button" hidden>
+        Keluar
+      </button>
+      <a href="/">Kembali ke situs</a>
+    </div>
+  </header>
+  <p id="status" role="status" aria-live="polite">
+    Memeriksa akses&hellip;
+  </p>
+  <div id="workspace" hidden>
+    <p id="intake-status" style="margin-bottom: 24px" role="status">
+      Memeriksa status pendaftaran&hellip;
+    </p>
+    <div class="stats-grid" id="stats"></div>
+    <form id="filter-form" class="search-bar">
+      <label>
+        Nama atau email
+        <input
+          id="search"
+          type="search"
+          maxlength="400"
+          placeholder="Cari nama atau email&hellip;"
+        />
+      </label>
+      <label>
+        Domain
+        <select id="filter-hods">
+          <option value="">Semua domain</option>
+        </select>
+      </label>
+      <label>
+        Status
+        <select id="filter-status">
+          <option value="">Semua status</option>
+        </select>
+      </label>
+      <label>
+        Tanggal mulai (WIB)
+        <input id="filter-since" type="date" />
+      </label>
+      <label>
+        Tanggal akhir (WIB)
+        <input id="filter-until" type="date" />
+      </label>
+      <label>
+        Urutan
+        <select id="filter-sort">
+          <option value="received_at_desc">Terbaru</option>
+          <option value="received_at_asc">Terlama</option>
+        </select>
+      </label>
+      <div class="actions">
+        <button id="filter-btn" class="primary" type="submit">
+          Cari
+        </button>
+        <button id="reset-filter" type="button">
+          Reset filter
+        </button>
+        <button id="reload-list" type="button">
+          Muat ulang daftar
+        </button>
+      </div>
+    </form>
+    <p id="stats-scope">
+      Ringkasan status dan domain mengikuti filter. Tanggal menggunakan WIB.
+    </p>
+    <p id="list-error" role="status" aria-live="polite"></p>
+    <div
+      id="table-wrapper"
+      tabindex="0"
+      role="region"
+      aria-label="Daftar pendaftar, geser untuk melihat seluruh kolom"
+    >
+      <table>
+        <thead>
+          <tr>
+            <th>Nama</th>
+            <th>Email</th>
+            <th>Domain</th>
+            <th>Tanggal</th>
+            <th>Status</th>
+            <th>Catatan</th>
+          </tr>
+        </thead>
+        <tbody id="applications-body"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination" hidden>
+      <button id="prev-page" type="button">
+        &larr; Sebelumnya
+      </button>
+      <span id="page-info"></span>
+      <button id="next-page" type="button">
+        Selanjutnya &rarr;
+      </button>
+    </div>
+    <div id="detail-area" hidden>
+      <h2 id="detail-heading" tabindex="-1">
+        Detail pendaftar
+      </h2>
+      <div id="detail-summary" class="review-block"></div>
+      <section class="review-block" aria-labelledby="selection-heading">
+        <h2 id="selection-heading">Seleksi internal</h2>
+        <p>Status ini tidak mengirim pesan atau menambah anggota Team.</p>
+        <p id="review-meta"></p>
+        <form id="status-form">
+          <label>
+            Status tujuan<select id="review-status" required></select>
+          </label>
+          <label>
+            Alasan
+            <textarea
+              id="review-reason"
+              rows="3"
+              aria-describedby="reason-help"
+            ></textarea>
+          </label>
+          <p id="reason-help">
+            Maksimum 500 karakter. Keputusan akhir dan pembukaan kembali
+            wajib alasan minimal 10 karakter.
+          </p>
+          <label id="decision-confirm" hidden>
+            <input id="confirm-status" type="checkbox" />
+            <span id="confirm-label"></span>
+          </label>
+          <button id="save-status" type="submit" class="primary">
+            Simpan status
+          </button>
+        </form>
+      </section>
+      <p
+        id="review-feedback"
+        role="status"
+        aria-live="polite"
+        tabindex="-1"
+      ></p>
+      <div class="actions">
+        <button id="retry-mutation" type="button" hidden>
+          Coba kiriman yang sama
+        </button>
+        <button id="reload-detail" type="button">
+          Muat detail terbaru
+        </button>
+      </div>
+      <section class="review-block" aria-labelledby="notes-heading">
+        <h2 id="notes-heading">Catatan internal</h2>
+        <p>
+          Koreksi ditulis sebagai catatan baru. Catatan yang tersimpan tidak
+          dapat diedit atau dihapus.
+        </p>
+        <form id="note-form">
+          <label>
+            Catatan
+            <textarea
+              id="review-note"
+              rows="5"
+              aria-describedby="note-help"
+              required
+            ></textarea>
+          </label>
+          <p id="note-help">1&ndash;4000 karakter, maksimum 16 KiB.</p>
+          <button id="save-note" type="submit" class="primary">
+            Tambah catatan
+          </button>
+        </form>
+        <div id="notes-list" class="detail-panel"></div>
+        <div class="actions">
+          <button id="notes-prev" type="button">
+            Catatan sebelumnya
+          </button>
+          <span id="notes-page"></span>
+          <button id="notes-next" type="button">
+            Catatan selanjutnya
+          </button>
+        </div>
+      </section>
+      <section class="review-block" aria-labelledby="history-heading">
+        <h2 id="history-heading">Aktivitas</h2>
+        <div id="history-list" class="detail-panel"></div>
+        <div class="actions">
+          <button id="history-prev" type="button">
+            Aktivitas sebelumnya
+          </button>
+          <span id="history-page"></span>
+          <button id="history-next" type="button">
+            Aktivitas selanjutnya
+          </button>
+        </div>
+      </section>
+      <h2>Jawaban formulir</h2>
+      <div id="detail-panel" class="detail-panel"></div>
+      <button id="back-list" type="button">
+        Kembali ke daftar
+      </button>
+    </div>
+  </div>
+</section>

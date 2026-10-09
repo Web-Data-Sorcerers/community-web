@@ -8,9 +8,14 @@ import {
   createSlowNotice,
   READ_DEADLINE_MS,
 } from './admin-request.js';
-(() => {
+
+const INSTANCES = new Map();
+
+export function mount(root, opts = {}) {
+  const id = root.id || root.dataset.panel || 'recruitment';
+  if (INSTANCES.has(id)) return INSTANCES.get(id);
   const send = createTransport();
-  const byId = (id) => document.getElementById(id);
+  const byId = (id) => root.querySelector('#' + id);
   const api = '/api/admin/recruitment/';
   const create = (tag, text, cls) => {
     const el = document.createElement(tag);
@@ -57,6 +62,10 @@ import {
   const pages = { notes: 0, history: 0 };
   const generations = { notes: 0, history: 0 };
   const reads = new Map();
+  const notify = (type) => {
+    if (typeof window !== 'undefined')
+      window.dispatchEvent(new CustomEvent(type, { detail: { panel: id } }));
+  };
   const readSignal = (kind) => {
     reads.get(kind)?.abort();
     const controller = new AbortController();
@@ -79,9 +88,9 @@ import {
   const dirty = () =>
     Boolean(
       byId('review-note').value.trim() ||
-      byId('review-reason').value.trim() ||
-      byId('review-status').value ||
-      mutationPending,
+        byId('review-reason').value.trim() ||
+        byId('review-status').value ||
+        mutationPending,
     );
   const mayLeave = () =>
     !saving &&
@@ -118,7 +127,7 @@ import {
     for (const id of ['filter-form', 'stats', 'stats-scope', 'intake-status'])
       byId(id).hidden = false;
   }
-  function endSession(code = 'UNAUTHORIZED') {
+  function endSession(code = 'UNAUTHORIZED', notifyEnd = true) {
     session++;
     listGeneration++;
     clearDetail();
@@ -143,12 +152,14 @@ import {
     message(errors[code], true);
     clearInterval(refreshTimer);
     refreshTimer = null;
+    if (notifyEnd) notify('admin:session-end');
   }
   function loggedIn() {
     byId('workspace').hidden = false;
     byId('login-form').hidden = true;
     byId('logout').hidden = false;
     if (!refreshTimer) refreshTimer = setInterval(refresh, 30 * 60 * 1000);
+    notify('admin:login');
   }
   const READ_KINDS = new Set(['list', 'stats', 'detail', 'notes', 'history']);
   async function request(route, input, post = false, kind = route) {
@@ -826,13 +837,6 @@ import {
           pages[kind] = Math.max(0, pages[kind] + (dir === 'next' ? 20 : -20));
           loadHistory(kind);
         });
-    document
-      .querySelectorAll('.admin-navigation a, .auth-links a')
-      .forEach((a) =>
-        a.addEventListener('click', (e) => {
-          if (current && !mayLeave()) e.preventDefault();
-        }),
-      );
     window.addEventListener('beforeunload', (e) => {
       if (current && dirty()) {
         e.preventDefault();
@@ -913,11 +917,31 @@ import {
             'Status pendaftaran belum bisa diperiksa.'),
       );
     byId('login-submit').disabled = true;
-    bootstrap().finally(() => {
-      byId('login-submit').disabled = false;
-    });
   }
-  if (document.readyState === 'loading')
-    document.addEventListener('DOMContentLoaded', init);
-  else init();
-})();
+  init();
+  const instance = {
+    show() {
+      root.hidden = false;
+    },
+    hide() {
+      root.hidden = true;
+    },
+    isDirty: () => Boolean(current) && dirty(),
+    load: bootstrap,
+    teardown() {
+      clearInterval(refreshTimer);
+      refreshTimer = null;
+      INSTANCES.delete(id);
+    },
+    expireSession() {
+      endSession('UNAUTHORIZED', false);
+    },
+    _root: root,
+  };
+  INSTANCES.set(id, instance);
+  return instance;
+}
+
+export function getInstance(id) {
+  return INSTANCES.get(id) || null;
+}

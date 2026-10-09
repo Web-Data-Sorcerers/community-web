@@ -1,0 +1,143 @@
+---
+// AdminProjectsPanel — markup existing dari /admin/ page, dipindah apa adanya
+---
+<section data-panel="projects" id="panel-projects" hidden>
+  <header>
+    <img
+      class="brand-logo"
+      src="/images/logo.png"
+      alt="Data Sorcerers"
+      width="48"
+      height="52"
+    />
+    <p class="brand">Data Sorcerers &middot; Editor</p>
+    <h1>Kelola projects</h1>
+    <p>
+      Pilih project, ubah isinya, lalu simpan. Situs diperbarui setelah
+      proses penerbitan selesai.
+    </p>
+    <div class="auth-actions">
+      <form id="login-form" class="login-form" hidden>
+        <label>
+          Email
+          <input
+            id="login-email"
+            type="email"
+            autocomplete="username"
+            required
+          />
+        </label>
+        <label>
+          Kata sandi
+          <input
+            id="login-password"
+            type="password"
+            autocomplete="current-password"
+            required
+          />
+        </label>
+        <button class="primary" id="login-submit" type="submit">
+          Masuk
+        </button>
+      </form>
+      <button id="login" type="button" class="login-link" hidden>
+        Masuk
+      </button>
+      <button id="logout" type="button" hidden>
+        Keluar
+      </button>
+      <a href="/">Kembali ke situs</a>
+    </div>
+  </header>
+  <p id="status" role="status" aria-live="polite">
+    Memeriksa akses&hellip;
+  </p>
+  <button id="retry" type="button" hidden>
+    Coba terbitkan lagi
+  </button>
+  <button id="reload" type="button" hidden>
+    Muat ulang projects
+  </button>
+  <div class="layout" id="workspace" hidden>
+    <nav aria-label="Daftar project">
+      <h2>Projects</h2>
+      <button id="add" type="button">
+        Tambah project
+      </button>
+      <div id="project-list"></div>
+    </nav>
+    <section class="editor" aria-labelledby="editor-title">
+      <h2 id="editor-title">Isi project</h2>
+      <form id="project-form">
+        <fieldset
+          id="fields"
+          style="
+            border: 0;
+            padding: 0;
+            margin: 0;
+            min-width: 0;
+            display: grid;
+            gap: 16px;
+          "
+        >
+          <label>
+            Judul project
+            <input id="title" required maxlength="20000" />
+          </label>
+          <label>
+            Deskripsi
+            <textarea
+              id="description"
+              required
+              maxlength="20000"
+            ></textarea>
+          </label>
+          <p class="hint">
+            Gunakan judul dan deskripsi singkat agar nyaman dibaca di kartu
+            situs.
+          </p>
+          <div class="tags">
+            <label>
+              Kategori pertama
+              <input id="tag-one" required maxlength="20000" />
+            </label>
+            <label>
+              Kategori kedua
+              <input id="tag-two" required maxlength="20000" />
+            </label>
+          </div>
+          <label>
+            Gambar project<select id="image" required></select>
+          </label>
+          <label>
+            Upload gambar
+            <input
+              id="image-upload"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              aria-describedby="image-hint"
+            />
+          </label>
+          <p class="hint" id="image-hint">
+            Pilih JPG, PNG atau WebP, maksimal 2 MB. Gambar terbit setelah
+            project disimpan.
+          </p>
+          <img
+            id="image-preview"
+            alt="Preview gambar project"
+            hidden
+            style="width: 100%; max-height: 240px; object-fit: contain;"
+          />
+          <div class="actions">
+            <button class="primary" id="save" type="submit">
+              Simpan dan terbitkan
+            </button>
+            <button id="delete" type="button">
+              Hapus project
+            </button>
+          </div>
+        </fieldset>
+      </form>
+    </section>
+  </div>
+</section>
