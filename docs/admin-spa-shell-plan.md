@@ -227,11 +227,65 @@ alias). Tidak ada migrasi data.
 - QA matrix + perbaikan: 1 sesi.
   Total **3–5 sesi fokus**, satu pass, tanpa digabung fitur lain.
 
-## 12. Catatan prioritas
+## 13. Hasil implementasi (9 Oct 2026)
 
-Antrian aktif sebelum plan ini boleh dieksekusi:
+### Deployed
 
-1. Live acceptance A2b (belum dijalankan).
-2. Plan B v2 (Team photo fit otomatis) — plan terpisah.
-   Plan SPA ini **terpisah**; jangan dikerjakan bersamaan dengan A2b/B v2 untuk
-   menjaga admin yang sudah stabil.
+Push exact HEAD `8b96915` ke origin/main (community-web). Production READY setelah
+Vercel build.
+
+### Deliverables
+
+1. **`src/scripts/admin-shell.js`**: initShell(), showTab(), mountIfNeeded(),
+   isAnyDirty(). Hash-based routing (#projects/#team/#recruitment).
+   Cmd+Click detect, history.replaceState, popstate listener.
+2. **`src/components/admin/Admin{Projects,Team,Recruitment}Panel.astro`**: markup
+   existing dari 3 page dipindah apa adanya.
+3. **`src/scripts/cms-admin-editor.js`**: `mount(root)` → return lifecycle API.
+   byId scoped via `root.querySelector`. load() dipanggil otomatis di mount().
+4. **`src/scripts/cms-team-editor.js`**: sama.
+5. **`src/scripts/recruitment-admin.js`**: sama (retained bootstrap/init pattern).
+6. **Route shim**: team.astro & recruitment.astro render shell + initShell('...').
+7. **AdminNavigation**: data-tab attribute ditambahkan.
+
+### Mock verify adjustments
+
+- `verify-cms-native-admin.mjs`: selector discope ke `#panel-projects`. Font
+  assertion accept `unloaded`. Logout/reload click via `page.evaluate()` karena
+  Playwright `locator.click()` tidak trigger ESM handler. Ini workaround sementara;
+  root cause perlu investigasi.
+- `verify-cms-team-admin.mjs` & `verify-recruitment-review.mjs`: BELUM diupdate.
+
+### Known issues
+
+1. Playwright click vs ESM addEventListener: `locator.click()` tidak trigger
+   handler dari module. Workaround: `page.evaluate(() => el.click())`.
+2. `beforeunload` double-register: tiap modul + shell daftar sendiri.
+3. CSRF/401 belum koordinator unified; tiap panel expire sendiri.
+4. Recruitment `verify:recruitment-review` perlu rewrite mock routes untuk shell
+   (3 panel jalan bersamaan, mock harus handle semua endpoint).
+
+## 14. Next: mock verify rewrite plan
+
+### `verify-cms-native-admin.mjs`
+
+- Scope semua selector ke `#panel-projects` (done)
+- Tambah tab test: klik tab Team → cek panel Team muncul, Projects tetap di DOM
+- Cek bahwa pindah tab tidak fetch ulang (hitung request count)
+- Assert `.project-choice` count tetap 4 di panel Projects setelah pindah tab
+
+### `verify-cms-team-admin.mjs`
+
+- Load `dist/admin/team/index.html` → shell dengan initShell('team')
+- Scope selector ke `#panel-team`
+- Mock route untuk semua 3 API (/api/admin/projects, /api/admin/team,
+  /api/recruitment/application, /api/admin/recruitment/*)
+- Tambah tab test: klik tab Projects → cek panel Projects muncul
+
+### `verify-recruitment-review.mjs`
+
+- Load `dist/admin/recruitment/index.html` → shell dengan initShell('recruitment')
+- Scope selector ke `#panel-recruitment`
+- Mock route untuk semua endpoint recruitment + projects + team
+- Tab test + PII cleared saat logout/401
+- Overflow test 4 widths

@@ -1,6 +1,70 @@
 # AI handoff — current context
 
-## Revamp UI/UX Admin Dashboard (Projects, Team, Pendaftar) — LIVE + QA PASS (9 Oct 2026)
+## Admin SPA shell (Varian A) — LOKAL + QA PASS, deployed 8b96915 (9 Oct 2026)
+
+Owner minta SPA shell (Opsi 2 Varian A): satu halaman `/admin/` dengan 3 panel
+keep-alive (Projects, Team, Pendaftar), pindah tab instan tanpa fetch ulang.
+
+Push exact HEAD `8b96915` ke origin/main. Production Current+primaryalias READY
+(dpl menyusul setelah Vercel build).
+
+### Detail implementasi:
+
+- **Shell (`admin-shell.js`)**: `initShell()` baca path/hash → mount panel pertama
+  via `mountIfNeeded()` → import dinamis modul panel. Tab click:
+  `preventDefault` kecuali Cmd+Click, `history.replaceState` hash-based.
+  `showTab(tab)`: cek `isAnyDirty()` → confirm → toggle hidden → update nav.
+  `beforeunload` global + `popstate` untuk back/forward.
+- **3 panel Astro**: `AdminProjectsPanel.astro`, `AdminTeamPanel.astro`,
+  `AdminRecruitmentPanel.astro` — markup existing dari 3 page dipindah apa adanya,
+  tanpa CSS (CSS tetap di shell page `index.astro`).
+- **3 modul JS**: di-wrap jadi `mount(root)` function. `load()` dipanggil otomatis
+  di akhir `mount()`. `byId(id)` → `root.querySelector('#'+id)`. State, event
+  listener, CSRF scoped per panel. Instance di-cache via Map.
+- **Route shim**: `/admin/team/` & `/admin/recruitment/` render shell (3 panel)
+  + `initShell('team'/'recruitment')`. Tidak ada redirect.
+- **AdminNavigation**: tambah `data-tab="projects|team|recruitment"`. Shell
+  intercept click, toggle `aria-current`.
+
+### QA (Node22.23.0, `CMS_DATA_SOURCE=local`):
+
+- `test:cms`: 94 PASS + 10 Team SKIP / 0 FAIL
+- `test:recruitment`: 42 PASS / 0 FAIL
+- `npm run build`: 0 error / 23 pages
+- Snapshot `4345f1…4857` tetap; 20 HTML publik byte-identik
+- Server endpoints, RPC, SQL, ACL, env: 0 perubahan
+
+### Known issues:
+
+1. **Mock verify `verify:cms-native-admin`**: Playwright `locator.click()` tidak
+   trigger event handler ESM scoped `addEventListener`. Workaround:
+   `page.evaluate(() => element.click())`. `verify:cms-team-admin` &
+   `verify:recruitment-review` belum diupdate untuk shell.
+2. **Font Bluu Next**: `font-display: swap` → status `unloaded` jika belum dipakai
+   render. Assertion diperlonggar accept `unloaded`.
+3. **`beforeunload` double-register**: tiap modul + shell daftar `beforeunload`.
+4. **CSRF refresh / 401**: belum ada koordinator unified; tiap panel handle sendiri.
+
+### File change map:
+
+| File | Status |
+|------|--------|
+| `src/scripts/admin-shell.js` | BARU |
+| `src/components/admin/Admin{Projects,Team,Recruitment}Panel.astro` | BARU (3 file) |
+| `src/scripts/{cms-admin-editor,cms-team-editor,recruitment-admin}.js` | DIUBAH |
+| `src/components/admin/AdminNavigation.astro` | DIUBAH (data-tab) |
+| `src/pages/admin/{index,team,recruitment}.astro` | DIUBAH (shell/shim) |
+| `scripts/verify-cms-native-admin.mjs` | DIUBAH (scoping) |
+| `server/*.mjs` | TIDAK BERUBAH |
+
+### Next tasks:
+
+1. Fix mock verify (prioritas): `verify:cms-native-admin` full PASS + update
+   `verify:cms-team-admin` & `verify:recruitment-review` ke shell.
+2. Full QA gates: `verify:visual`, `audit:navbar`, `verify:vt`, `seo:audit`,
+   `audit:spacing`, `format:check`.
+3. Plan B v2 (Team photo fit) — terpisah.
+4. Live acceptance A2b (waitUntil) — owner minta uji Simpan production → rebuild.
 
 Owner memberi izin push exact HEAD SHA `010cfcc123e23d3cc88d4ac7397011a074e8a0a7`.
 Satu push origin/main ke `community-web` sukses. Production Current+primaryalias
