@@ -1,14 +1,43 @@
 # AGENTS.md — instructions for AI agents
 
-## Admin Button Loading States, Dark Arcane Toasts & Upright Donut Chart — LOKAL PASS (9 Oct 2026)
+## Fix Recruitment Login Form Hide & Comprehensive Button Loading Feedback — LOKAL PASS (9 Oct 2026)
+
+Owner melaporkan form login sempat muncul saat berpindah ke tab Pendaftar dan tombol detail pelamar belum memiliki loading state & notifikasi:
+
+1. **Form Login Default Hidden**: Menambahkan atribut `hidden` pada `<form id="login-form" class="login-form" hidden>` di `AdminRecruitmentPanel.astro` (selaras dengan panel Projects dan Team). Saat modul inisialisasi mengambil data (`/api/admin/recruitment/applications`), pengguna tidak lagi melihat kedipan form login. Form login hanya terbuka jika sesi tidak valid (401) atau setelah logout.
+2. **Loading State & Notifikasi Tombol Detail Pendaftar**:
+   - Tombol "Tinjau Detail →" (`.btn-review-action`) dan nama pendaftar (`.applicant-detail`) kini otomatis menerapkan `.btn-spinner`, kelas `is-loading`, `aria-busy="true"`, teks dinamis "Memuat…", serta floating toast Dark Arcane `Memuat Berkas: Mengambil rincian data [Nama]…`.
+3. **Loading State Menyeluruh pada Semua Tombol Recruitment**:
+   - Dilengkapi `.btn-spinner`, kelas `is-loading`, dan notifikasi toast untuk `#filter-btn` ("Mencari…"), `#reset-filter` ("Mereset…"), `#reload-list` ("Memuat…"), `#back-list` & `#back-list-top` ("Kembali…"), `#prev-page` & `#next-page`, `#retry-mutation` ("Mengirim…"), `#reload-detail`, dan paginasi catatan/riwayat.
+4. **Zero Emote**: Konsistensi 0 emote/emoji di seluruh kode, UI, toast, dan komunikasi.
+
+### QA Lengkap (Node 22.23.0, `CMS_DATA_SOURCE=local`):
+
+- `npm run format:check`: **PASS** (Prettier)
+- `npm run build`: **0 error / 23 pages**
+- `npm run test:recruitment`: **42 PASS / 0 FAIL** (42 tests)
+- `npm run test:cms`: **94 PASS + 10 Team SKIP / 0 FAIL** (104 tests)
+- Browser Playwright Mocks (4 widths: 320, 390, 768, 1440 px):
+  - `npm run verify:recruitment-review`: **PASS**
+  - `npm run verify:cms-native-admin`: **PASS**
+  - `npm run verify:cms-team-admin`: **PASS**
+- `npm run verify:visual`: **PASS** (exit 0, `browserErrors: []`)
+- `npm run audit:spacing`: **PASS** (Strict 8-point audit PASS on 39 components)
+- `npm run seo:audit`: **PASS** (23 pages)
+- Snapshot: `4345f1abe445aa2a400c31413ccc058707a77105a7e388dc8d1074e78da94857` (100% byte-matched)
+- Public HTML parity: 20 HTML publik 100% tidak tersentuh
+- Dist secrets: **0**
+- Server endpoints, RPC, SQL, ACL, env: **0 perubahan**
 
 Owner meminta perbaikan visual dan interaktivitas:
+
 1. **Donut Chart Tegak Lurus**: Memperbaiki orientasi teks tengah Donut Chart ("201" dan "PELAMAR") agar tegak lurus horizontal (upright) di tengah lingkaran (y=64 dan y=82, dominant-baseline="middle"), tanpa kemiringan rotasi -90 derajat. Sektor visual SVG tetap berputar dari arah jam 12.
 2. **Loading State Menyeluruh**: Menambahkan elemen `.btn-spinner`, kelas `is-loading`, atribut `disabled` dan `aria-busy="true"`, serta pesan loading dinamis pada semua tombol panel Projects, Team, dan Recruitment (`#save`, `#delete`, `#retry`, `#reload`, `#add`, `#image-upload`, `#login-submit`, `#logout`, `#reload-detail`).
 3. **Dark Arcane Floating Toasts**: Mengintegrasikan sistem toast melayang dengan indikator dot semantik (emerald, rose, amber, sky) ke dalam panel Projects dan Team dengan auto-dismiss 4 detik.
 4. **Zero Emote**: Memastikan 0 emoji/emotikon di seluruh UI, toast, kode, dan respon.
 
 ### QA Lengkap (Node 22.23.0, `CMS_DATA_SOURCE=local`):
+
 - `npm run format:check`: **PASS** (Prettier)
 - `npm run build`: **0 error / 23 pages**
 - `npm run test:cms`: **94 PASS + 10 Team SKIP / 0 FAIL** (104 tests)

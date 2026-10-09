@@ -105,6 +105,20 @@ export function mount(root, opts = {}) {
       }, duration);
     }
   }
+  const setBtnLoading = (btn, isLoading, loadingText, defaultText) => {
+    if (!btn) return;
+    if (isLoading) {
+      btn.classList.add('is-loading');
+      btn.setAttribute('aria-busy', 'true');
+      btn.disabled = true;
+      btn.innerHTML = `<span class="btn-spinner"></span> ${loadingText}`;
+    } else {
+      btn.classList.remove('is-loading');
+      btn.removeAttribute('aria-busy');
+      btn.disabled = false;
+      if (defaultText !== undefined) btn.textContent = defaultText;
+    }
+  };
   const message = (s, bad = false) => {
     byId('status').textContent = s;
     byId('status').dataset.error = String(bad);
@@ -604,7 +618,34 @@ export function mount(root, opts = {}) {
           'applicant-detail',
         );
       button.type = 'button';
-      button.addEventListener('click', () => loadDetail(a.receipt));
+      const actionTd = create('td', undefined, 'col-action');
+      const actionBtn = create(
+        'button',
+        'Tinjau Detail →',
+        'btn-review-action',
+      );
+      actionBtn.type = 'button';
+
+      const openDetail = async () => {
+        showToast(
+          'info',
+          'Memuat Berkas',
+          `Mengambil rincian data ${a.full_name || 'pendaftar'}…`,
+        );
+        setBtnLoading(actionBtn, true, 'Memuat…', 'Tinjau Detail →');
+        button.classList.add('is-loading');
+        button.disabled = true;
+        try {
+          await loadDetail(a.receipt);
+        } finally {
+          setBtnLoading(actionBtn, false, '', 'Tinjau Detail →');
+          button.classList.remove('is-loading');
+          button.disabled = false;
+        }
+      };
+
+      button.addEventListener('click', openDetail);
+      actionBtn.addEventListener('click', openDetail);
       name.append(button);
       const statusTd = create('td');
       const badge = create(
@@ -613,15 +654,6 @@ export function mount(root, opts = {}) {
         'status-pill status-' + a.review.status,
       );
       statusTd.append(badge);
-
-      const actionTd = create('td', undefined, 'col-action');
-      const actionBtn = create(
-        'button',
-        'Tinjau Detail →',
-        'btn-review-action',
-      );
-      actionBtn.type = 'button';
-      actionBtn.addEventListener('click', () => loadDetail(a.receipt));
       actionTd.append(actionBtn);
 
       row.append(
@@ -1290,35 +1322,79 @@ export function mount(root, opts = {}) {
         o.value = value;
         byId(id).append(o);
       }
-    byId('filter-form').addEventListener('submit', (e) => {
+    byId('filter-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      loadList(true);
+      const btn = byId('filter-btn');
+      setBtnLoading(btn, true, 'Mencari…', 'Cari');
+      try {
+        await loadList(true);
+      } finally {
+        setBtnLoading(btn, false, '', 'Cari');
+      }
     });
-    byId('reset-filter').addEventListener('click', () => {
+    byId('reset-filter').addEventListener('click', async () => {
       if (current && !mayLeave()) return;
       clearDetail();
-      byId('filter-form').reset();
-      loadList(true);
+      const btn = byId('reset-filter');
+      setBtnLoading(btn, true, 'Mereset…', 'Reset filter');
+      showToast(
+        'info',
+        'Filter Direset',
+        'Kriteria pencarian dikembalikan ke awal.',
+      );
+      try {
+        byId('filter-form').reset();
+        await loadList(true);
+      } finally {
+        setBtnLoading(btn, false, '', 'Reset filter');
+      }
     });
-    byId('reload-list').addEventListener('click', () => loadList(true));
-    byId('prev-page').addEventListener('click', () => {
+    byId('reload-list').addEventListener('click', async () => {
+      const btn = byId('reload-list');
+      setBtnLoading(btn, true, 'Memuat…', 'Muat ulang daftar');
+      showToast('info', 'Pembaruan Data', 'Memperbarui daftar pendaftar…');
+      try {
+        await loadList(true);
+      } finally {
+        setBtnLoading(btn, false, '', 'Muat ulang daftar');
+      }
+    });
+    byId('prev-page').addEventListener('click', async () => {
+      const btn = byId('prev-page');
+      btn.classList.add('is-loading');
       offset = Math.max(0, offset - 50);
-      loadList();
+      try {
+        await loadList();
+      } finally {
+        btn.classList.remove('is-loading');
+      }
     });
-    byId('next-page').addEventListener('click', () => {
+    byId('next-page').addEventListener('click', async () => {
+      const btn = byId('next-page');
+      btn.classList.add('is-loading');
       offset += 50;
-      loadList();
+      try {
+        await loadList();
+      } finally {
+        btn.classList.remove('is-loading');
+      }
     });
-    byId('back-list').addEventListener('click', () => {
+    const handleBack = async (btn) => {
       if (!mayLeave()) return;
+      if (btn) btn.classList.add('is-loading');
       clearDetail();
-      loadList();
-    });
-    byId('back-list-top')?.addEventListener('click', () => {
-      if (!mayLeave()) return;
-      clearDetail();
-      loadList();
-    });
+      try {
+        await loadList();
+      } finally {
+        if (btn) btn.classList.remove('is-loading');
+      }
+    };
+    byId('back-list').addEventListener('click', () =>
+      handleBack(byId('back-list')),
+    );
+    byId('back-list-top')?.addEventListener('click', () =>
+      handleBack(byId('back-list-top')),
+    );
     byId('review-status').addEventListener('change', () => {
       byId('confirm-status').checked = false;
       confirmation();
@@ -1332,15 +1408,43 @@ export function mount(root, opts = {}) {
       e.preventDefault();
       submit('note');
     });
-    byId('retry-mutation').addEventListener('click', sendMutation);
+    byId('retry-mutation').addEventListener('click', async () => {
+      const btn = byId('retry-mutation');
+      if (btn) {
+        btn.classList.add('is-loading');
+        btn.innerHTML = '<span class="btn-spinner"></span> Mengirim…';
+      }
+      showToast(
+        'info',
+        'Mencoba Kirim Ulang',
+        'Mengirim kembali pembaruan review…',
+      );
+      try {
+        await sendMutation();
+      } finally {
+        if (btn) {
+          btn.classList.remove('is-loading');
+          btn.textContent = 'Coba kiriman lagi';
+        }
+      }
+    });
     byId('reload-detail').addEventListener('click', () => {
-      if (current && !saving) loadDetail(current.receipt, true);
+      if (current && !saving) {
+        showToast('info', 'Pembaruan Berkas', 'Memperbarui rincian pendaftar…');
+        loadDetail(current.receipt, true);
+      }
     });
     for (const kind of ['notes', 'history'])
       for (const dir of ['prev', 'next'])
-        byId(kind + '-' + dir).addEventListener('click', () => {
+        byId(kind + '-' + dir).addEventListener('click', async (e) => {
+          const btn = e.currentTarget;
+          if (btn) btn.classList.add('is-loading');
           pages[kind] = Math.max(0, pages[kind] + (dir === 'next' ? 20 : -20));
-          loadHistory(kind);
+          try {
+            await loadHistory(kind);
+          } finally {
+            if (btn) btn.classList.remove('is-loading');
+          }
         });
     window.addEventListener('beforeunload', (e) => {
       if (current && dirty()) {
