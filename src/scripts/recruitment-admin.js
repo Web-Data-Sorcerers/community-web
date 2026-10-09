@@ -301,10 +301,11 @@ export function mount(root, opts = {}) {
 
       const totalText = document.createElementNS(svgNS, 'text');
       totalText.setAttribute('x', '70');
-      totalText.setAttribute('y', '66');
+      totalText.setAttribute('y', '64');
       totalText.setAttribute('text-anchor', 'middle');
+      totalText.setAttribute('dominant-baseline', 'middle');
       totalText.setAttribute('fill', '#ffffff');
-      totalText.setAttribute('font-size', '20');
+      totalText.setAttribute('font-size', '22');
       totalText.setAttribute('font-weight', '700');
       totalText.setAttribute('font-family', "'Bluu Next', serif");
       totalText.textContent = String(stats.filtered);
@@ -313,6 +314,7 @@ export function mount(root, opts = {}) {
       labelText.setAttribute('x', '70');
       labelText.setAttribute('y', '82');
       labelText.setAttribute('text-anchor', 'middle');
+      labelText.setAttribute('dominant-baseline', 'middle');
       labelText.setAttribute('fill', '#a8a3b8');
       labelText.setAttribute('font-size', '10');
       labelText.setAttribute('font-weight', '600');
@@ -948,12 +950,21 @@ export function mount(root, opts = {}) {
   async function loadDetail(receipt, preserve = false) {
     if (!preserve && current && !mayLeave()) return;
     if (!preserve) clearDetail();
+    const reloadBtn = byId('reload-detail');
+    if (reloadBtn) {
+      reloadBtn.classList.add('is-loading');
+      reloadBtn.innerHTML = '<span class="btn-spinner"></span> Memuat…';
+    }
     const gen = ++detailGeneration;
     listGeneration++;
     byId('notes-list').textContent = 'Memuat catatan…';
     byId('history-list').textContent = 'Memuat aktivitas…';
     const doneSlow = armSlow('Memuat detail…');
     const result = await request('application', { receipt }, false, 'detail');
+    if (reloadBtn) {
+      reloadBtn.classList.remove('is-loading');
+      reloadBtn.textContent = 'Muat detail terbaru';
+    }
     if (gen !== detailGeneration || !result || result.cancelled) return;
     if (!result.ok) {
       doneSlow();
@@ -1339,6 +1350,11 @@ export function mount(root, opts = {}) {
     });
     byId('logout').addEventListener('click', async () => {
       const gen = session;
+      const btn = byId('logout');
+      if (btn) {
+        btn.classList.add('is-loading');
+        btn.innerHTML = '<span class="btn-spinner"></span> Keluar…';
+      }
       try {
         const r = await fetch('/api/admin/auth/logout', {
           method: 'POST',
@@ -1350,19 +1366,34 @@ export function mount(root, opts = {}) {
         if (r.ok || r.status === 401) {
           endSession();
           message('Sudah keluar dari admin.');
+          showToast('info', 'Sesi Berakhir', 'Sudah keluar dari admin.');
         } else {
           if (r.status === 403) endSession('FORBIDDEN');
           message('Belum berhasil keluar. Coba lagi.', true);
+          showToast(
+            'error',
+            'Gagal Keluar',
+            'Belum berhasil keluar. Coba lagi.',
+          );
         }
       } catch {
         message('Koneksi terputus. Coba keluar lagi.', true);
+        showToast('error', 'Koneksi Terputus', 'Coba keluar lagi.');
+      } finally {
+        if (btn) {
+          btn.classList.remove('is-loading');
+          btn.textContent = 'Keluar';
+        }
       }
     });
     byId('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       if (byId('login-submit').disabled) return;
       const gen = session;
-      byId('login-submit').disabled = true;
+      const submit = byId('login-submit');
+      submit.disabled = true;
+      submit.classList.add('is-loading');
+      submit.innerHTML = '<span class="btn-spinner"></span> Memeriksa…';
       message('Masuk…');
       try {
         const r = await fetch('/api/admin/auth/login', {
@@ -1379,22 +1410,34 @@ export function mount(root, opts = {}) {
         if (gen !== session) return;
         byId('login-password').value = '';
         if (!r.ok) {
-          message(
+          const errText =
             r.status === 429
               ? 'Terlalu banyak percobaan. Coba beberapa saat lagi.'
-              : 'Email atau password salah.',
-            true,
-          );
+              : 'Email atau password salah.';
+          message(errText, true);
+          showToast('error', 'Gagal Masuk', errText);
           return;
         }
         session++;
         csrf = d.csrf;
         loggedIn();
+        showToast(
+          'success',
+          'Akses Diberikan',
+          'Selamat datang di konsol admin.',
+        );
         await bootstrap();
       } catch {
         message('Koneksi terputus.', true);
+        showToast(
+          'error',
+          'Koneksi Terputus',
+          'Periksa koneksi jaringan Anda.',
+        );
       } finally {
-        byId('login-submit').disabled = false;
+        submit.disabled = false;
+        submit.classList.remove('is-loading');
+        submit.textContent = 'Masuk';
       }
     });
     fetch('/api/recruitment/application', { cache: 'no-store' })

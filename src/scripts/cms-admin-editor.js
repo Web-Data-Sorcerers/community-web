@@ -40,6 +40,56 @@ export function mount(root, opts = {}) {
     $('status').textContent = text;
     $('status').dataset.error = String(error);
   };
+  const showToast = (type, title, text = '', duration = 4000) => {
+    const container =
+      root.querySelector('.admin-toast-container') ||
+      document.querySelector('.admin-toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = 'admin-toast toast-' + type;
+    toast.setAttribute('role', 'alert');
+    const dot = document.createElement('span');
+    dot.className = 'toast-dot';
+    const content = document.createElement('div');
+    content.className = 'toast-content';
+    const titleEl = document.createElement('div');
+    titleEl.className = 'toast-title';
+    titleEl.textContent = title;
+    content.appendChild(titleEl);
+    if (text) {
+      const descEl = document.createElement('div');
+      descEl.className = 'toast-desc';
+      descEl.textContent = text;
+      content.appendChild(descEl);
+    }
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'toast-close';
+    closeBtn.textContent = '×';
+    closeBtn.setAttribute('aria-label', 'Tutup notifikasi');
+    const dismiss = () => {
+      toast.classList.add('toast-closing');
+      setTimeout(() => toast.remove(), 300);
+    };
+    closeBtn.addEventListener('click', dismiss);
+    toast.append(dot, content, closeBtn);
+    container.appendChild(toast);
+    if (duration > 0) {
+      setTimeout(() => {
+        if (toast.isConnected) dismiss();
+      }, duration);
+    }
+  };
+  const setBtnLoading = (btn, isLoading, loadingText, defaultText) => {
+    if (!btn) return;
+    if (isLoading) {
+      btn.classList.add('is-loading');
+      btn.innerHTML = `<span class="btn-spinner"></span> ${loadingText}`;
+    } else {
+      btn.classList.remove('is-loading');
+      btn.textContent = defaultText;
+    }
+  };
   const setScope = (name, value) => {
     scopes[name] = value;
     applyBusy();
@@ -202,7 +252,7 @@ export function mount(root, opts = {}) {
         'Penerbitan dimulai di belakang layar. Tunggu beberapa menit sebelum memeriksa situs.',
     );
   };
-  const load = async () => {
+  const load = async (isManual = false) => {
     if (locked() || scopes.read) return;
     if (
       dirty &&
@@ -210,11 +260,22 @@ export function mount(root, opts = {}) {
     )
       return;
     setScope('read', true);
+    setBtnLoading($('reload'), true, 'Memuat…', 'Muat ulang projects');
     message('Memuat projects…');
     try {
       const result = await rpc('adminLoadProjects');
       if (!result.ok) {
-        message(errors[result.error.code] || errors.SERVER_ERROR, true);
+        const errText = errors[result.error.code] || errors.SERVER_ERROR;
+        message(errText, true);
+        showToast(
+          'error',
+          result.error?.code === 'UNAUTHORIZED'
+            ? 'Sesi Berakhir'
+            : 'Gagal Memuat',
+          result.error?.code === 'UNAUTHORIZED'
+            ? 'Sesi owner telah berakhir. Silakan masuk kembali.'
+            : 'Tidak dapat memuat data projects terbaru.',
+        );
         $('reload').hidden = false;
         return;
       }
@@ -229,13 +290,21 @@ export function mount(root, opts = {}) {
           ? 'Ada perubahan tersimpan yang belum berhasil diterbitkan. Klik Coba terbitkan lagi.'
           : 'Pilih project yang ingin diubah.',
       );
+      if (isManual) {
+        showToast(
+          'info',
+          'Data Terkini',
+          'Daftar projects berhasil diperbarui.',
+        );
+      }
     } catch (_error) {
-      message(
-        'Koneksi terputus. Muat ulang projects untuk mencoba lagi.',
-        true,
-      );
+      const errText =
+        'Koneksi terputus. Muat ulang projects untuk mencoba lagi.';
+      message(errText, true);
+      showToast('error', 'Koneksi Terputus', errText);
       $('reload').hidden = false;
     } finally {
+      setBtnLoading($('reload'), false, '', 'Muat ulang projects');
       setScope('read', false);
     }
   };
@@ -248,28 +317,30 @@ export function mount(root, opts = {}) {
     try {
       const prepared = await prepareImageForUpload(file);
       if (prepared.error === 'type') {
-        message('Pilih JPG, PNG atau WebP.', true);
+        const errText = 'Pilih JPG, PNG atau WebP.';
+        message(errText, true);
+        showToast('error', 'Format Tidak Didukung', errText);
         return;
       }
       if (prepared.error === 'decode') {
-        message(
-          'Gambar tidak bisa dibaca. Coba JPG, PNG atau WebP lain.',
-          true,
-        );
+        const errText =
+          'Gambar tidak bisa dibaca. Coba JPG, PNG atau WebP lain.';
+        message(errText, true);
+        showToast('error', 'Gagal Membaca Berkas', errText);
         return;
       }
       if (prepared.error === 'size') {
-        message(
-          'Gambar terlalu besar untuk diunggah. Coba gambar yang lebih kecil.',
-          true,
-        );
+        const errText =
+          'Gambar terlalu besar untuk diunggah. Coba gambar yang lebih kecil.';
+        message(errText, true);
+        showToast('error', 'Ukuran Terlalu Besar', errText);
         return;
       }
-      message(
-        prepared.converted
-          ? 'Gambar dikecilkan otomatis agar sesuai batas. Mengupload…'
-          : 'Mengupload gambar…',
-      );
+      const notice = prepared.converted
+        ? 'Gambar dikecilkan otomatis agar sesuai batas. Mengupload…'
+        : 'Mengupload gambar…';
+      message(notice);
+      showToast('info', 'Memproses Berkas', notice);
       const response = await fetch('/api/admin/media', {
         method: 'POST',
         credentials: 'same-origin',
@@ -279,6 +350,7 @@ export function mount(root, opts = {}) {
       const result = await response.json();
       if (result.error?.code === 'UNAUTHORIZED') {
         expire();
+        showToast('error', 'Sesi Berakhir', 'Masuk lagi sebelum melanjutkan.');
         return;
       }
       if (
@@ -287,12 +359,12 @@ export function mount(root, opts = {}) {
           result.data?.image || '',
         )
       ) {
-        message(
+        const errText =
           result.error?.code === 'INVALID_INPUT'
             ? 'Gambar tidak didukung server. Coba JPG, PNG atau WebP lain.'
-            : 'Gambar belum berhasil diupload. Coba lagi.',
-          true,
-        );
+            : 'Gambar belum berhasil diupload. Coba lagi.';
+        message(errText, true);
+        showToast('error', 'Gagal Mengunggah', errText);
         return;
       }
       const image = result.data.image;
@@ -305,14 +377,19 @@ export function mount(root, opts = {}) {
       $('image').value = image;
       dirty = true;
       preview();
-      message(
-        'Gambar siap. Klik Simpan dan terbitkan untuk memakai gambar ini di situs.',
+      const readyMsg =
+        'Gambar siap. Klik Simpan dan terbitkan untuk memakai gambar ini di situs.';
+      message(readyMsg);
+      showToast(
+        'success',
+        'Berkas Terverifikasi',
+        'Gambar project telah siap digunakan. Klik Simpan dan terbitkan untuk menerapkan.',
       );
     } catch {
-      message(
-        'Koneksi upload terputus. Project belum disimpan. Pilih gambar lagi untuk mencoba ulang.',
-        true,
-      );
+      const errText =
+        'Koneksi upload terputus. Project belum disimpan. Pilih gambar lagi untuk mencoba ulang.';
+      message(errText, true);
+      showToast('error', 'Koneksi Terputus', errText);
     } finally {
       $('image-upload').value = '';
       setScope('upload', false);
@@ -335,6 +412,7 @@ export function mount(root, opts = {}) {
       image: $('image').value,
     };
     setScope('mutation', true);
+    setBtnLoading($('save'), true, 'Menyimpan…', 'Simpan dan terbitkan');
     message('Menyimpan dan meminta penerbitan…');
     try {
       const result = await rpc(
@@ -342,7 +420,21 @@ export function mount(root, opts = {}) {
         { project, revision: state.revision },
       );
       if (!result.ok) {
-        message(errors[result.error.code] || errors.SERVER_ERROR, true);
+        const errText = errors[result.error.code] || errors.SERVER_ERROR;
+        message(errText, true);
+        showToast(
+          result.error?.code === 'CONFLICT' ? 'warning' : 'error',
+          result.error?.code === 'CONFLICT'
+            ? 'Konflik Versi'
+            : result.error?.code === 'UNAUTHORIZED'
+              ? 'Sesi Berakhir'
+              : 'Gagal Menyimpan',
+          result.error?.code === 'CONFLICT'
+            ? 'Terdapat revisi terbaru dari sesi lain. Muat ulang untuk sinkronisasi data.'
+            : result.error?.code === 'UNAUTHORIZED'
+              ? 'Sesi owner telah berakhir. Silakan masuk kembali.'
+              : 'Permintaan tidak dapat diproses oleh server.',
+        );
         $('reload').hidden = false;
         return;
       }
@@ -353,22 +445,33 @@ export function mount(root, opts = {}) {
       render();
       $('reload').hidden = true;
       publicationMessage(true);
-    } catch (_error) {
-      message(
-        'Koneksi terputus. Muat ulang projects sebelum menyimpan lagi untuk memeriksa perubahan terakhir.',
-        true,
+      showToast(
+        'success',
+        'Project Tersimpan',
+        'Perubahan data project berhasil disimpan ke server.',
       );
+    } catch (_error) {
+      const errText =
+        'Koneksi terputus. Muat ulang projects sebelum menyimpan lagi untuk memeriksa perubahan terakhir.';
+      message(errText, true);
+      showToast('error', 'Koneksi Terputus', errText);
       $('reload').hidden = false;
     } finally {
+      setBtnLoading($('save'), false, '', 'Simpan dan terbitkan');
       setScope('mutation', false);
     }
   });
   $('add').addEventListener('click', () => {
-    if (locked() || state.projects.length >= state.maxProjects) return;
+    if (locked()) return;
+    if (state && state.projects.length >= state.maxProjects) {
+      showToast('warning', 'Batas Maksimal', errors.LIMIT);
+      return;
+    }
     choose(null);
     if (selected === null) {
       dirty = true;
       $('title').focus();
+      showToast('info', 'Project Baru', 'Formulir project baru siap diisi.');
     }
   });
   $('delete').addEventListener('click', async () => {
@@ -382,6 +485,7 @@ export function mount(root, opts = {}) {
     )
       return;
     setScope('mutation', true);
+    setBtnLoading($('delete'), true, 'Menghapus…', 'Hapus project');
     message('Menghapus dan meminta penerbitan…');
     try {
       const result = await rpc('adminDeleteProject', {
@@ -389,7 +493,17 @@ export function mount(root, opts = {}) {
         revision: state.revision,
       });
       if (!result.ok) {
-        message(errors[result.error.code] || errors.SERVER_ERROR, true);
+        const errText = errors[result.error.code] || errors.SERVER_ERROR;
+        message(errText, true);
+        showToast(
+          'error',
+          result.error?.code === 'UNAUTHORIZED'
+            ? 'Sesi Berakhir'
+            : 'Gagal Menghapus',
+          result.error?.code === 'UNAUTHORIZED'
+            ? 'Sesi owner telah berakhir. Silakan masuk kembali.'
+            : 'Permintaan hapus tidak dapat diproses oleh server.',
+        );
         $('reload').hidden = false;
         return;
       }
@@ -399,33 +513,52 @@ export function mount(root, opts = {}) {
       render();
       $('reload').hidden = true;
       publicationMessage(true);
+      showToast(
+        'success',
+        'Project Dihapus',
+        'Data project telah disingkirkan dari daftar.',
+      );
       $('title').focus();
     } catch (_error) {
-      message(
-        'Koneksi terputus. Muat ulang projects sebelum menghapus lagi untuk memeriksa perubahan terakhir.',
-        true,
-      );
+      const errText =
+        'Koneksi terputus. Muat ulang projects sebelum menghapus lagi untuk memeriksa perubahan terakhir.';
+      message(errText, true);
+      showToast('error', 'Koneksi Terputus', errText);
       $('reload').hidden = false;
     } finally {
+      setBtnLoading($('delete'), false, '', 'Hapus project');
       setScope('mutation', false);
     }
   });
   $('retry').addEventListener('click', async () => {
     if (locked() || scopes.publication) return;
     setScope('publication', true);
+    setBtnLoading($('retry'), true, 'Menerbitkan…', 'Coba terbitkan lagi');
     message('Meminta penerbitan ulang…');
     try {
       const result = await rpc('adminRetryPublication');
-      if (!result.ok)
-        message(errors[result.error.code] || errors.SERVER_ERROR, true);
-      else publicationMessage(false);
+      if (!result.ok) {
+        const errText = errors[result.error.code] || errors.SERVER_ERROR;
+        message(errText, true);
+        showToast('error', 'Gagal Publikasi', errText);
+      } else {
+        publicationMessage(false);
+        showToast(
+          'success',
+          'Antrean Rilis',
+          'Permintaan build situs telah dikirimkan ke server.',
+        );
+      }
     } catch {
-      message('Koneksi terputus. Coba terbitkan lagi.', true);
+      const errText = 'Koneksi terputus. Coba terbitkan lagi.';
+      message(errText, true);
+      showToast('error', 'Koneksi Terputus', errText);
     } finally {
+      setBtnLoading($('retry'), false, '', 'Coba terbitkan lagi');
       setScope('publication', false);
     }
   });
-  $('reload').addEventListener('click', load);
+  $('reload').addEventListener('click', () => load(true));
   if ($('logout')) {
     $('logout').addEventListener('click', async () => {
       if (locked() || scopes.logout) return;
@@ -435,6 +568,7 @@ export function mount(root, opts = {}) {
       )
         return;
       setScope('logout', true);
+      setBtnLoading($('logout'), true, 'Keluar…', 'Keluar');
       try {
         const response = await fetch('/api/admin/auth/logout', {
           method: 'POST',
@@ -442,7 +576,9 @@ export function mount(root, opts = {}) {
           headers: { 'X-CSRF-Token': csrf },
         });
         if (!response.ok) {
-          message('Belum bisa keluar. Coba lagi.', true);
+          const errText = 'Belum bisa keluar. Coba lagi.';
+          message(errText, true);
+          showToast('error', 'Gagal Keluar', errText);
           return;
         }
         dirty = false;
@@ -453,10 +589,15 @@ export function mount(root, opts = {}) {
         $('project-list').replaceChildren();
         expire();
         $('reload').hidden = true;
-        message('Sudah keluar. Masuk lagi untuk mengelola Projects.');
+        const msg = 'Sudah keluar. Masuk lagi untuk mengelola Projects.';
+        message(msg);
+        showToast('info', 'Sesi Berakhir', msg);
       } catch {
-        message('Koneksi terputus. Coba keluar lagi.', true);
+        const errText = 'Koneksi terputus. Coba keluar lagi.';
+        message(errText, true);
+        showToast('error', 'Koneksi Terputus', errText);
       } finally {
+        setBtnLoading($('logout'), false, '', 'Keluar');
         setScope('logout', false);
       }
     });
@@ -477,7 +618,10 @@ export function mount(root, opts = {}) {
       const email = $('login-email').value.trim();
       const password = $('login-password').value;
       if (!email || !password) return;
-      if (submit) submit.disabled = true;
+      if (submit) {
+        submit.disabled = true;
+        setBtnLoading(submit, true, 'Memeriksa…', 'Masuk');
+      }
       try {
         const response = await fetch('/api/admin/auth/login', {
           method: 'POST',
@@ -487,22 +631,32 @@ export function mount(root, opts = {}) {
         });
         const result = await response.json().catch(() => ({}));
         if (!response.ok || !result.ok) {
-          message(
+          const errText =
             result.error?.code === 'FORBIDDEN'
               ? 'Akun ini tidak punya akses owner.'
-              : 'Login belum berhasil. Periksa email dan kata sandi.',
-            true,
-          );
+              : 'Login belum berhasil. Periksa email dan kata sandi.';
+          message(errText, true);
+          showToast('error', 'Gagal Masuk', errText);
           return;
         }
         $('login-password').value = '';
         loginForm.hidden = true;
         message('Masuk. Memuat projects…');
+        showToast(
+          'success',
+          'Akses Diberikan',
+          'Selamat datang di konsol admin.',
+        );
         load();
       } catch {
-        message('Koneksi terputus. Coba masuk lagi.', true);
+        const errText = 'Koneksi terputus. Coba masuk lagi.';
+        message(errText, true);
+        showToast('error', 'Koneksi Terputus', errText);
       } finally {
-        if (submit) submit.disabled = false;
+        if (submit) {
+          submit.disabled = false;
+          setBtnLoading(submit, false, '', 'Masuk');
+        }
       }
     });
   }
