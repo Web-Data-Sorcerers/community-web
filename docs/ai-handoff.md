@@ -1,8 +1,15 @@
 # AI handoff — current context
 
-## Revamp UI/UX Admin Dashboard (Projects, Team, Pendaftar) — LOKAL, QA PASS (9 Oct 2026)
+## Revamp UI/UX Admin Dashboard (Projects, Team, Pendaftar) — LIVE + QA PASS (9 Oct 2026)
 
-Owner memberi izin (`okee gass`) eksekusi plan revamp UI/UX dashboard admin.
+Owner memberi izin push exact HEAD SHA `010cfcc123e23d3cc88d4ac7397011a074e8a0a7`.
+Satu push origin/main ke `community-web` sukses. Production Current+primaryalias
+READY `dpl_GMmBzLxG96hsp77QpdRR8CeYHmni`, alias
+`data-sorcerers-community-sigma.vercel.app`; provider READY **09 Oct 2026
+04:18:38 UTC / 11:18:38 WIB**. Live checks: 9 route 200 (6 publik + 3 admin shell),
+4 API endpoint anon 401, recruitment `accepting:true`. Admin HTML live terkonfirmasi
+memuat `admin-nav` dan Console chip.
+
 Transformasi menyeluruh dari tampilan raw form/wireframe lama ke tampilan modern
 "Dark Arcane Command Center" yang selaras dengan estetika Data Sorcerers (obsidian
 glass, glowing accents, typography Bluu Next & Manrope, semantic status badges,
@@ -31,7 +38,8 @@ QA Node22.23.0 `CMS_DATA_SOURCE=local`:
 - `audit:spacing`: strict 8-point audit PASS (39 components).
 - `format:check`: Prettier bersih.
 - Build: 0 errors / 23 pages. Snapshot dan 20 HTML publik 100% identik.
-- Status: Lokal commit saja, belum push. Push butuh persetujuan exact HEAD SHA baru.
+- Visual regression `node scripts/verify.mjs`: PASS, `browserErrors: []`.
+- Status: **LIVE di Production Vercel**. Izin push exact HEAD `010cfcc` consumed.
 
 ## Admin save background publish (waitUntil) — LIVE + QA PASS (8 Oct 2026)
 
