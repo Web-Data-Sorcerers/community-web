@@ -1,5 +1,34 @@
 # AGENTS.md — instructions for AI agents
 
+## Admin Recruitment Revamp (Kolom Detail, Loading Shimmer, Dark Arcane Toast, Detail Workspace 5 Kategori, & Data Visualization) — LOKAL PASS (9 Oct 2026)
+
+Owner meminta pembaruan menyeluruh untuk admin pendaftaran (`/admin/recruitment/`):
+
+1. Kolom "Aksi" dengan tombol "Tinjau Detail →" yang jelas dan mudah diakses.
+2. Loading state jelas di semua proses (skeleton shimmer 5 baris di tabel, button spinner berputar saat mutasi status/catatan).
+3. Sistem notifikasi floating toast Dark Arcane (4 status visual semantik: Sukses emerald, Error rose, Warning amber, Info sky).
+4. Layout detail formulir yang rapi: Split 2-column workspace (sticky reviewer console di kiri, 38 field dikelompokkan ke dalam 5 kartu kategori tematik di kanan, portfolio link clickable & aman XSS, badge persetujuan).
+5. Visualisasi dan analisis data: Distribusi Domain (progress bars dengan % dan counters) & Pipeline Alur Seleksi (funnel steps interaktif).
+
+### QA Lengkap (Node 22.23.0, `CMS_DATA_SOURCE=local`):
+
+- `npm run build`: **0 error / 23 pages**
+- `npm run test:recruitment`: **42 PASS / 0 FAIL** (42 tests)
+- `npm run test:cms`: **94 PASS + 10 Team SKIP / 0 FAIL** (104 tests)
+- Browser Playwright Mocks (4 widths: 320, 390, 768, 1440 px):
+  - `npm run verify:recruitment-review`: **PASS** (Zero horizontal overflow pada 320px, 38 field assertion pass, security XSS pass)
+  - `npm run verify:cms-native-admin`: **PASS**
+  - `npm run verify:cms-team-admin`: **PASS**
+- `npm run verify:visual`: **PASS** (exit 0, `browserErrors: []`)
+- `npm run audit:navbar`: **ALL PASS** (20 breakpoint)
+- `npm run audit:spacing`: **PASS** (Strict 8-point audit PASS on 39 components)
+- `npm run format:check`: **PASS** (All matched files use Prettier code style)
+- `npm run seo:audit`: **PASS** (23 pages)
+- Snapshot: `4345f1abe445aa2a400c31413ccc058707a77105a7e388dc8d1074e78da94857` (100% byte-matched)
+- Public HTML parity: 20 HTML publik 100% tidak tersentuh
+- Dist secrets: **0**
+- Server endpoints, RPC, SQL, ACL, env: **0 perubahan**
+
 ## Admin SPA shell (Varian A) + Mock Verify & Full QA — LOKAL PASS (9 Oct 2026)
 
 Owner minta SPA shell (Opsi 2 Varian A): satu halaman `/admin/` dengan 3 panel

@@ -76,14 +76,60 @@ export function mount(root, opts = {}) {
     for (const controller of reads.values()) controller.abort();
     reads.clear();
   };
+  function showToast(type, title, text = '', duration = 4000) {
+    const container = byId('recruitment-toast-container');
+    if (!container) return;
+    const icons = {
+      success: '✓',
+      error: '⚠',
+      warning: '⚡',
+      info: 'ℹ',
+    };
+    const toast = create('div', undefined, 'admin-toast toast-' + type);
+    toast.setAttribute('role', 'alert');
+    const iconSpan = create('span', icons[type] || '•', 'toast-icon');
+    const contentDiv = create('div', undefined, 'toast-content');
+    const titleDiv = create('div', title, 'toast-title');
+    contentDiv.append(titleDiv);
+    if (text) {
+      const descDiv = create('div', text, 'toast-desc');
+      contentDiv.append(descDiv);
+    }
+    const closeBtn = create('button', '✕', 'toast-close');
+    closeBtn.type = 'button';
+    closeBtn.setAttribute('aria-label', 'Tutup notifikasi');
+    const dismiss = () => {
+      toast.classList.add('toast-closing');
+      setTimeout(() => toast.remove(), 300);
+    };
+    closeBtn.addEventListener('click', dismiss);
+    toast.append(iconSpan, contentDiv, closeBtn);
+    container.append(toast);
+    if (duration > 0) {
+      setTimeout(() => {
+        if (toast.isConnected) dismiss();
+      }, duration);
+    }
+  }
   const message = (s, bad = false) => {
     byId('status').textContent = s;
     byId('status').dataset.error = String(bad);
+    if (bad && s) {
+      showToast('error', 'Pemberitahuan Sistem', s);
+    }
   };
   const armSlow = createSlowNotice((text) => message(text));
-  const feedback = (s) => {
+  const feedback = (s, bad = false) => {
     byId('review-feedback').textContent = s;
     byId('review-feedback').focus();
+    if (s && s !== 'Menyimpan…') {
+      const isWarn =
+        s.includes('Konflik') ||
+        s.includes('Pilih perpindahan') ||
+        s.includes('Konfirmasikan');
+      const type = bad ? 'error' : isWarn ? 'warning' : 'success';
+      showToast(type, s);
+    }
   };
   const dirty = () =>
     Boolean(
@@ -126,6 +172,7 @@ export function mount(root, opts = {}) {
     byId('detail-area').hidden = true;
     for (const id of ['filter-form', 'stats', 'stats-scope', 'intake-status'])
       byId(id).hidden = false;
+    if (byId('analytics-visuals')) byId('analytics-visuals').hidden = false;
   }
   function endSession(code = 'UNAUTHORIZED', notifyEnd = true) {
     session++;
@@ -197,6 +244,94 @@ export function mount(root, opts = {}) {
     if (result.ok) loggedIn();
     return { ...result, http: r.status };
   }
+  function renderVisualizations(stats, counts) {
+    const visuals = byId('analytics-visuals');
+    if (!visuals) return;
+    visuals.hidden = false;
+
+    // 1. Domain Distribution Bars
+    const domainBars = byId('domain-bars');
+    const totalFiltered = Math.max(1, stats.filtered);
+    const domainColors = {
+      data: 'linear-gradient(90deg, #9333ea, #c084fc)',
+      core: 'linear-gradient(90deg, #2563eb, #60a5fa)',
+      language: 'linear-gradient(90deg, #059669, #34d399)',
+      vision: 'linear-gradient(90deg, #d97706, #fbbf24)',
+      product: 'linear-gradient(90deg, #e11d48, #fb7185)',
+      growth: 'linear-gradient(90deg, #0891b2, #38bdf8)',
+    };
+    const domainLabels = {
+      data: 'Data & AI',
+      core: 'Core Engineering',
+      language: 'Language & LLM',
+      vision: 'Computer Vision',
+      product: 'Product & Design',
+      growth: 'Growth & Community',
+    };
+
+    if (domainBars) {
+      domainBars.replaceChildren(
+        ...stats.by_hods.map(({ hods, count }) => {
+          const pct = Math.round((count / totalFiltered) * 100);
+          const item = create('div', undefined, 'domain-bar-item');
+          const labelRow = create('div', undefined, 'domain-bar-label-row');
+          labelRow.append(
+            create('span', domainLabels[hods] || hods),
+            create('span', `${count} (${pct}%)`),
+          );
+          const track = create('div', undefined, 'domain-bar-track');
+          const fill = create('div', undefined, 'domain-bar-fill');
+          fill.style.width = `${pct}%`;
+          fill.style.background = domainColors[hods] || 'var(--accent)';
+          track.append(fill);
+          item.append(labelRow, track);
+          return item;
+        }),
+      );
+    }
+    const domainTotalBadge = byId('domain-stats-total');
+    if (domainTotalBadge) {
+      domainTotalBadge.textContent = `${stats.filtered} dari ${stats.total_global}`;
+    }
+
+    // 2. Recruitment Funnel Pipeline
+    const funnel = byId('pipeline-funnel');
+    if (funnel) {
+      const inReviewTotal =
+        counts.reviewing + counts.shortlisted + counts.interview;
+      const steps = [
+        { label: 'Pendaftar Baru', val: counts.new, color: '#38bdf8' },
+        { label: 'Sedang Ditinjau', val: inReviewTotal, color: '#c4b5fd' },
+        { label: 'Lolos Shortlist', val: counts.shortlisted, color: '#fbbf24' },
+        {
+          label: 'Diterima (Accepted)',
+          val: counts.accepted,
+          color: '#34d399',
+        },
+        {
+          label: 'Daftar Tunggu / Ditolak',
+          val: counts.waitlisted + counts.rejected,
+          color: '#fb7185',
+        },
+      ];
+      funnel.replaceChildren(
+        ...steps.map((st) => {
+          const row = create('div', undefined, 'funnel-step-row');
+          row.style.borderLeftColor = st.color;
+          const left = create('div', undefined, 'funnel-step-left');
+          left.append(create('span', st.label));
+          const valSpan = create('span', String(st.val), 'funnel-step-val');
+          row.append(left, valSpan);
+          return row;
+        }),
+      );
+    }
+    const funnelConversionBadge = byId('pipeline-stats-conversion');
+    if (funnelConversionBadge) {
+      const acceptedPct = Math.round((counts.accepted / totalFiltered) * 100);
+      funnelConversionBadge.textContent = `${acceptedPct}% Diterima`;
+    }
+  }
   function renderStats(stats) {
     const counts = Object.fromEntries(
       stats.by_status.map((x) => [x.status, x.count]),
@@ -225,6 +360,7 @@ export function mount(root, opts = {}) {
       'Ringkasan mengikuti filter: ' +
       stats.by_hods.map((x) => x.hods + ' ' + x.count).join(', ') +
       '. Tanggal WIB. Status dapat berubah saat reviewer lain menyimpan.';
+    renderVisualizations(stats, counts);
   }
   function readFilters() {
     const f = {};
@@ -258,11 +394,21 @@ export function mount(root, opts = {}) {
     byId('table-wrapper').setAttribute('aria-busy', 'true');
     byId('pagination').hidden = true;
     byId('list-error').textContent = '';
-    const placeholder = create('tr');
-    const placeholderCell = create('td', 'Memuat pendaftar…');
-    placeholderCell.colSpan = 6;
-    placeholder.append(placeholderCell);
-    byId('applications-body').replaceChildren(placeholder);
+    const skeletonFragment = document.createDocumentFragment();
+    for (let i = 0; i < 5; i++) {
+      const sRow = create('tr', undefined, 'skeleton-row');
+      sRow.innerHTML = `
+        <td><div class="skeleton-pill w-140"></div></td>
+        <td><div class="skeleton-pill w-180"></div></td>
+        <td><div class="skeleton-pill w-80"></div></td>
+        <td><div class="skeleton-pill w-120"></div></td>
+        <td><div class="skeleton-badge"></div></td>
+        <td><div class="skeleton-pill w-40"></div></td>
+        <td class="col-action"><div class="skeleton-btn"></div></td>
+      `;
+      skeletonFragment.append(sRow);
+    }
+    byId('applications-body').replaceChildren(skeletonFragment);
     const doneSlow = armSlow('Memuat daftar…');
     // Bootstrap uses GET so a restored sealed session yields validated CSRF
     // before the protected list/stats POSTs (no CSRF-guessing request).
@@ -296,7 +442,7 @@ export function mount(root, opts = {}) {
             ? 'Belum ada pendaftar.'
             : 'Tidak ada pendaftar yang cocok. Reset filter untuk melihat lainnya.',
         );
-      cell.colSpan = 6;
+      cell.colSpan = 7;
       row.append(cell);
       byId('applications-body').append(row);
     }
@@ -319,6 +465,16 @@ export function mount(root, opts = {}) {
       );
       statusTd.append(badge);
 
+      const actionTd = create('td', undefined, 'col-action');
+      const actionBtn = create(
+        'button',
+        'Tinjau Detail →',
+        'btn-review-action',
+      );
+      actionBtn.type = 'button';
+      actionBtn.addEventListener('click', () => loadDetail(a.receipt));
+      actionTd.append(actionBtn);
+
       row.append(
         name,
         create('td', a.email || '—'),
@@ -326,6 +482,7 @@ export function mount(root, opts = {}) {
         create('td', date(a.received_at)),
         statusTd,
         create('td', String(a.review.note_count)),
+        actionTd,
       );
       byId('applications-body').append(row);
     }
@@ -409,6 +566,7 @@ export function mount(root, opts = {}) {
     byId('detail-area').hidden = false;
     for (const id of ['filter-form', 'stats', 'stats-scope', 'intake-status'])
       byId(id).hidden = true;
+    if (byId('analytics-visuals')) byId('analytics-visuals').hidden = true;
     byId('table-wrapper').hidden = true;
     byId('pagination').hidden = true;
     byId('detail-summary').replaceChildren(
@@ -453,14 +611,157 @@ export function mount(root, opts = {}) {
     byId('confirm-status').checked = false;
     confirmation();
     byId('detail-panel').replaceChildren();
+
+    const groups = [
+      {
+        title: 'Profil & Identitas Pelamar',
+        icon: '👤',
+        keys: [
+          'full_name',
+          'preferred_name',
+          'email',
+          'whatsapp',
+          'institution',
+          'city_region',
+          'current_status',
+        ],
+      },
+      {
+        title: 'Peminatan Domain & Spesialisasi',
+        icon: '🎯',
+        keys: [
+          'primary_hods',
+          'specific_area',
+          'current_level',
+          'currently_exploring',
+          'foundation_skills',
+          'secondary_interest',
+        ],
+      },
+      {
+        title: 'Bukti Karya & Portofolio',
+        icon: '💼',
+        keys: [
+          'portfolio_link',
+          'most_relevant_work',
+          'alternative_evidence',
+          'project_experience',
+        ],
+      },
+      {
+        title: 'Visi, Esai & Kesiapan Tim',
+        icon: '💡',
+        fullWidth: true,
+        keys: [
+          'why_join',
+          'real_world_problem',
+          'technology_approach',
+          'explore_or_build',
+          'what_to_contribute',
+          'what_to_build_together',
+          'time_commitment',
+          'team_comfort',
+          'team_roles',
+          'team_story',
+          'cross_hods_willingness',
+          'learning_methods',
+          'independent_learning',
+          'desired_output',
+          'best_description',
+          'skill_to_improve',
+          'six_months_goal',
+          'contribution_types',
+        ],
+      },
+      {
+        title: 'Persetujuan & Kebijakan',
+        icon: '📋',
+        keys: ['agreement_1', 'agreement_2', 'agreement_3'],
+      },
+    ];
+
+    const renderedKeys = new Set();
+    for (const grp of groups) {
+      const groupFields = [];
+      for (const key of grp.keys) {
+        const value = data.fields[key];
+        if (value === null || value === undefined || value === '') continue;
+        renderedKeys.add(key);
+        const field = create('div', undefined, 'field');
+        const labelDiv = create(
+          'div',
+          labels[key] || key.replaceAll('_', ' '),
+          'field-label',
+        );
+        let valElement;
+        if (
+          key === 'portfolio_link' &&
+          typeof value === 'string' &&
+          (value.startsWith('http://') || value.startsWith('https://'))
+        ) {
+          valElement = create('div', undefined, 'field-value');
+          const link = create('a', value, 'portfolio-link');
+          link.href = value;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          valElement.append(link);
+        } else if (key.startsWith('agreement_')) {
+          valElement = create('div', undefined, 'field-value agreement-badge');
+          valElement.append(create('span', '✓ Disetujui (' + value + ')'));
+        } else {
+          valElement = create(
+            'div',
+            Array.isArray(value) ? value.join(', ') : String(value),
+          );
+        }
+        field.append(labelDiv, valElement);
+        groupFields.push(field);
+      }
+      if (groupFields.length > 0) {
+        const card = create(
+          'div',
+          undefined,
+          'detail-group-card' + (grp.fullWidth ? ' full-width-fields' : ''),
+        );
+        const head = create('div', undefined, 'detail-group-header');
+        head.append(
+          create('span', grp.icon, 'detail-group-icon'),
+          create('h3', grp.title, 'detail-group-title'),
+        );
+        const grid = create('div', undefined, 'detail-group-grid');
+        grid.append(...groupFields);
+        card.append(head, grid);
+        byId('detail-panel').append(card);
+      }
+    }
+
+    const otherFields = [];
     for (const [key, value] of Object.entries(data.fields)) {
-      if (value === null || value === undefined || value === '') continue;
+      if (
+        renderedKeys.has(key) ||
+        value === null ||
+        value === undefined ||
+        value === ''
+      )
+        continue;
       const field = create('div', undefined, 'field');
       field.append(
         create('div', labels[key] || key.replaceAll('_', ' '), 'field-label'),
         create('div', Array.isArray(value) ? value.join(', ') : String(value)),
       );
-      byId('detail-panel').append(field);
+      otherFields.push(field);
+    }
+    if (otherFields.length > 0) {
+      const card = create('div', undefined, 'detail-group-card');
+      const head = create('div', undefined, 'detail-group-header');
+      head.append(
+        create('span', '📝', 'detail-group-icon'),
+        create('h3', 'Informasi Lainnya', 'detail-group-title'),
+      );
+      const grid = create('div', undefined, 'detail-group-grid');
+      grid.append(...otherFields);
+      card.append(head, grid);
+      byId('detail-panel').append(card);
     }
     noteCount();
     controls();
@@ -593,7 +894,25 @@ export function mount(root, opts = {}) {
     byId('retry-mutation').disabled = saving || revisionPending;
     byId('retry-mutation').hidden = !mutationPending;
     byId('back-list').disabled = locked;
+    if (byId('back-list-top')) byId('back-list-top').disabled = locked;
     byId('reload-detail').disabled = saving || revisionPending;
+
+    if (saving) {
+      if (mutationPending?.kind === 'status') {
+        byId('save-status').classList.add('is-loading');
+        byId('save-status').innerHTML =
+          '<span class="btn-spinner"></span> Menyimpan…';
+      } else if (mutationPending?.kind === 'note') {
+        byId('save-note').classList.add('is-loading');
+        byId('save-note').innerHTML =
+          '<span class="btn-spinner"></span> Menambahkan…';
+      }
+    } else {
+      byId('save-status').classList.remove('is-loading');
+      byId('save-status').textContent = 'Simpan status';
+      byId('save-note').classList.remove('is-loading');
+      byId('save-note').textContent = 'Tambah catatan';
+    }
   }
   function noteCount() {
     byId('note-help').textContent =
@@ -810,6 +1129,11 @@ export function mount(root, opts = {}) {
       loadList();
     });
     byId('back-list').addEventListener('click', () => {
+      if (!mayLeave()) return;
+      clearDetail();
+      loadList();
+    });
+    byId('back-list-top')?.addEventListener('click', () => {
       if (!mayLeave()) return;
       clearDetail();
       loadList();
