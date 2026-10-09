@@ -1,11 +1,19 @@
 # AGENTS.md — instructions for AI agents
 
-## Admin save background publish (waitUntil) — LOKAL, QA PASS (8 Oct 2026)
+## Admin save background publish (waitUntil) — LIVE + QA PASS (8 Oct 2026)
 
-Owner pilih **A2b** (`gasss`): klik Simpan/terbitkan Team/Projects balik cepat,
-`callDeployHooks` (deploy hook Vercel) jalan di belakang pakai `waitUntil()` dari
-`@vercel/functions@^3.9.11` (dependency baru, owner-approved). Plan lengkap +
-hasil: [plan](docs/admin-background-publish-plan.md).
+Owner pilih **A2b** (`gasss`) lalu izin push. Klik Simpan/terbitkan Team/Projects
+balik cepat; `callDeployHooks` (deploy hook Vercel) jalan di belakang pakai
+`waitUntil()` dari `@vercel/functions@^3.9.11` (dependency baru, owner-approved).
+Plan lengkap + hasil: [plan](docs/admin-background-publish-plan.md).
+
+**LIVE:** commit feature `c7b82e169389f1a7faa43da3b96a4f04e70802ce`, satu push
+origin/community-web. Production Current+primaryalias READY
+`dpl_EbhtiEyUpWajiuoU1P29vGznGxv4`, alias
+`data-sorcerers-community-sigma.vercel.app`; provider READY **09 Oct 2026
+02:32:42.580 UTC / 09:32:42.580 WIB**. Live: 8 route 200 (publik+admin shell),
+media/team anon 401, recruitment `accepting:true`; bundle admin `_astro`
+(`team...DzbqiU11.js` / `index...Brzrz-VK.js`) memuat string fix.
 
 Perubahan: [`server/cms-admin.mjs`](server/cms-admin.mjs) import `waitUntil` +
 helper `runInBackground` (fallback no-op tanpa konteks Vercel); Team + Projects
@@ -23,9 +31,8 @@ FAIL**; build0errors/23pages; `verify:cms-native-admin` + `verify:cms-team-admin
 **PASS 4 widths**; `verify:visual` exit0 `browserErrors[]`; navbar/vt/seo/spacing
 PASS; **hanya 2 HTML admin berubah**, 21 HTML publik + aset byte-identik;
 snapshot `4345f1…4857` tetap; dist secrets0; prettier bersih. Mock **bukan**
-bukti `waitUntil` jalan di Vercel — live acceptance (Simpan production →
-deployment Vercel tetap menambah rebuild) wajib pasca-deploy. **Belum
-push/deploy**; production tetap `6fc5085`. Push butuh izin exact HEAD SHA baru.
+bukti `waitUntil` jalan di Vercel — **live acceptance (Simpan production →
+deployment Vercel tetap menambah rebuild) belum dijalankan**; owner minta uji ini.
 
 Masalah foto Team bagian B (kepala tidak kepotong garis frame) **ditunda** owner.
 

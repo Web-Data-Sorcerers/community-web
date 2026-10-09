@@ -1,10 +1,17 @@
 # AI handoff — current context
 
-## Admin save background publish (waitUntil) — LOKAL, QA PASS (8 Oct 2026)
+## Admin save background publish (waitUntil) — LIVE + QA PASS (8 Oct 2026)
 
-Owner pilih A2b: Simpan/terbitkan Team/Projects balik cepat; hook Vercel jalan
-di belakang via `waitUntil()` `@vercel/functions@^3.9.11` (dep baru,
+Owner pilih A2b lalu izin push. Simpan/terbitkan Team/Projects balik cepat; hook
+Vercel jalan di belakang via `waitUntil()` `@vercel/functions@^3.9.11` (dep baru,
 owner-approved). [Plan + hasil](admin-background-publish-plan.md) §11.
+
+**LIVE:** feature `c7b82e169389f1a7faa43da3b96a4f04e70802ce`, satu push
+origin/community-web. Production Current+primaryalias READY
+`dpl_EbhtiEyUpWajiuoU1P29vGznGxv4`, alias `data-sorcerers-community-sigma.vercel.app`,
+provider READY 09 Oct 2026 02:32:42.580 UTC / 09:32:42.580 WIB. Live: 8 route
+200, media/team anon 401, recruitment `accepting:true`; bundle admin memuat
+string fix.
 
 - `server/cms-admin.mjs`: `runInBackground(callDeployHooks())` (fallback no-op
   tanpa konteks Vercel); buang `result.publication`, `publicationPending:true`;
@@ -18,9 +25,8 @@ QA Node22 `CMS_DATA_SOURCE=local`: test:cms 94 PASS + 10 SKIP/0 FAIL; build
 0err/23pages; native+team admin mock PASS 4 widths; verify:visual exit0
 browserErrors[]; navbar/vt/seo/spacing PASS; hanya 2 HTML admin berubah, publik
 byte-identik; snapshot `4345f1…4857` tetap; dist secrets0. Mock bukan bukti
-`waitUntil` Vercel — live acceptance pasca-deploy wajib. Belum push; production
-`6fc5085`. Push butuh izin exact HEAD SHA baru. Masalah foto Team (bagian B)
-ditunda owner.
+`waitUntil` Vercel — **live acceptance Simpan production → rebuild Vercel tetap
+muncul belum dijalankan**. Masalah foto Team (bagian B) ditunda owner.
 
 ## Fix upload foto/gambar admin (Team & Projects) — QA PASS (8 Oct 2026)
 
