@@ -62,6 +62,19 @@ export function mount(root, opts = {}) {
   const pages = { notes: 0, history: 0 };
   const generations = { notes: 0, history: 0 };
   const reads = new Map();
+  const detailCache = new Map();
+  function updateRowStatus(receipt, newStatus) {
+    const row = byId('applications-body').querySelector(
+      `tr[data-receipt="${receipt}"]`,
+    );
+    if (row) {
+      const pill = row.querySelector('.status-pill');
+      if (pill) {
+        pill.className = 'status-pill status-' + newStatus;
+        pill.textContent = STATUSES[newStatus] || newStatus;
+      }
+    }
+  }
   const notify = (type) => {
     if (typeof window !== 'undefined')
       window.dispatchEvent(new CustomEvent(type, { detail: { panel: id } }));
@@ -191,14 +204,22 @@ export function mount(root, opts = {}) {
     byId('review-feedback').textContent = '';
     byId('review-meta').textContent = '';
     byId('detail-area').hidden = true;
-    for (const id of ['filter-form', 'stats', 'stats-scope', 'intake-status'])
-      byId(id).hidden = false;
+    for (const id of [
+      'filter-form',
+      'stats',
+      'stats-scope',
+      'intake-status',
+      'table-wrapper',
+      'pagination',
+    ])
+      if (byId(id)) byId(id).hidden = false;
     if (byId('analytics-visuals')) byId('analytics-visuals').hidden = false;
   }
   function endSession(code = 'UNAUTHORIZED', notifyEnd = true) {
     session++;
     listGeneration++;
     clearDetail();
+    detailCache.clear();
     if (code !== 'FORBIDDEN') csrf = undefined;
     saving = false;
     byId('workspace').hidden = true;
@@ -378,7 +399,7 @@ export function mount(root, opts = {}) {
 
     if (domainBars) {
       domainBars.replaceChildren(
-        ...stats.by_hods.map(({ hods, count }) => {
+        ...(stats.by_hods || []).map(({ hods, count }) => {
           const pct = Math.round((count / totalFiltered) * 100);
           const item = create('div', undefined, 'domain-bar-item');
           const labelRow = create('div', undefined, 'domain-bar-label-row');
@@ -513,18 +534,24 @@ export function mount(root, opts = {}) {
     }
   }
   function renderStats(stats) {
-    const counts = Object.fromEntries(
-      stats.by_status.map((x) => [x.status, x.count]),
-    );
+    if (!stats) return;
+    const byStatus = stats.by_status || [];
+    const byHods = stats.by_hods || [];
+    const counts = Object.fromEntries(byStatus.map((x) => [x.status, x.count]));
     const cards = [
-      ['Total seluruh pendaftar', stats.total_global],
-      ['Hasil filter', stats.filtered],
-      ['Baru', counts.new],
-      ['Proses', counts.reviewing + counts.shortlisted + counts.interview],
-      ['Daftar tunggu', counts.waitlisted],
-      ['Diterima', counts.accepted],
-      ['Ditolak', counts.rejected],
-      ['Mundur', counts.withdrawn],
+      ['Total seluruh pendaftar', stats.total_global || 0],
+      ['Hasil filter', stats.filtered || 0],
+      ['Baru', counts.new || 0],
+      [
+        'Proses',
+        (counts.reviewing || 0) +
+          (counts.shortlisted || 0) +
+          (counts.interview || 0),
+      ],
+      ['Daftar tunggu', counts.waitlisted || 0],
+      ['Diterima', counts.accepted || 0],
+      ['Ditolak', counts.rejected || 0],
+      ['Mundur', counts.withdrawn || 0],
     ];
     byId('stats').replaceChildren(
       ...cards.map(([label, value]) => {
@@ -538,7 +565,7 @@ export function mount(root, opts = {}) {
     );
     byId('stats-scope').textContent =
       'Ringkasan mengikuti filter: ' +
-      stats.by_hods.map((x) => x.hods + ' ' + x.count).join(', ') +
+      byHods.map((x) => x.hods + ' ' + x.count).join(', ') +
       '. Tanggal WIB. Status dapat berubah saat reviewer lain menyimpan.';
     renderVisualizations(stats, counts);
   }
@@ -633,6 +660,7 @@ export function mount(root, opts = {}) {
     }
     for (const a of data.applications) {
       const row = create('tr');
+      row.dataset.receipt = a.receipt;
       const name = create('td'),
         button = create(
           'button',
@@ -649,20 +677,25 @@ export function mount(root, opts = {}) {
       actionBtn.type = 'button';
 
       const openDetail = async () => {
-        showToast(
-          'info',
-          'Memuat Berkas',
-          `Mengambil rincian data ${a.full_name || 'pendaftar'}…`,
-        );
-        setBtnLoading(actionBtn, true, 'Memuat…', 'Tinjau Detail →');
-        button.classList.add('is-loading');
-        button.disabled = true;
+        const isCached = detailCache.has(a.receipt);
+        if (!isCached) {
+          showToast(
+            'info',
+            'Memuat Berkas',
+            `Mengambil rincian data ${a.full_name || 'pendaftar'}…`,
+          );
+          setBtnLoading(actionBtn, true, 'Memuat…', 'Tinjau Detail →');
+          button.classList.add('is-loading');
+          button.disabled = true;
+        }
         try {
           await loadDetail(a.receipt);
         } finally {
-          setBtnLoading(actionBtn, false, '', 'Tinjau Detail →');
-          button.classList.remove('is-loading');
-          button.disabled = false;
+          if (!isCached) {
+            setBtnLoading(actionBtn, false, '', 'Tinjau Detail →');
+            button.classList.remove('is-loading');
+            button.disabled = false;
+          }
         }
       };
 
@@ -1001,9 +1034,65 @@ export function mount(root, opts = {}) {
     byId('confirm-label').textContent =
       `Saya mengonfirmasi ${current.fields.full_name || 'pendaftar'} → ${STATUSES[to] || ''}. Riwayat keputusan tetap tersimpan.`;
   }
-  async function loadDetail(receipt, preserve = false) {
+  function renderHistoryItems(kind, d) {
+    const container = byId(kind + '-list');
+    container.replaceChildren();
+    if (!d || !d.items || !d.items.length) {
+      container.textContent =
+        kind === 'notes'
+          ? 'Belum ada catatan internal.'
+          : 'Belum ada aktivitas review.';
+    } else {
+      for (const item of d.items) {
+        const field = create('div', undefined, 'field');
+        if (kind === 'notes')
+          field.append(
+            create('strong', item.author_label || 'Reviewer'),
+            create('p', date(item.created_at)),
+            create('div', item.body),
+          );
+        else
+          field.append(
+            create(
+              'strong',
+              item.action === 'note_added'
+                ? 'Catatan ditambahkan'
+                : `${STATUSES[item.from_status]} → ${STATUSES[item.to_status]}`,
+            ),
+            create(
+              'p',
+              `${item.actor_label} · ${date(item.created_at)} · Revisi ${item.before_version} → ${item.after_version}`,
+            ),
+            create('div', item.reason || ''),
+          );
+        container.append(field);
+      }
+    }
+    byId(kind + '-prev').disabled = pages[kind] === 0;
+    byId(kind + '-next').disabled = !d?.has_more;
+    byId(kind + '-page').textContent =
+      `${d?.total || 0} ${kind === 'notes' ? 'catatan' : 'aktivitas'} · halaman ${Math.floor(pages[kind] / 20) + 1}`;
+  }
+
+  async function loadDetail(receipt, preserve = false, force = false) {
     if (!preserve && current && !mayLeave()) return;
     if (!preserve) clearDetail();
+
+    const cached = detailCache.get(receipt);
+    if (cached && !preserve && !force) {
+      ++detailGeneration;
+      renderDetail(cached.application, false);
+      byId('detail-heading').focus();
+      message(
+        'Detail pendaftar: ' + (cached.application.fields.full_name || ''),
+      );
+      if (cached.notes) renderHistoryItems('notes', cached.notes);
+      else void loadHistory('notes');
+      if (cached.history) renderHistoryItems('history', cached.history);
+      else void loadHistory('history');
+      return true;
+    }
+
     const reloadBtn = byId('reload-detail');
     if (reloadBtn) {
       reloadBtn.classList.add('is-loading');
@@ -1034,6 +1123,12 @@ export function mount(root, opts = {}) {
         'Detail belum bisa dimuat. Coba muat detail terbaru.';
       return false;
     }
+    const existingCache = detailCache.get(receipt);
+    detailCache.set(receipt, {
+      application: result.data,
+      notes: existingCache?.notes || null,
+      history: existingCache?.history || null,
+    });
     renderDetail(result.data, preserve);
     if (!preserve) byId('detail-heading').focus();
     doneSlow();
@@ -1081,39 +1176,11 @@ export function mount(root, opts = {}) {
       pages[kind] = Math.max(0, pages[kind] - 20);
       return loadHistory(kind);
     }
-    if (!d.items.length)
-      container.textContent =
-        kind === 'notes'
-          ? 'Belum ada catatan internal.'
-          : 'Belum ada aktivitas review.';
-    for (const item of d.items) {
-      const field = create('div', undefined, 'field');
-      if (kind === 'notes')
-        field.append(
-          create('strong', item.author_label || 'Reviewer'),
-          create('p', date(item.created_at)),
-          create('div', item.body),
-        );
-      else
-        field.append(
-          create(
-            'strong',
-            item.action === 'note_added'
-              ? 'Catatan ditambahkan'
-              : `${STATUSES[item.from_status]} → ${STATUSES[item.to_status]}`,
-          ),
-          create(
-            'p',
-            `${item.actor_label} · ${date(item.created_at)} · Revisi ${item.before_version} → ${item.after_version}`,
-          ),
-          create('div', item.reason || ''),
-        );
-      container.append(field);
+    renderHistoryItems(kind, d);
+    if (pages[kind] === 0 && detailCache.has(id)) {
+      const c = detailCache.get(id);
+      if (c) c[kind] = d;
     }
-    byId(kind + '-prev').disabled = pages[kind] === 0;
-    byId(kind + '-next').disabled = !d.has_more;
-    byId(kind + '-page').textContent =
-      `${d.total} ${kind === 'notes' ? 'catatan' : 'aktivitas'} · halaman ${Math.floor(pages[kind] / 20) + 1}`;
   }
   function controls() {
     const locked = saving || revisionPending || Boolean(mutationPending);
@@ -1225,6 +1292,11 @@ export function mount(root, opts = {}) {
         else {
           byId('review-status').value = '';
           byId('review-reason').value = '';
+          updateRowStatus(id, intent.body.status);
+          const cached = detailCache.get(id);
+          if (cached?.application?.review) {
+            cached.application.review.status = intent.body.status;
+          }
         }
         // Acknowledge the authoritative write result immediately; list/stats
         // and notes/history reconciliation continue in the background.
@@ -1239,7 +1311,7 @@ export function mount(root, opts = {}) {
         return;
       } else if (r.http === 409) {
         mutationPending = null;
-        const refreshed = await loadDetail(id, true);
+        const refreshed = await loadDetail(id, true, true);
         if (!refreshed) {
           if (current)
             feedback(
@@ -1270,7 +1342,10 @@ export function mount(root, opts = {}) {
   }
   async function reconcile(id, sg) {
     try {
-      const refreshed = await loadDetail(id, true);
+      const refreshed = await loadDetail(id, true, true);
+      if (current) {
+        updateRowStatus(id, current.review.status);
+      }
       if (sg !== session) return;
       if (!refreshed && current)
         feedback(
@@ -1401,22 +1476,13 @@ export function mount(root, opts = {}) {
         btn.classList.remove('is-loading');
       }
     });
-    const handleBack = async (btn) => {
+    const handleBack = () => {
       if (!mayLeave()) return;
-      if (btn) btn.classList.add('is-loading');
       clearDetail();
-      try {
-        await loadList();
-      } finally {
-        if (btn) btn.classList.remove('is-loading');
-      }
+      message('Menampilkan ' + filtered + ' pendaftar');
     };
-    byId('back-list').addEventListener('click', () =>
-      handleBack(byId('back-list')),
-    );
-    byId('back-list-top')?.addEventListener('click', () =>
-      handleBack(byId('back-list-top')),
-    );
+    byId('back-list').addEventListener('click', handleBack);
+    byId('back-list-top')?.addEventListener('click', handleBack);
     byId('review-status').addEventListener('change', () => {
       byId('confirm-status').checked = false;
       confirmation();
@@ -1453,7 +1519,7 @@ export function mount(root, opts = {}) {
     byId('reload-detail').addEventListener('click', () => {
       if (current && !saving) {
         showToast('info', 'Pembaruan Berkas', 'Memperbarui rincian pendaftar…');
-        loadDetail(current.receipt, true);
+        loadDetail(current.receipt, true, true);
       }
     });
     for (const kind of ['notes', 'history'])

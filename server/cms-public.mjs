@@ -100,7 +100,8 @@ export function createPublicContentHandler({
         status: fallback.ok ? 200 : 500,
         headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=59',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'CDN-Cache-Control': 'no-cache, no-store, must-revalidate',
         },
       });
     }
@@ -165,9 +166,8 @@ export function createPublicContentHandler({
           status: 200,
           headers: {
             'Content-Type': 'application/json',
-            'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=59',
-            'CDN-Cache-Control':
-              'public, s-maxage=10, stale-while-revalidate=59',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'CDN-Cache-Control': 'no-cache, no-store, must-revalidate',
           },
         },
       );
@@ -177,7 +177,7 @@ export function createPublicContentHandler({
         status: fallback.ok ? 200 : 500,
         headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': 'public, s-maxage=5, stale-while-revalidate=30',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
         },
       });
     }

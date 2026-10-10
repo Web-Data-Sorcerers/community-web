@@ -66,12 +66,12 @@ function showTab(tab) {
   mountIfNeeded(tab);
 }
 
-function mountIfNeeded(tab) {
+function mountIfNeeded(tab, isPrewarm = false) {
   if (mounted[tab]) return;
   const root = getPanelRoot(tab);
   if (!root) return;
   const link = document.querySelector(`.admin-module-link[data-tab="${tab}"]`);
-  if (link) link.classList.add('is-loading');
+  if (link && !isPrewarm) link.classList.add('is-loading');
   const mod = getModule(tab);
   mod.mount(root);
   mounted[tab] = true;
@@ -126,6 +126,19 @@ function initShell(initialTab) {
   }
   updateNav(tab);
   mountIfNeeded(tab);
+
+  const prewarmRemainingTabs = () => {
+    TABS.filter((t) => t !== activeTab).forEach((t) => {
+      mountIfNeeded(t, true);
+    });
+  };
+
+  if (typeof requestIdleCallback !== 'undefined') {
+    requestIdleCallback(prewarmRemainingTabs, { timeout: 1200 });
+  } else {
+    setTimeout(prewarmRemainingTabs, 400);
+  }
+
   document.querySelectorAll('.admin-module-link').forEach((link) => {
     link.addEventListener('click', (e) => {
       if (e.button !== 0 || e.metaKey || e.ctrlKey) return;

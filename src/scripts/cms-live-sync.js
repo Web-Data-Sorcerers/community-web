@@ -5,16 +5,34 @@
  */
 
 let cachedContent = null;
+let cachedTime = 0;
 let fetchPromise = null;
+const CACHE_TTL_MS = 3000;
+
+if (typeof document !== 'undefined') {
+  document.addEventListener('astro:page-load', () => {
+    cachedContent = null;
+    cachedTime = 0;
+  });
+  document.addEventListener('astro:after-swap', () => {
+    cachedContent = null;
+    cachedTime = 0;
+  });
+}
 
 async function getContent(signal) {
-  if (cachedContent) return cachedContent;
+  const now = Date.now();
+  if (cachedContent && now - cachedTime < CACHE_TTL_MS) return cachedContent;
   if (!fetchPromise) {
-    fetchPromise = fetch('/api/cms/content', { signal })
+    fetchPromise = fetch(`/api/cms/content?t=${now}`, {
+      signal,
+      cache: 'no-store',
+    })
       .then((res) => (res.ok ? res.json() : null))
       .then((json) => {
         if (json?.ok && json.data) {
           cachedContent = json.data;
+          cachedTime = Date.now();
           return json.data;
         }
         return null;

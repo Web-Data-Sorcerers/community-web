@@ -12,6 +12,7 @@ const env = {
   SUPABASE_ACCESS_TOKEN: 'placeholder-token',
   CMS_DEPLOY_HOOK_TESTING: '',
   CMS_DEPLOY_HOOK_PRODUCTION: '',
+  CMS_DATA_SOURCE: '',
 };
 const USER_ID = '11111111-1111-1111-1111-111111111111';
 const data = {

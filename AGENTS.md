@@ -1,5 +1,37 @@
 # AGENTS.md — instructions for AI agents
 
+## Instant Admin Navigation & Public Cache Bypass — PASS (10 Oct 2026)
+
+Owner meminta penghapusan loading berulang pada navigasi bolak-balik pendaftar (list <-> detail), penghapusan jeda saat perpindahan tab admin awal, serta perbaikan refresh publik agar foto/data baru langsung berubah pada refresh pertama (F5):
+
+1. **Navigasi Bolak-Balik Instan Pendaftar (0ms)**:
+   - `src/scripts/recruitment-admin.js`: `handleBack()` kini hanya beralih visibilitas DOM (menyembunyikan detail dan menampilkan daftar) dalam 0ms tanpa me-reload daftar dari network atau merusak tabel dengan baris skeleton.
+   - Menambahkan struktur data `detailCache = new Map()` di browser. Membuka kembali detail pelamar yang pernah dibuka merender 38 data pertanyaan formulir, catatan, dan riwayat secara instan (0ms) dari memori tanpa spinner atau toast loading berulang.
+   - Menambahkan `updateRowStatus(receipt, newStatus)` agar status pelamar yang diperbarui langsung tersinkronisasi pada status pill baris tabel tanpa refresh seluruh tabel.
+   - Tombol `#reload-detail` tetap tersedia untuk mengambil versi data terbaru secara eksplisit.
+2. **Pre-Warming Tab Admin Shell (Perpindahan Tab Instan)**:
+   - `src/scripts/admin-shell.js`: Menggunakan `requestIdleCallback` (dengan fallback `setTimeout`) untuk me-mount modul tab Team dan Recruitment di latar belakang segera setelah tab Projects selesai dimuat. Tab sudah aktif di memori tanpa memicu cincin loading, membuat perpindahan tab pertama kali menjadi 0ms.
+3. **Bypass SWR CDN untuk Refresh Publik Instan**:
+   - `server/cms-public.mjs`: Mengganti header SWR pada `/api/cms/content` dengan `Cache-Control: no-cache, no-store, must-revalidate` dan `CDN-Cache-Control: no-cache, no-store, must-revalidate`.
+   - `src/scripts/cms-live-sync.js`: Menambahkan `cache: 'no-store'`, query parameter timestamp dinamis `?t=${Date.now()}`, dan reset cache saat event `astro:page-load` dan `astro:after-swap`. Foto dan konten baru langsung tampil pada refresh pertama.
+4. **Zero Emote**: Memastikan 0 emoji/emotikon di seluruh antarmuka, notifikasi, toast, dan komunikasi.
+
+### QA Lengkap (Node 26.10, `CMS_DATA_SOURCE=local`):
+
+- `npm run check` (Astro typecheck): **PASS** (0 errors, 0 warnings, 299 files)
+- `npm run format:check`: **PASS** (Prettier)
+- `npm run build`: **0 error / 23 pages**
+- `npm run test:recruitment`: **42 PASS / 0 FAIL** (42 tests)
+- `npm run test:cms`: **98 PASS + 10 Team SKIP / 0 FAIL** (108 tests)
+- Browser Playwright Mocks (4 widths: 320, 390, 768, 1440 px):
+  - `node scripts/verify-cms-native-admin.mjs`: **PASS**
+  - `node scripts/verify-cms-team-admin.mjs`: **PASS**
+  - `node scripts/verify-recruitment-review.mjs`: **PASS**
+- `npm run verify:visual`: **PASS** (exit 0, `browserErrors: []`)
+- `npm run audit:spacing`: **PASS** (Strict 8-point audit PASS on 39 components)
+- `npm run audit:navbar`: **ALL PASS** (20 breakpoint)
+- `npm run seo:audit`: **PASS** (23 pages)
+
 ## Hybrid ISR, On-Demand Live Sync & Instant Public Media — PASS & LIVE (10 Oct 2026)
 
 Owner menanyakan mengapa update gambar dan data di dashboard admin lambat tayang di situs publik (harus menunggu build 1-3 menit). Arsitektur ditingkatkan ke Opsi 2 (Hybrid ISR & Live Sync):

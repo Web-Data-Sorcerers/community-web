@@ -146,7 +146,14 @@ try {
         return route.fulfill({
           json: {
             ok: true,
-            data: { applications: [], total_global: 0, filtered: 0, items: [] },
+            data: {
+              applications: [],
+              total_global: 0,
+              filtered: 0,
+              items: [],
+              by_hods: [],
+              by_status: [],
+            },
             csrf: 'mock-csrf',
           },
         });

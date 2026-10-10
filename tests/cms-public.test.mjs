@@ -90,9 +90,7 @@ test('public content handler: falls back gracefully to local snapshot when offli
   assert.equal(json.source, 'snapshot');
   assert.ok(Array.isArray(json.data.projects));
   assert.ok(json.data.team.leaderTeam.length > 0);
-  assert.ok(
-    res.headers.get('cache-control').includes('stale-while-revalidate'),
-  );
+  assert.ok(res.headers.get('cache-control').includes('no-store'));
 });
 
 test('public content handler: maps Supabase RPCs when online and falls back on error', async () => {
