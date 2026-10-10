@@ -23,15 +23,17 @@
     wired.__dsSoundWired = true;
     sound.setAmbientAllowed(!reduceMotion.matches);
 
-    // First real gesture unlocks the context.
-    window.addEventListener('pointerdown', () => sound.unlock(), {
-      once: true,
-      capture: true,
-    });
-    window.addEventListener('keydown', () => sound.unlock(), {
-      once: true,
-      capture: true,
-    });
+    // First real gesture unlocks the context (iOS Safari requires touchstart/touchend/click).
+    const unlock = () => sound.unlock();
+    ['touchstart', 'touchend', 'click', 'pointerdown', 'keydown'].forEach(
+      (evt) => {
+        window.addEventListener(evt, unlock, {
+          once: true,
+          capture: true,
+          passive: true,
+        });
+      },
+    );
 
     // Delegated wiring: components opt in with data-sfx, and
     // stateful ones request a cue via `ds:sfx` (e.g. menu open/close). All gated

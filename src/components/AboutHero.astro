@@ -21,7 +21,7 @@
   </div>
   <div class="hero-content">
     <h1 id="about-hero-title">
-      <span>Architecting the Future of AI</span>
+      <span>Architecting the Future of AI </span>
       <span>&amp; Data Innovation.</span>
     </h1>
     <p>
@@ -138,6 +138,9 @@
     h1 span {
       display: inline;
     }
+    h1 span:not(:last-child)::after {
+      content: ' ';
+    }
   }
 
   @media (min-width: 1921px) {
@@ -158,9 +161,18 @@
 
   @media (max-width: 600px) {
     .about-hero {
+      min-height: 100vh;
+      min-height: 100dvh;
       justify-content: center;
-      padding-top: clamp(100px, 15svh, 130px);
-      padding-bottom: clamp(40px, 8svh, 60px);
+      padding-top: clamp(90px, 13dvh, 120px);
+      padding-bottom: clamp(40px, 8dvh, 60px);
+    }
+    .artwork::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 70%, #050507 100%);
+      pointer-events: none;
     }
     .hero-content {
       gap: 16px;

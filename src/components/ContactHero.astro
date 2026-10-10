@@ -236,6 +236,7 @@ const info = [
     padding: 12px 20px;
     border-radius: 20px;
     background: rgb(255 255 255 / 12%);
+    min-width: 0;
   }
 
   .info-icon {
@@ -251,6 +252,7 @@ const info = [
     flex-direction: column;
     gap: 2px;
     flex: 1;
+    min-width: 0;
   }
 
   .info-title {
@@ -267,6 +269,8 @@ const info = [
     font-size: 16px;
     font-weight: 400;
     line-height: 24px;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .info-arrow {
@@ -408,6 +412,53 @@ const info = [
     .hero-art {
       width: 600px;
       height: 450px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .contact-hero {
+      padding: 120px var(--page-gutter) 60px;
+    }
+    .info-card {
+      gap: 14px;
+      padding: 12px 16px;
+    }
+    .info-icon {
+      width: 48px;
+      height: 36px;
+    }
+    .info-arrow {
+      width: 34px;
+      height: 34px;
+    }
+    .info-title {
+      font-size: 15px;
+    }
+    .info-value {
+      font-size: 14px;
+      line-height: 20px;
+    }
+    .contact-form {
+      padding: 20px 16px;
+      gap: 24px;
+    }
+  }
+
+  @media (max-width: 380px) {
+    .info-card {
+      gap: 10px;
+      padding: 10px 12px;
+    }
+    .info-icon {
+      width: 40px;
+      height: 30px;
+    }
+    .info-arrow {
+      width: 30px;
+      height: 30px;
+    }
+    .info-value {
+      font-size: 13px;
     }
   }
 </style>

@@ -154,8 +154,10 @@ import Button from './Button.astro';
   }
   @media (max-width: 600px) {
     .hero {
-      padding-top: clamp(96px, 12svh, 120px);
-      padding-bottom: clamp(64px, 9svh, 96px);
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding-top: clamp(90px, 12dvh, 120px);
+      padding-bottom: clamp(48px, 8dvh, 72px);
       align-items: center;
     }
     .artwork img {

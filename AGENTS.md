@@ -1,5 +1,57 @@
 # AGENTS.md — instructions for AI agents
 
+## Resolution of 9 Mobile Layout & Audio Anomalies — PASS (10 Oct 2026)
+
+Owner melaporkan 9 anomali pada versi mobile website:
+
+1. Hero section terpotong di HP, judul span menyatu tanpa spasi ("KnowledgeTurns").
+2. Contact Us: panah keluar dari box "Email Us" akibat teks email panjang tanpa word-break dan min-width flex.
+   3 & 4. About Us: batas pertemuan antara section Our Philosophy (ilustrasi penyihir terpotong horizontal) dan Our Ecosystem tidak bersambung mulus.
+   5, 6, & 7. About Us section Our Team: Leader Team terpotong di kiri dan kanan, card HoDS terpotong canggung tanpa peek, dan chip domain HoDS kaku/terlalu lebar (236px) dengan navigasi role yang tidak responsif.
+3. Footer terlalu ke atas dan bebatuan lanskap terpotong oleh browser toolbar/home indicator iPhone.
+4. Audio/sound tidak berbunyi di browser mobile (iOS Safari/WebKit gesture gating).
+
+### Perbaikan yang Dilakukan:
+
+1. **Hero Titles & 100dvh Framing (Anomali 1)**:
+   - Menambahkan spasi aman di HTML (`<span>Where Knowledge </span>`) dan CSS `h1 span:not(:last-child)::after { content: ' '; }` di seluruh hero section (`HallOfFramesHero.astro`, `AboutHero.astro`, `PartnersHero.astro`, `RecruitmentHero.astro`, `Hero.astro`).
+   - Menerapkan `min-height: 100dvh` dengan padding clamp berbasis viewport dinamis dan vignette gradient fade lembut ke `#050507` di bagian bawah hero mobile agar section berikutnya tidak bocor di atas lipatan layar.
+2. **Contact Us Card Flex Containment (Anomali 2)**:
+   - Menambahkan `min-width: 0;` pada `.info-card` dan `.info-text`.
+   - Menambahkan `overflow-wrap: anywhere; word-break: break-word;` pada `.info-value`.
+   - Menyesuaikan proporsi padding, icon, dan arrow di layar <600px dan <380px agar tombol panah 100% berada di dalam kartu tanpa horizontal overflow.
+3. **Harmonisasi Transisi Philosophy & Ecosystem (Anomali 3 & 4)**:
+   - Pada `Philosophy.astro` mobile (`@media (max-width: 760px)`), menambahkan `-webkit-mask-image: linear-gradient(180deg, #000 60%, transparent 100%)` pada ilustrasi penyihir agar jubah memudar halus ke latar belakang hitam pekat `#050507`.
+   - Menyelaraskan batas bawah `Philosophy` dan batas atas `OurEcosystem` pada latar dasar obsidian `#050507`, menciptakan transisi kosmik yang berkesinambungan tanpa patahan visual.
+4. **Revamp Responsif Our Team & HoDS (Anomali 5, 6, & 7)**:
+   - **Leader Team**: Pada layar mobile (`<= 680px`), menggunakan `padding-inline: max(16px, calc((100% - 302px) / 2))`, `scroll-snap-type: x mandatory`, dan `scroll-snap-align: center`, menempatkan kartu aktif persis di tengah layar dengan kartu kedua mengintip (peek) elegan tanpa terpotong di kedua sisi.
+   - **HoDS Cards**: Menerapkan scroll-snap terpusat dengan padding-inline simetris dan card peek 28px di tepi layar untuk memberi indikasi visual interaktif bahwa kartu dapat digeser.
+   - **HoDS Domain Chips**: Merombak chip domain di mobile menjadi auto-width pill rail (`width: auto; padding: 6px 16px; border-radius: 999px; font-size: 13px;`) dengan smooth horizontal scroll. Ditambahkan auto-centering via `scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })` saat chip dipilih.
+5. **Footer Safe Area Inset & Mountain Landscape (Anomali 8)**:
+   - Menerapkan `padding-bottom: max(64px, calc(env(safe-area-inset-bottom, 34px) + 32px));` pada `Footer.astro`.
+   - Mengatur `object-position: center bottom` dan proporsi jarak teks legal sehingga siluet pegunungan ungu tampil utuh dan teks legal tidak tertutup browser toolbar atau iOS home indicator.
+6. **Web Audio Activation untuk Mobile / iOS Safari (Anomali 9)**:
+   - Di `Sound.astro`, menambahkan gesture listeners untuk `touchstart`, `touchend`, dan `click` (selain `pointerdown` dan `keydown`) untuk memenuhi spesifikasi aktivasi WebKit iOS.
+   - Di `sound.ts`, menambahkan auto-resume reaktif: jika `ctx.state === 'suspended'` saat event `play()` dipanggil dari gesture pengguna, otomatis memanggil `ctx.resume()` dan langsung memainkan efek suara tanpa jeda.
+7. **Zero Emote**: Memastikan 0 emoji/emotikon di seluruh kode, UI, dan komunikasi.
+
+### QA Lengkap (Node 26.10, `CMS_DATA_SOURCE=local`):
+
+- `npm run check` (Astro typecheck): **PASS** (0 errors, 0 warnings, 300 files)
+- `npm run format:check`: **PASS** (Prettier)
+- `npm run build`: **0 error / 23 pages**
+- `npm run test:recruitment`: **42 PASS / 0 FAIL** (42 tests)
+- `node --test tests/cms-public.test.mjs`: **4 PASS / 0 FAIL**
+- Browser Playwright Mocks (4 widths: 320, 390, 768, 1440 px):
+  - `node scripts/verify-cms-native-admin.mjs`: **PASS**
+  - `node scripts/verify-cms-team-admin.mjs`: **PASS**
+  - `node scripts/verify-recruitment-review.mjs`: **PASS**
+- `npm run verify:visual`: **PASS** (exit 0, `browserErrors: []`)
+- `npm run audit:spacing`: **PASS** (Strict 8-point audit PASS on 39 components)
+- `npm run audit:navbar`: **ALL PASS** (20 breakpoint)
+- `npm run seo:audit`: **PASS** (23 pages)
+- Targeted Playwright Mobile Verification (`verify-mobile-9-fixes`): **PASS** (320px & 390px, contact arrow containment, hero whitespace separation, compact pill rail, audio touch unlock)
+
 ## Fix OurTeam Abort Race Condition & Live Image DOM Swap — PASS (10 Oct 2026)
 
 Owner melaporkan foto anggota tim ("Language & Reasoning: Zidan Amikul") yang sudah diganti di admin belum berubah di browser publik meskipun sudah direfresh berkali-kali:

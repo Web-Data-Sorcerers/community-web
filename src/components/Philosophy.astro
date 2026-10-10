@@ -762,6 +762,16 @@ const principles = [
     .principle-copy {
       gap: 4px;
     }
+    .philosophy.is-about {
+      min-height: 0;
+      background: linear-gradient(
+        180deg,
+        #050507 0%,
+        #180d38 35%,
+        #050507 90%,
+        #050507 100%
+      );
+    }
     .illustration {
       position: relative;
       order: 1;
@@ -771,6 +781,8 @@ const principles = [
       height: auto;
       aspect-ratio: 861 / 770;
       margin-top: 24px;
+      -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent 100%);
+      mask-image: linear-gradient(180deg, #000 60%, transparent 100%);
     }
     .canvas::before {
       left: calc(65% - 350px);

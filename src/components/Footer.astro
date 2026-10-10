@@ -398,6 +398,7 @@ const destinations: Record<string, string> = {
     .footer {
       gap: 40px;
       padding-top: 56px;
+      padding-bottom: max(64px, calc(env(safe-area-inset-bottom, 34px) + 32px));
     }
     /* Portrait backdrop: the landscape is anchored at the bottom edge. */
     .backdrop img {
@@ -405,10 +406,12 @@ const destinations: Record<string, string> = {
     }
     .top {
       flex-direction: column;
-      gap: 44px;
+      gap: 40px;
     }
     .legal {
       flex-wrap: wrap;
+      gap: 16px;
+      padding-bottom: 8px;
     }
     .legal p,
     .legal-links span {

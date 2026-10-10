@@ -196,6 +196,14 @@ const STEP = 948;
       dots.forEach((dot, i) => dot.classList.toggle('is-active', i === page));
       chipsEl?.style.setProperty('--hods-page', String(page));
       shown = active;
+
+      if (window.innerWidth <= 1050) {
+        chips[active]?.scrollIntoView({
+          behavior: 'smooth',
+          inline: 'center',
+          block: 'nearest',
+        });
+      }
     };
 
     chips.forEach((chip, i) =>
@@ -646,20 +654,75 @@ const STEP = 948;
   }
 
   @media (max-width: 1050px) {
+    .hods-top {
+      width: 100%;
+    }
+    .hods-chips-row {
+      width: 100%;
+    }
     .hods-chips-viewport {
       width: 100%;
       overflow-x: auto;
       scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      padding-inline: 8px;
     }
     .hods-chips-viewport::-webkit-scrollbar {
       display: none;
     }
     .hods-chips {
       transform: none;
+      width: max-content;
+      gap: 12px;
+      padding: 4px;
+    }
+    .hods-chip {
+      width: auto;
+      min-width: 0;
+      height: 42px;
+      padding: 8px 20px;
+      border-radius: 999px;
+      font-size: 15px;
+      line-height: 22px;
+      flex-shrink: 0;
     }
     .hods-arrow,
     .hods-dots {
       display: none;
+    }
+  }
+
+  @media (max-width: 680px) {
+    .team-cards--leader {
+      justify-content: flex-start;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      padding-inline: max(16px, calc((100% - 302px) / 2));
+      scroll-padding-inline: max(16px, calc((100% - 302px) / 2));
+      gap: 16px;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .team-cards--leader::-webkit-scrollbar {
+      display: none;
+    }
+    .team-cards--leader :global(.team-card) {
+      scroll-snap-align: center;
+      scroll-snap-stop: always;
+      flex: none;
+    }
+    .team-cards--hods {
+      padding-inline: max(16px, calc((100% - 302px) / 2));
+      scroll-padding-inline: max(16px, calc((100% - 302px) / 2));
+      scroll-snap-type: x mandatory;
+      gap: 16px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .team-cards--hods :global(.team-card),
+    .team-cards--hods .team-card--join {
+      scroll-snap-align: center;
+      scroll-snap-stop: always;
+      flex: none;
     }
   }
 
@@ -678,10 +741,10 @@ const STEP = 948;
       gap: 48px;
     }
     .hods-chip {
-      width: 236px;
-      height: 43px;
-      font-size: 16px;
-      line-height: 24px;
+      height: 38px;
+      padding: 6px 16px;
+      font-size: 13px;
+      line-height: 20px;
     }
   }
 </style>

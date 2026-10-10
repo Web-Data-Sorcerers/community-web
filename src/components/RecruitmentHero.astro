@@ -167,10 +167,18 @@ import Button from './Button.astro';
   }
   @media (max-width: 600px) {
     .recruitment-hero {
-      /* svh, not dvh — see Hero.astro: dvh reflows with the address bar. */
+      min-height: 100vh;
+      min-height: 100dvh;
       justify-content: center;
-      padding-top: clamp(96px, 12svh, 120px);
-      padding-bottom: clamp(64px, 9svh, 96px);
+      padding-top: clamp(90px, 12dvh, 120px);
+      padding-bottom: clamp(48px, 8dvh, 72px);
+    }
+    .artwork::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 70%, #050507 100%);
+      pointer-events: none;
     }
     .hero-content {
       gap: clamp(24px, 6vw, 36px);

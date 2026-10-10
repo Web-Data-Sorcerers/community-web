@@ -34,7 +34,7 @@
   <div class="hero-content">
     <span class="pill">Create · Collaborate · Make an impact</span>
     <h1 id="partners-hero-title">
-      <span>Let's Build Something</span>
+      <span>Let's Build Something </span>
       <span>Meaningful Together.</span>
     </h1>
   </div>
@@ -150,11 +150,23 @@
     h1 span {
       display: inline;
     }
+    h1 span:not(:last-child)::after {
+      content: ' ';
+    }
   }
   @media (max-width: 600px) {
     .partners-hero {
+      min-height: 100vh;
+      min-height: 100dvh;
       justify-content: center;
-      padding: clamp(110px, 18svh, 150px) 24px clamp(48px, 10svh, 72px);
+      padding: clamp(90px, 14dvh, 130px) 24px clamp(40px, 8dvh, 60px);
+    }
+    .artwork::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 70%, #050507 100%);
+      pointer-events: none;
     }
     h1 {
       font-size: clamp(30px, 8.4vw, 44px);

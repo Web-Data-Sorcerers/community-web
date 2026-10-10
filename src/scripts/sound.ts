@@ -78,7 +78,14 @@ class SoundEngine {
   play(cue: Cue): void {
     if (this.muted) return;
     const ctx = this.ensure();
-    if (!ctx || !this.master || ctx.state !== 'running') return;
+    if (!ctx || !this.master) return;
+    if (ctx.state === 'suspended') {
+      void ctx.resume().then(() => {
+        if (ctx.state === 'running') this.play(cue);
+      });
+      return;
+    }
+    if (ctx.state !== 'running') return;
     switch (cue) {
       case 'hover':
         this.note({
