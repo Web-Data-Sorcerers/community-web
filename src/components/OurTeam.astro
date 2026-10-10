@@ -239,7 +239,6 @@ const STEP = 948;
     syncLiveTeam({ root, signal });
   };
 
-  initHods();
   document.addEventListener('astro:page-load', initHods);
   document.addEventListener('astro:before-swap', () => controller?.abort());
 </script>

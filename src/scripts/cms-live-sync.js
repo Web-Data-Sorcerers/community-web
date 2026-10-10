@@ -20,12 +20,12 @@ if (typeof document !== 'undefined') {
   });
 }
 
-async function getContent(signal) {
+async function getContent() {
   const now = Date.now();
   if (cachedContent && now - cachedTime < CACHE_TTL_MS) return cachedContent;
   if (!fetchPromise) {
     fetchPromise = fetch(`/api/cms/content?t=${now}`, {
-      signal,
+      signal: AbortSignal.timeout(10000),
       cache: 'no-store',
     })
       .then((res) => (res.ok ? res.json() : null))
@@ -47,7 +47,7 @@ async function getContent(signal) {
 
 export function syncLiveProjects({ stage, onUpdate, signal }) {
   if (!stage) return;
-  getContent(signal).then((data) => {
+  getContent().then((data) => {
     if (!data?.projects || signal?.aborted) return;
     const cards = [
       ...stage.querySelectorAll('.project-card, .hof-project-card'),
@@ -72,7 +72,9 @@ export function syncLiveProjects({ stage, onUpdate, signal }) {
         changed = true;
       }
       if (imgEl && imgEl.getAttribute('src') !== proj.image) {
+        imgEl.removeAttribute('srcset');
         imgEl.setAttribute('src', proj.image);
+        imgEl.src = proj.image;
         changed = true;
       }
       if (tagsEl && Array.isArray(proj.tags)) {
@@ -97,7 +99,7 @@ export function syncLiveProjects({ stage, onUpdate, signal }) {
 
 export function syncLiveTeam({ root, signal }) {
   if (!root) return;
-  getContent(signal).then((data) => {
+  getContent().then((data) => {
     if (!data?.team || signal?.aborted) return;
     const { leaderTeam, hodsTeams } = data.team;
 
@@ -151,13 +153,18 @@ function updateTeamCard(card, member) {
       ? member.photo
       : `/images/team/${member.photo}.webp`;
     if (photoEl.getAttribute('src') !== targetSrc) {
-      photoEl.setAttribute('src', targetSrc);
       if (uploaded) {
         photoEl.removeAttribute('srcset');
         photoEl.className = 'team-card-photo is-uploaded';
       } else {
+        photoEl.setAttribute(
+          'srcset',
+          `/images/team/${member.photo}.webp 1x, /images/team/${member.photo}-2x.webp 2x`,
+        );
         photoEl.className = `team-card-photo is-${member.photo}`;
       }
+      photoEl.setAttribute('src', targetSrc);
+      photoEl.src = targetSrc;
     }
   }
 }

@@ -1,5 +1,32 @@
 # AGENTS.md — instructions for AI agents
 
+## Fix OurTeam Abort Race Condition & Live Image DOM Swap — PASS (10 Oct 2026)
+
+Owner melaporkan foto anggota tim ("Language & Reasoning: Zidan Amikul") yang sudah diganti di admin belum berubah di browser publik meskipun sudah direfresh berkali-kali:
+
+1. **Akar Masalah (Root Cause)**:
+   - Di `src/components/OurTeam.astro`, terdapat inisialisasi ganda: `initHods()` dipanggil langsung saat skrip dieksekusi DAN dipanggil lagi via event `document.addEventListener('astro:page-load', initHods)`.
+   - Pada refresh browser (F5), pemanggilan kedua mengeksekusi `controller?.abort()` yang langsung membatalkan request HTTP in-flight pertama (`net::ERR_ABORTED`). Akibatnya request `/api/cms/content` selalu gagal di setiap reload, meninggalkan kartu dengan foto statis default.
+   - Di `src/scripts/cms-live-sync.js`, `getContent(signal)` sebelumnya mengikat fetch jaringan global dengan signal komponen lokal yang mudah ter-abort, serta urutan pembaruan DOM menetapkan `src` sebelum `removeAttribute('srcset')`, menyebabkan browser mengabaikan `src` baru demi kandidat `srcset` lama.
+2. **Perbaikan**:
+   - `src/components/OurTeam.astro`: Menghapus pemanggilan mandiri `initHods()` sehingga inisialisasi hanya berjalan satu kali pada event `astro:page-load` (konsisten dengan `Projects.astro` dan `HallOfFramesProjects.astro`).
+   - `src/scripts/cms-live-sync.js`: `getContent()` kini menggunakan fetch independen dengan timeout 10 detik (`AbortSignal.timeout(10000)`), kebal terhadap unmount atau pembatalan komponen.
+   - `src/scripts/cms-live-sync.js`: `updateTeamCard()` kini menghapus `srcset` sebelum menetapkan `src`, serta secara eksplisit menyetel properti DOM `photoEl.src = targetSrc`.
+3. **Zero Emote**: Memastikan 0 emoji/emotikon di seluruh antarmuka, notifikasi, toast, dan komunikasi.
+
+### QA Lengkap (Node 26.10, `CMS_DATA_SOURCE=local`):
+
+- `npm run check` (Astro typecheck): **PASS** (0 errors, 0 warnings, 299 files)
+- `npm run format:check`: **PASS** (Prettier)
+- `npm run build`: **0 error / 23 pages**
+- `npm run test:recruitment`: **42 PASS / 0 FAIL** (42 tests)
+- `node --test tests/cms-public.test.mjs`: **4 PASS / 0 FAIL**
+- Browser Playwright Mocks (4 widths: 320, 390, 768, 1440 px):
+  - `node scripts/verify-cms-native-admin.mjs`: **PASS**
+  - `node scripts/verify-cms-team-admin.mjs`: **PASS**
+  - `node scripts/verify-recruitment-review.mjs`: **PASS**
+- `npm run verify:visual`: **PASS** (exit 0, `browserErrors: []`)
+
 ## Instant Admin Navigation & Public Cache Bypass — PASS (10 Oct 2026)
 
 Owner meminta penghapusan loading berulang pada navigasi bolak-balik pendaftar (list <-> detail), penghapusan jeda saat perpindahan tab admin awal, serta perbaikan refresh publik agar foto/data baru langsung berubah pada refresh pertama (F5):
