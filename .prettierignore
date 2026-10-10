@@ -3,4 +3,5 @@ artifacts/
 public/
 dist/
 .astro/
+.vercel/
 package-lock.json

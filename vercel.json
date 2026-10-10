@@ -10,8 +10,20 @@
     },
     "api/recruitment/**/*.js": {
       "maxDuration": 90
+    },
+    "api/media.js": {
+      "maxDuration": 30
+    },
+    "api/cms/content.js": {
+      "maxDuration": 30
     }
   },
+  "rewrites": [
+    {
+      "source": "/images/cms/:collection/:hash.webp",
+      "destination": "/api/media?collection=:collection&hash=:hash"
+    }
+  ],
   "headers": [
     {
       "source": "/admin/:path*",

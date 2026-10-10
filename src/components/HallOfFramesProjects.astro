@@ -99,6 +99,8 @@ import { projects } from '../data/projects';
 </section>
 
 <script>
+  import { syncLiveProjects } from '../scripts/cms-live-sync.js';
+
   let hofProjectsController: AbortController | undefined;
   // Keyboard navigation bypasses the pointer wiring, so ask the sound system
   // for the same "select" cue the arrow buttons use (ignored under reduce).
@@ -304,6 +306,7 @@ import { projects } from '../data/projects';
         );
         addEventListener('resize', render, { passive: true, signal });
         render();
+        syncLiveProjects({ stage, onUpdate: render, signal });
       });
   };
 

@@ -1,5 +1,6 @@
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
+import vercel from '@astrojs/vercel';
 
 // Canonical origin used for absolute URLs (canonical, Open Graph, sitemap).
 // Override with SITE_URL in the deploy environment if the domain changes.
@@ -9,6 +10,7 @@ const site =
 export default defineConfig({
   site,
   output: 'static',
+  adapter: vercel(),
   devToolbar: { enabled: false },
   // Warm the next document (HTML + linked islands) as nav links enter the
   // viewport, so Home <-> Recruitment switches paint almost instantly instead of

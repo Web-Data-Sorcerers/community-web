@@ -147,6 +147,8 @@ const STEP = 948;
 </section>
 
 <script>
+  import { syncLiveTeam } from '../scripts/cms-live-sync.js';
+
   let controller: AbortController | undefined;
 
   const initHods = () => {
@@ -234,6 +236,7 @@ const STEP = 948;
     );
 
     render();
+    syncLiveTeam({ root, signal });
   };
 
   initHods();
