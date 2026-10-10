@@ -180,6 +180,11 @@ const STEP = 948;
       panels.forEach((panel, i) => {
         const isActive = i === active;
         panel.classList.toggle('is-active', isActive);
+        if (isActive) {
+          const cardsRow =
+            panel.querySelector<HTMLElement>('.team-cards--hods');
+          if (cardsRow) cardsRow.scrollLeft = 0;
+        }
         // Restart the gated entrance on the newly shown panel. Skipped on the
         // first render so the section's scroll-reveal owns the first appearance.
         if (isActive && i !== shown && shown !== -1) {
@@ -197,12 +202,17 @@ const STEP = 948;
       chipsEl?.style.setProperty('--hods-page', String(page));
       shown = active;
 
-      if (window.innerWidth <= 1050) {
-        chips[active]?.scrollIntoView({
-          behavior: 'smooth',
-          inline: 'center',
-          block: 'nearest',
-        });
+      if (chipsEl && chips[active]) {
+        const chip = chips[active];
+        const viewport = chipsEl.parentElement;
+        if (viewport && viewport.classList.contains('hods-chips-viewport')) {
+          const scrollTarget =
+            chip.offsetLeft - (viewport.clientWidth - chip.clientWidth) / 2;
+          viewport.scrollTo({
+            left: scrollTarget,
+            behavior: shown === -1 ? 'auto' : 'smooth',
+          });
+        }
       }
     };
 
@@ -693,15 +703,27 @@ const STEP = 948;
   }
 
   @media (max-width: 680px) {
+    .hods-panels {
+      max-width: 100%;
+      min-width: 0;
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .hods-panel {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+    }
     .team-cards--leader {
       justify-content: flex-start;
       overflow-x: auto;
       scroll-snap-type: x mandatory;
-      padding-inline: max(16px, calc((100% - 302px) / 2));
-      scroll-padding-inline: max(16px, calc((100% - 302px) / 2));
-      gap: 16px;
+      padding-inline: max(0px, calc((100% - 302px) / 2));
+      scroll-padding-inline: max(0px, calc((100% - 302px) / 2));
+      gap: max(40px, calc(100vw - 302px));
       scrollbar-width: none;
       -webkit-overflow-scrolling: touch;
+      width: 100%;
+      min-width: 0;
     }
     .team-cards--leader::-webkit-scrollbar {
       display: none;
@@ -712,11 +734,19 @@ const STEP = 948;
       flex: none;
     }
     .team-cards--hods {
-      padding-inline: max(16px, calc((100% - 302px) / 2));
-      scroll-padding-inline: max(16px, calc((100% - 302px) / 2));
+      justify-content: flex-start;
+      overflow-x: auto;
       scroll-snap-type: x mandatory;
-      gap: 16px;
+      padding-inline: max(0px, calc((100% - 302px) / 2));
+      scroll-padding-inline: max(0px, calc((100% - 302px) / 2));
+      gap: max(40px, calc(100vw - 302px));
+      scrollbar-width: none;
       -webkit-overflow-scrolling: touch;
+      width: 100%;
+      min-width: 0;
+    }
+    .team-cards--hods::-webkit-scrollbar {
+      display: none;
     }
     .team-cards--hods :global(.team-card),
     .team-cards--hods .team-card--join {

@@ -1,5 +1,44 @@
 # AGENTS.md — instructions for AI agents
 
+## Mobile Team Layout: 1 Card per Screen & Zero Edge Peeking — PASS (10 Oct 2026)
+
+Owner meminta kartu tim di mobile tampil satu kartu penuh per layar tanpa ada bagian kartu sebelah yang mengintip di pinggir ("kok ilang, sama mending satu card satu layar jangan ada ningol dipinggir"):
+
+1. **Akar Masalah (Root Cause)**:
+   - **Kartu Hilang/Geser**: Kontainer `.hods-panels` pada mobile tanpa konstrain kolom menyebabkan track grid melebar ke `min-content` (1288px), sehingga perhitungan `padding-inline: calc((100% - 302px) / 2)` melempar kartu aktif keluar layar ke `x = 509px`.
+   - **Kartu Mengintip ("Ningol")**: Jarak `gap` sebelumnya mengevaluasi sisa margin container secara parsial sehingga 20-30px kartu kedua menyembul di tepi kanan layar.
+2. **Perbaikan**:
+   - `src/components/OurTeam.astro`:
+     - Pada `@media (max-width: 680px)`:
+       - Membatasi `.hods-panels` dengan `max-width: 100%; min-width: 0; grid-template-columns: minmax(0, 1fr);`.
+       - Membatasi `.hods-panel` dengan `width: 100%; max-width: 100%; min-width: 0;`.
+       - Menetapkan `.team-cards--leader` dan `.team-cards--hods` dengan `padding-inline: max(0px, calc((100% - 302px) / 2))`, `scroll-padding-inline: max(0px, calc((100% - 302px) / 2))`, dan `gap: max(40px, calc(100vw - 302px))`.
+       - Mengaktifkan `scroll-snap-type: x mandatory; scroll-snap-align: center; scroll-snap-stop: always;`.
+     - Menambahkan `cardsRow.scrollLeft = 0` saat pergantian tab HoDS agar panel baru selalu mulai dari kartu pertama di tengah layar.
+     - Mengganti `scrollIntoView` global pada rel chip mobile dengan `viewport.scrollTo(...)` lokal agar tidak terjadi lompatan vertikal pada halaman.
+3. **Verifikasi Metrik (320px - 430px)**:
+   - Kartu aktif terpusat 100% simetris di tengah layar pada semua lebar layar mobile.
+   - Kartu tetangga (sebelumnya dan berikutnya) 100% berada di luar viewport (`visible: false`, `offScreenRight: true`, `offScreenLeft: true`). Nol piksel mengintip di tepi layar.
+   - Saat digeser, kartu berikutnya mengunci persis di tengah layar dan kartu sebelumnya keluar layar sepenuhnya ke sebelah kiri.
+4. **Zero Emote**: Memastikan 0 emoji/emotikon di seluruh kode, UI, dan komunikasi.
+
+### QA Lengkap (Node 26.10, `CMS_DATA_SOURCE=local`):
+
+- `npm run check` (Astro typecheck): **PASS** (0 errors, 0 warnings, 299 files)
+- `npm run format:check`: **PASS** (Prettier)
+- `npm run build`: **0 error / 23 pages**
+- `npm run test:recruitment`: **42 PASS / 0 FAIL** (42 tests)
+- `node --test tests/cms-public.test.mjs`: **4 PASS / 0 FAIL**
+- Browser Playwright Mocks (4 widths: 320, 390, 768, 1440 px):
+  - `node scripts/verify-cms-native-admin.mjs`: **PASS**
+  - `node scripts/verify-cms-team-admin.mjs`: **PASS**
+  - `node scripts/verify-recruitment-review.mjs`: **PASS**
+- `node scripts/verify-cms-team-renderer.mjs`: **PASS** (112 test cases)
+- `npm run audit:spacing`: **PASS** (Strict 8-point audit PASS on 39 components)
+- `npm run audit:navbar`: **ALL PASS** (20 breakpoint)
+- `npm run seo:audit`: **PASS** (23 pages)
+- `npm run verify:visual`: **PASS** (exit 0, `browserErrors: []`)
+
 ## Resolution of 9 Mobile Layout & Audio Anomalies — PASS (10 Oct 2026)
 
 Owner melaporkan 9 anomali pada versi mobile website:
