@@ -1,5 +1,42 @@
 # AGENTS.md — instructions for AI agents
 
+## Hybrid ISR, On-Demand Live Sync & Instant Public Media — PASS & LIVE (10 Oct 2026)
+
+Owner menanyakan mengapa update gambar dan data di dashboard admin lambat tayang di situs publik (harus menunggu build 1-3 menit). Arsitektur ditingkatkan ke Opsi 2 (Hybrid ISR & Live Sync):
+
+1. **Direct Public Media Streaming & Immutable CDN Caching**:
+   - Menambahkan `server/cms-public.mjs` dan entrypoint `api/media.js`.
+   - Menambahkan rewrite di `vercel.json` (`/images/cms/:collection/:hash.webp` -> `/api/media?collection=:collection&hash=:hash`).
+   - Media foto profil tim dan cover proyek yang baru diupload langsung dialirkan secara aman dari Supabase Storage dan di-cache secara permanen di CDN Edge Vercel (`Cache-Control: public, max-age=31536000, immutable`). Foto baru langsung aktif tanpa menunggu build Vercel.
+2. **Public Content API dengan SWR Caching & Graceful Fallback**:
+   - Menambahkan endpoint `api/cms/content.js` yang memetakan data proyek dan tim langsung dari Supabase RPC (`cms_load_projects` dan `cms_load_team`) dengan header SWR (`s-maxage=10, stale-while-revalidate=59`).
+   - Menyediakan fallback otomatis ke `cms-snapshot.json` jika koneksi Supabase terputus, serta endpoint statis `src/pages/api/cms/content.ts` untuk menjamin kompatibilitas offline build dan `astro preview`.
+3. **Client-Side Live Hydration (Pembaruan Instan di Layar)**:
+   - Membuat modul `src/scripts/cms-live-sync.js`.
+   - Mengintegrasikan sinkronisasi live pada `Projects.astro`, `HallOfFramesProjects.astro`, dan `OurTeam.astro`.
+   - Pengunjung website tetap membuka halaman statis secara instan (<50ms). Di latar belakang, kartu proyek dan foto anggota tim otomatis diperbarui ke versi terbaru di layar jika ada revisi baru dari admin.
+4. **Vercel Adapter Integration**:
+   - Memasang `@astrojs/vercel` pada `astro.config.mjs` dengan mempertahankan `output: 'static'` agar seluruh 23 halaman publik tetap pre-rendered dan SEO-compliant.
+   - Mengabaikan `.vercel/` pada `.gitignore` dan `.prettierignore`.
+5. **Zero Emote**: Memastikan 0 emoji/emotikon di seluruh antarmuka, notifikasi, toast, dan komunikasi.
+
+### QA Lengkap (Node 26.10, `CMS_DATA_SOURCE=local`):
+
+- `npm run check` (Astro typecheck): **PASS** (0 errors, 0 warnings, 299 files)
+- `npm run format:check`: **PASS** (Prettier)
+- `npm run build`: **0 error / 23 pages**
+- `npm run test:recruitment`: **42 PASS / 0 FAIL** (42 tests)
+- `npm run test:cms`: **98 PASS + 10 Team SKIP / 0 FAIL** (108 tests, mencakup 4 unit test baru `tests/cms-public.test.mjs`)
+- Browser Playwright Mocks (4 widths: 320, 390, 768, 1440 px):
+  - `node scripts/verify-cms-native-admin.mjs`: **PASS**
+  - `node scripts/verify-cms-team-admin.mjs`: **PASS**
+  - `node scripts/verify-recruitment-review.mjs`: **PASS**
+- `node scripts/verify.mjs`: **PASS** (exit 0, `browserErrors: []`)
+- `npm run audit:spacing`: **PASS** (Strict 8-point audit PASS on 39 components)
+- `npm run audit:navbar`: **ALL PASS** (20 breakpoint)
+- `npm run seo:audit`: **PASS** (23 pages)
+- Commit SHA: `694d4726d09836760e945847938a040b5f52539e` (Pushed to `origin/main`)
+
 ## Image Preview & Profile Switch Loading States — LOKAL PASS (10 Oct 2026)
 
 Owner meminta indikator loading saat mengganti foto profil/proyek, upload berkas, maupun saat berpindah anggota/proyek:
