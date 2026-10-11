@@ -17,14 +17,49 @@ import Snippets from '../components/Snippets.astro';
 import Cta from '../components/Cta.astro';
 import Footer from '../components/Footer.astro';
 import Motion from '../components/Motion.astro';
+import { faqItems } from '../data/faq';
 const enabled = getPageState(Astro.locals.visibility!, 'recruitment');
 const visible = (section: string) =>
   getSectionState(Astro.locals.visibility!, 'recruitment', section);
+
+const site =
+  Astro.site ?? new URL('https://data-sorcerers-community-sigma.vercel.app');
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqItems.map((item) => ({
+    '@type': 'Question',
+    name: item.q,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: item.a,
+    },
+  })),
+};
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Home',
+      item: site.href,
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Recruitment',
+      item: new URL('/recruitment', site).href,
+    },
+  ],
+};
 ---
 
 <BaseLayout
-  title="Recruitment — Data Sorcerers"
-  description="Join Data Sorcerers. Explore open roles across data, AI, language, vision, product and growth, and see the selection timeline."
+  title="Open Recruitment — Data Sorcerers Community"
+  description="Join Data Sorcerers AI community. Explore open roles across Data Intelligence, Core AI, NLP & Reasoning, Computer Vision, Product, and Growth."
+  structuredData={[faqSchema, breadcrumbSchema]}
 >
   <Navbar active="Recruitment" />
   {enabled ? (

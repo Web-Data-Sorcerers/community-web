@@ -10,6 +10,7 @@ interface Props {
   image?: string;
   type?: 'website' | 'article';
   noindex?: boolean;
+  structuredData?: Record<string, any>[];
 }
 const {
   title = 'Data Sorcerers — Sorcery in Data, Magic in AI',
@@ -17,6 +18,7 @@ const {
   image = '/og/og-default.jpg',
   type = 'website',
   noindex = false,
+  structuredData: extraStructuredData = [],
 } = Astro.props;
 
 const visibility = Astro.locals.visibility;
@@ -32,7 +34,7 @@ const pageUrl = new URL(canonicalPath, site).href;
 const imageUrl = new URL(image, site).href;
 const imageAlt = 'Data Sorcerers — Sorcery in Data, Magic in AI';
 
-const structuredData = [
+const baseStructuredData = [
   {
     '@context': 'https://schema.org',
     '@type': 'Organization',
@@ -48,6 +50,7 @@ const structuredData = [
     url: site.href,
   },
 ];
+const allStructuredData = [...baseStructuredData, ...extraStructuredData];
 ---
 
 <!doctype html>
@@ -71,6 +74,12 @@ const structuredData = [
       }
     />
     <link rel="canonical" href={pageUrl} />
+    {import.meta.env.GOOGLE_SITE_VERIFICATION && (
+      <meta
+        name="google-site-verification"
+        content={import.meta.env.GOOGLE_SITE_VERIFICATION}
+      />
+    )}
     <meta name="theme-color" content="#050507" />
     <!-- Client-side navigation: cross-fades between pages and keeps the DOM/JS
          context (and the Web Audio engine) alive, so the sound does not cut on
@@ -132,7 +141,7 @@ const structuredData = [
 
     <script
       type="application/ld+json"
-      set:html={JSON.stringify(structuredData)}
+      set:html={JSON.stringify(allStructuredData)}
     ></script>
     <script is:inline>
       // Components push promises here for the splash to await (see Splash.astro):

@@ -15,7 +15,10 @@ const visible = (id: string) =>
   getSectionState(Astro.locals.visibility!, 'home', id);
 ---
 
-<BaseLayout>
+<BaseLayout
+  title="Data Sorcerers — AI & Data Innovation Community"
+  description="An AI & Data Innovation Community where students, researchers, and engineers learn, experiment, and build meaningful technology together."
+>
   <Navbar />
   <main id="main">
     <Hero />

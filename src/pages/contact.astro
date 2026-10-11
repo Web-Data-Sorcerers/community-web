@@ -8,11 +8,33 @@ import ContactHero from '../components/ContactHero.astro';
 import Footer from '../components/Footer.astro';
 import Motion from '../components/Motion.astro';
 const enabled = getPageState(Astro.locals.visibility!, 'contact');
+
+const site =
+  Astro.site ?? new URL('https://data-sorcerers-community-sigma.vercel.app');
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Home',
+      item: site.href,
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Contact',
+      item: new URL('/contact', site).href,
+    },
+  ],
+};
 ---
 
 <BaseLayout
-  title="Contact — Data Sorcerers"
-  description="Get in touch with Data Sorcerers. Share your idea, challenge, or collaboration opportunity and explore what we can build together."
+  title="Contact Us — Data Sorcerers"
+  description="Get in touch with Data Sorcerers. Connect with our team for inquiries, collaboration opportunities, and AI community partnerships."
+  structuredData={[breadcrumbSchema]}
 >
   <Navbar active="Contact" />
   {enabled ? (

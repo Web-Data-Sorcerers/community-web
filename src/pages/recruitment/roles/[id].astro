@@ -18,12 +18,67 @@ if (description.length > 160)
   description = description.slice(0, 157).trimEnd() + '…';
 else if (description.length < 60)
   description = `${role.title} — open role at Data Sorcerers. See the role details, requirements and how to apply.`;
+
+const site =
+  Astro.site ?? new URL('https://data-sorcerers-community-sigma.vercel.app');
+const roleUrl = new URL(`/recruitment/roles/${role.id}`, site).href;
+const jobPostingSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'JobPosting',
+  title: role.title,
+  description: `${role.about}\n\nKey Qualifications:\n${role.requirements.map((r) => `- ${r}`).join('\n')}`,
+  identifier: {
+    '@type': 'PropertyValue',
+    name: 'Data Sorcerers',
+    value: role.id,
+  },
+  datePosted: '2026-10-01',
+  validThrough: '2026-10-20T23:59:59+07:00',
+  employmentType: 'VOLUNTEER',
+  hiringOrganization: {
+    '@type': 'Organization',
+    name: 'Data Sorcerers',
+    sameAs: site.href,
+    logo: new URL('/icon-512.png', site).href,
+  },
+  jobLocationType: 'TELECOMMUTE',
+  applicantLocationRequirements: {
+    '@type': 'Country',
+    name: 'Indonesia',
+  },
+  url: roleUrl,
+};
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Home',
+      item: site.href,
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Recruitment',
+      item: new URL('/recruitment', site).href,
+    },
+    {
+      '@type': 'ListItem',
+      position: 3,
+      name: role.title,
+      item: roleUrl,
+    },
+  ],
+};
 ---
 
 <BaseLayout
   title={`${role.title} — Open Role — Data Sorcerers`}
   description={description}
   type="article"
+  structuredData={[jobPostingSchema, breadcrumbSchema]}
 >
   {enabled ? (
     <RoleDetail role={role} />

@@ -15,11 +15,32 @@ import Motion from '../components/Motion.astro';
 const enabled = getPageState(Astro.locals.visibility!, 'partners');
 const visible = (section: string) =>
   getSectionState(Astro.locals.visibility!, 'partners', section);
+const site =
+  Astro.site ?? new URL('https://data-sorcerers-community-sigma.vercel.app');
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Home',
+      item: site.href,
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Partners',
+      item: new URL('/partners', site).href,
+    },
+  ],
+};
 ---
 
 <BaseLayout
-  title="Partners — Data Sorcerers"
-  description="Build something meaningful with Data Sorcerers. Partner with our AI & data community across industry, academia, and the wider technology ecosystem."
+  title="Partnership & Ecosystem — Data Sorcerers"
+  description="Collaborate with Data Sorcerers. Partner with our AI & data innovation community across industry, academia, and open-source technology."
+  structuredData={[breadcrumbSchema]}
 >
   <Navbar active="Partners" />
   {enabled ? (

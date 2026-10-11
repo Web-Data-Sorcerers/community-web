@@ -11,12 +11,34 @@ const hod = hods.find((item) => item.id === Astro.params.id);
 if (!hod) return new Response('Not found', { status: 404 });
 const pageId = 'hods-' + hod.id;
 const enabled = getPageState(Astro.locals.visibility!, pageId);
+const site =
+  Astro.site ?? new URL('https://data-sorcerers-community-sigma.vercel.app');
+const hodUrl = new URL(`/hods/${hod.id}`, site).href;
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: 'Home',
+      item: site.href,
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: hod.title,
+      item: hodUrl,
+    },
+  ],
+};
 ---
 
 <BaseLayout
   title={`${hod.title} — Data Sorcerers`}
   description={hod.description}
   type="article"
+  structuredData={[breadcrumbSchema]}
 >
   {enabled ? (
     <HoDSDetail hod={hod} />

@@ -1,25 +1,33 @@
 # Handover — Data Sorcerers (community-web)
 
-## Navigation performance P2/P3 — LOCAL QA FREEZE PASS, AWAITING RELEASE AUTHORIZATION (11 Oct 2026)
+## SEO & Schema.org Rich Snippets — RELEASED (11 Oct 2026)
 
-Owner instructed “gasss” after reviewing the technical plan. Local QA freeze executed across all gates and verified PASS.
-Exact local source: P2 (astro.config.mjs, Navbar.astro, BaseLayout.astro, site-visibility-navigation.js) and P3 (admin-shell.js).
-Top loading bar is confirmed permanently deleted; bottom-left text status “.navigation-status” verified.
-QA gates passed:
-- Typecheck & syntax: npm run check PASS (0 errors, 0 warnings, 335 files).
-- Prettier: P2 and P3 modified source files formatted with zero issues.
-- Spacing: npm run audit:spacing PASS (Strict 8-point audit on 40 components).
-- Packaging: scripts/verify-navigation-package.mjs PASS (11 root APIs + 1 SSR = 12 functions, sin1 region in vercel.json).
-- Public UX: scripts/verify-navigation-ux.mjs PASS (15 cases, 0 errors across 4 viewports 320/390/768/1440, reduced and normal motion, error/abort/watchdog resilience, 0 top progress bar).
-- Prefetch: scripts/verify-navigation-prefetch.mjs PASS (0 speculative HTML requests on controlled routes).
-- Admin scheduling: scripts/verify-navigation-admin.mjs PASS (0 competing background requests during active tab bootstrap, 19-68ms tab switching).
-- View Transitions: scripts/verify-vt.mjs PASS (all 26 assertions pass, 0 page errors).
-- Navbar: scripts/navbar-audit.mjs PASS (all 20 widths pass, exact Figma geometry).
-- SEO: scripts/seo-audit.mjs PASS (24 pages, canonical origin, robots + sitemap OK).
-- Regression test suites: tests/site-visibility*.test.mjs (10 PASS), tests/cms*.test.mjs (98 PASS / 10 SKIP), tests/recruitment*.test.mjs (42 PASS).
-- Security audit: 0 secrets in src/.
-Production baseline unchanged: HEAD/remote 45cc864, Current/alias READY dpl_7bredDjDLDsY18nxTqGHymQgsVnS, sin1, revision 716138bd-f7b2-4ae9-ba05-e6be5158d801, HomeON/projectsOFF/AboutHoFOFF.
-No production writes, deploy, commit or push executed. Awaiting explicit scoped “commit dan push” instruction from owner before releasing P2. Rollback target for P2 is P1 sin1 (45cc864 / dpl_7bredDjDLDsY18nxTqGHymQgsVnS).
+Owner authorized commit and push for SEO & Rich Snippets optimization.
+Scope:
+- BaseLayout.astro: structuredData prop extension + GOOGLE_SITE_VERIFICATION meta tag support.
+- src/data/faq.ts: centralized single source of truth for 6 official FAQ items.
+- Faq.astro: refactored to consume shared faq.ts.
+- Schema.org FAQPage on /recruitment; JobPosting on /recruitment/roles/[id]; BreadcrumbList on all hierarchical routes.
+- Targeted titles & meta descriptions on Home, Recruitment, Partners, Contact.
+- Full QA: npm run check (0 errors, 0 warnings), npm run seo:audit (24 pages PASS), strict 8-point spacing, prettier check PASS.
+
+## Navigation performance P2 & P3 — RELEASED, production acceptance PASS (11 Oct 2026)
+
+Owner explicitly authorized “commit dan push P2 dan P3”. Single commit/push executed: SHA 2ccd797f2b4128e6a9dad3c817b266abf5f7dfb0.
+Vercel deployment dpl_544dtqCJfPu9DC2nNjq84RsJhkfK is READY; primary alias data-sorcerers-community-sigma.vercel.app points to it.
+Runtime: Node 22, 12 functions (11 root API + 1 SSR), deployed compute region sin1. Supabase Singapore ACTIVE_HEALTHY.
+Production acceptance PASS:
+- 19 public routes HTTP 200 no-store with x-vercel-id sin1.
+- 6 admin routes HTTP 200 no-store with noindex, nofollow.
+- 4 private admin APIs HTTP 401 noindex, nofollow.
+- Public CMS content & media 200 OK; Recruitment application 200 OK; Revision API 200 OK; unknown 404.
+- Active visibility revision 716138bd-f7b2-4ae9-ba05-e6be5158d801 (Home ON, home.projects=false, About/HoF OFF, 19 pages / 21 sections) preserved.
+- Live prefetch verifier: 0 speculative controlled HTML requests on live production.
+- Runtime log sample: 50 events, zero 5xx errors, zero native crashes.
+- Top progress bar permanently deleted; bottom-left .navigation-status text active during pending navigation; nav-warm active.
+- Admin bounded prewarm active: zero background contention during active tab load.
+Rollback target: P1 sin1 deployment dpl_7bredDjDLDsY18nxTqGHymQgsVnS (commit 45cc86466b573fa067f0c98281e391afff502e75).
+Post-deploy evidence docs remain dirty locally; no second commit/push without explicit instruction.
 
 ## Next AI — PLAN ONLY requested after P1 (11 Oct 2026)
 
