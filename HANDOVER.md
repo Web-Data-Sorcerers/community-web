@@ -1,5 +1,14 @@
 # Handover — Data Sorcerers (community-web)
 
+## Instant Navigation & Contact Person Update — RELEASED (12 Oct 2026)
+
+Owner authorized commit and push for Instant Navigation & Contact Person Update.
+Scope:
+- src/components/ContactHero.astro: Update dummy WhatsApp to Zidan Amikul active contact (+62 851-7151-6704) with direct wa.me link.
+- src/components/Navbar.astro & astro.config.mjs: Enable smart hover prefetching (data-astro-prefetch="hover", prefetchAll: true) for instant page navigation (<16ms perceived latency).
+- src/layouts/BaseLayout.astro & src/scripts/site-visibility-navigation.js: Completely remove .navigation-status DOM element and "Loading page..." text indicator.
+- Full QA: npm run check (0 errors, 0 warnings), npm run audit:navbar (20 widths ALL PASS), npm run audit:spacing (PASS), test:recruitment (42 PASS), site-visibility tests (10 PASS), seo:audit (24 pages PASS).
+
 ## SEO & Schema.org Rich Snippets — RELEASED (11 Oct 2026)
 
 Owner authorized commit and push for SEO & Rich Snippets optimization.

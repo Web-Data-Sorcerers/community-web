@@ -13,9 +13,8 @@ export default defineConfig({
   output: 'static',
   adapter: vercel(),
   devToolbar: { enabled: false },
-  // Public Navbar links opt out of prefetch so navigation reads current visibility.
-  // Keep the existing integration available for explicitly opted-in internal links.
-  prefetch: { prefetchAll: false, defaultStrategy: 'viewport' },
+  // Enable hover-based prefetching for instant page transitions.
+  prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
   // Keep the internal sound audition page out of the public sitemap.
   integrations: [
     sitemap({

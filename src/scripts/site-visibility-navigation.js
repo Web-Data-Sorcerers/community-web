@@ -44,8 +44,6 @@ function clearPending(id = pending?.id) {
   pending.signal.removeEventListener('abort', pending.abort);
   document.documentElement.classList.remove('navigation-pending');
   document.querySelector('main')?.removeAttribute('aria-busy');
-  const status = document.querySelector('.navigation-status');
-  if (status) status.textContent = '';
   pending = undefined;
 }
 document.addEventListener('astro:before-preparation', (event) => {
@@ -73,8 +71,6 @@ document.addEventListener('astro:before-preparation', (event) => {
   pending.link?.setAttribute('data-navigation-pending', 'true');
   document.documentElement.classList.add('navigation-pending');
   document.querySelector('main')?.setAttribute('aria-busy', 'true');
-  const status = document.querySelector('.navigation-status');
-  if (status) status.textContent = 'Loading page…';
   const loader = event.loader;
   event.loader = async () => {
     try {
@@ -93,8 +89,6 @@ document.addEventListener('astro:before-swap', (event) => {
   if (pending.signal === event.signal) pending.target = event.to.href;
   event.newDocument.documentElement.classList.add('navigation-pending');
   event.newDocument.querySelector('main')?.setAttribute('aria-busy', 'true');
-  const status = event.newDocument.querySelector('.navigation-status');
-  if (status) status.textContent = 'Loading page…';
 });
 document.addEventListener('astro:page-load', () => {
   if (!pending) return;

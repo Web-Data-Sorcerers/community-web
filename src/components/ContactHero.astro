@@ -8,8 +8,9 @@ const info = [
   },
   {
     title: 'WhatsApp',
-    value: '09876543215637',
+    value: '+62 851-7151-6704',
     icon: 'whatsapp',
+    href: 'https://wa.me/6285171516704',
   },
   {
     title: 'Our Office',
@@ -50,6 +51,12 @@ const info = [
             <Tag
               class="info-card"
               href={item.href}
+              target={item.href?.startsWith('http') ? '_blank' : undefined}
+              rel={
+                item.href?.startsWith('http')
+                  ? 'noopener noreferrer'
+                  : undefined
+              }
               data-sfx={item.href ? 'click' : undefined}
               data-sfx-hover={item.href ? 'hover' : undefined}
             >

@@ -235,12 +235,6 @@ const allStructuredData = [...baseStructuredData, ...extraStructuredData];
     </script>
   </head>
   <body>
-    <div
-      class="navigation-status"
-      role="status"
-      aria-live="polite"
-      aria-atomic="true"
-    ></div>
     <Splash />
     <a class="skip-link" href="#main">
       Skip to content
@@ -249,21 +243,3 @@ const allStructuredData = [...baseStructuredData, ...extraStructuredData];
     <Sound />
   </body>
 </html>
-
-<style is:global>
-  .navigation-status {
-    position: fixed;
-    left: 24px;
-    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
-    z-index: 10000;
-    pointer-events: none;
-    padding: 8px 16px;
-    font-family: var(--font-body);
-    font-size: 16px;
-    color: #ede8ff;
-    background: #050507;
-  }
-  .navigation-status:empty {
-    display: none;
-  }
-</style>
