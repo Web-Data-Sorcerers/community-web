@@ -1,5 +1,39 @@
 # Handover — Data Sorcerers (community-web)
 
+## R7 repair release authorized — 11 Oct 2026
+
+Owner explicitly instructed “commit dan push fix runtime/routing beserta
+deployment main”. Scope: astro.config.mjs granular compiler treeshake rule,
+vercel.json two visibility rewrites, isolated packaging verifier and related
+dirty evidence/handoff docs. One main push with connected deployment; verify
+actual new SHA/READY/alias and R5 reads. [Repair evidence](docs/page-section-visibility-r7-runtime-repair.md).
+At freeze release SHA/deployment acceptance pending; exact results will be
+recorded in artifacts/site-visibility/r7-release-20261011/ and local docs after
+push. No additional SQL, provider env/plan/Node setting changes or live toggle.
+Rollback remains separately unapproved; owner chose new repair release.
+Earlier pending approval/failure checkpoints below are historical evidence.
+
+## R7 local repair ready — 11 Oct 2026
+
+[Runtime cause, isolated repro, fix and approval packages](docs/page-section-visibility-r7-runtime-repair.md):
+production logs prove Rolldown native binding boot failure; exact packed function
+reproduced outside workspace. Local build rule removes unused compiler import;
+packed shared Auth/19routes/21sections/freshSSR synthetic PASS,54 tests PASS.
+Two exact visibility API rewrites prepared locally; cloud routing still PENDING.
+Primary alias remains failed release032fdf9 until approved recovery/new release.
+Rollback approval question pending; repair not committed/pushed, live flags intact.
+
+## R4 pushed / R5 FAILED — 11 Oct 2026
+
+[Actual release result and rollback proposal](docs/page-section-visibility-r4-release.md): commit032fdf9
+pushed once after explicit approval, deployment dpl_BXduXxUzuiw6Bsc4KBipr1aKf69h
+READY and primary alias matched. All19 public routes500 invocation failed;
+three admin200, visibility/revision API404. Production acceptance FAILED;
+feature must not be called live accepted. Old rollback candidate Home200.
+Rollback needs separate approval, not performed. DB seed and live flags untouched;
+no provider/config mutation, deploy hook, retry deploy or additional push.
+Latest evidence docs dirty after release; earlier pending push text historical.
+
 ## R4 release diizinkan — 11 Oct 2026
 
 Owner memberi instruksi eksplisit “commit dan push scope release tersebut,

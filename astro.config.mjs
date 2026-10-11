@@ -31,6 +31,15 @@ export default defineConfig({
   vite: {
     build: {
       cssMinify: 'esbuild',
+      rolldownOptions: {
+        treeshake: {
+          // The Vercel entrypoint imports its build-time adapter constants.
+          // Drop the unused compiler import from the deployed SSR function.
+          moduleSideEffects: [
+            { test: /^rolldown$/, external: true, sideEffects: false },
+          ],
+        },
+      },
     },
   },
 });

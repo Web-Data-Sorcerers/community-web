@@ -20,6 +20,14 @@
   },
   "rewrites": [
     {
+      "source": "/api/admin/site-visibility",
+      "destination": "/_render"
+    },
+    {
+      "source": "/api/site-visibility/revision",
+      "destination": "/_render"
+    },
+    {
       "source": "/images/cms/:collection/:hash.webp",
       "destination": "/api/media?collection=:collection&hash=:hash"
     }
