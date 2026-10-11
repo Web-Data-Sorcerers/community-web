@@ -1878,6 +1878,21 @@ import {
     transform: translateY(-1px);
   }
 
+  .btn-step-action:is(:active, [data-pressed]):not(:disabled):not(
+      [aria-disabled='true']
+    ) {
+    opacity: 0.88;
+    transform: none;
+    transition: none;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .btn-step-action:is(:active, [data-pressed]):not(:disabled):not(
+        [aria-disabled='true']
+      ) {
+      scale: 0.98;
+    }
+  }
+
   .btn-submit .submit-spinner {
     display: none;
     width: 16px;

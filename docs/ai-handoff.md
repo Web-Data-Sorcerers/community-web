@@ -1,5 +1,20 @@
 # AI handoff — current context
 
+## Snappy Navigation — local follow-up, 12 Oct 2026
+
+Owner approved local execution (“gassss”). Read
+[local implementation and evidence](snappy-navigation-local.md) before treating
+kickoff recommendations as proven. Explicit80ms fade and immediate touch/mouse
+CTA feedback are implemented locally. Viewport prefetch experiment showed another
+HTML fetch on click despite completed prefetch; speculative HTML is now disabled.
+Visibility reads remain fresh; no SWR/TTL cache or Auth/save contract changes.
+Owner subsequently authorized “coba commit dan deploy” for the tested scope,
+including main push. Release acceptance pending. Existing unrelated dirty docs retained.
+Production remains the released6811a50 checkpoint. Local checks/build and targeted
+browser/visibility/recruitment/Navbar/spacing/SEO checks PASS; no0ms guarantee.
+
+
+
 ## R7 runtime recovered / admin header release approved — 11 Oct 2026
 
 [Results and scoped header fix](page-section-visibility-r7-header-release.md): f8a87ca deployment READY and

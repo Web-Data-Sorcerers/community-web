@@ -1,7 +1,7 @@
 ---
 import '../styles/global.css';
 import { getPageState, PAGE_BY_ID } from '../data/site-visibility-registry.mjs';
-import { ClientRouter } from 'astro:transitions';
+import { ClientRouter, fade } from 'astro:transitions';
 import Splash from '../components/Splash.astro';
 import Sound from '../components/Sound.astro';
 interface Props {
@@ -54,7 +54,11 @@ const allStructuredData = [...baseStructuredData, ...extraStructuredData];
 ---
 
 <!doctype html>
-<html lang="en" prefix="og: https://ogp.me/ns#">
+<html
+  lang="en"
+  prefix="og: https://ogp.me/ns#"
+  transition:animate={fade({ duration: '80ms' })}
+>
   <head>
     <meta charset="UTF-8" />
     <meta
@@ -85,12 +89,13 @@ const allStructuredData = [...baseStructuredData, ...extraStructuredData];
          context (and the Web Audio engine) alive, so the sound does not cut on
          navigation. Component scripts are re-run per page via `astro:page-load`
          because Astro does not re-execute bundled scripts on a swap. -->
-    <ClientRouter />
+    <ClientRouter fallback="swap" />
     {visibility && (
       <meta name="ds-visibility-revision" content={visibility.revision} />
     )}
     <script>
       import '../scripts/site-visibility-navigation.js';
+      import '../scripts/press-feedback.js';
     </script>
     <meta name="author" content="Data Sorcerers" />
 

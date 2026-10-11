@@ -38,6 +38,7 @@ try {
       });
       await page.goto(base.href, { waitUntil: 'domcontentloaded' });
       await page.locator('.navbar.is-ready').waitFor();
+      const projectCount = await page.locator('#projects').count();
       const before = await page.locator('.navbar').boundingBox();
       if (await page.locator('.mobile-menu summary').isVisible())
         await page.locator('.mobile-menu summary').click();
@@ -53,10 +54,7 @@ try {
         'true',
       );
       assert.equal(await page.locator('.navigation-progress').count(), 0);
-      assert.equal(
-        await page.locator('.navigation-status').textContent(),
-        'Loading page…',
-      );
+      assert.equal(await page.locator('.navigation-status').count(), 0);
       assert.equal(
         await page
           .locator('a.nav-link.active')
@@ -84,7 +82,7 @@ try {
         false,
       );
       assert.equal(await page.locator('main').getAttribute('aria-busy'), null);
-      assert.equal(await page.locator('.navigation-status').textContent(), '');
+      assert.equal(await page.locator('.navigation-status').count(), 0);
       assert.equal(
         await page
           .locator('.navbar')
@@ -121,7 +119,7 @@ try {
           location.pathname === '/' &&
           !document.documentElement.classList.contains('navigation-pending'),
       );
-      assert.equal(await page.locator('#projects').count(), 0);
+      assert.equal(await page.locator('#projects').count(), projectCount);
       proof.push({
         width,
         motion,

@@ -13,8 +13,8 @@ export default defineConfig({
   output: 'static',
   adapter: vercel(),
   devToolbar: { enabled: false },
-  // Enable hover-based prefetching for instant page transitions.
-  prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
+  // Keep speculative traffic limited to explicitly selected links.
+  prefetch: { prefetchAll: false, defaultStrategy: 'hover' },
   // Keep the internal sound audition page out of the public sitemap.
   integrations: [
     sitemap({

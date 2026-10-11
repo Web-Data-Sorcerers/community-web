@@ -70,6 +70,19 @@ const {
       color 0.3s ease,
       outline-color 0.3s ease;
   }
+  .button:is(:active, [data-pressed]):not(:disabled):not(
+      [aria-disabled='true']
+    ) {
+    opacity: 0.88;
+    transition: none;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .button:is(:active, [data-pressed]):not(:disabled):not(
+        [aria-disabled='true']
+      ) {
+      scale: 0.98;
+    }
+  }
   .button[aria-disabled] {
     cursor: default;
   }

@@ -2996,3 +2996,10 @@ Default About/Hall of Frames presentation is preserved. See
 Pages & Sections UI refinement (11 Oct 2026): reuse console fonts, colors and
 Button variants; no new artwork or font asset. Layout/QA record:
 [page-section-visibility-ui-refinement-local.md](page-section-visibility-ui-refinement-local.md).
+
+## Snappy navigation local follow-up — 12 Oct 2026
+
+See [implementation/evidence](snappy-navigation-local.md). Explicit80ms fade and
+pressed CTA opacity/scale change interaction only. Existing Figma references,
+fonts, artwork, spacing and resting geometry are preserved; no new asset or
+Figma node is introduced. Reduced motion has no pressed scale. No release.

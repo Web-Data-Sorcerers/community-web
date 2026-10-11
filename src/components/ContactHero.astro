@@ -401,8 +401,19 @@ const info = [
         0 12px 28px -10px rgb(108 59 255 / 60%);
       transform: translateY(-2px);
     }
-    .form-submit:active {
-      transform: translateY(0);
+  }
+  .form-submit:is(:active, [data-pressed]):not(:disabled):not(
+      [aria-disabled='true']
+    ) {
+    opacity: 0.88;
+    transform: none;
+    transition: none;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .form-submit:is(:active, [data-pressed]):not(:disabled):not(
+        [aria-disabled='true']
+      ) {
+      scale: 0.98;
     }
   }
   @media (prefers-reduced-motion: reduce) {

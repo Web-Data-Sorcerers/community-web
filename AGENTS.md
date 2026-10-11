@@ -1,5 +1,21 @@
 # AGENTS.md — instructions for AI agents
 
+## Snappy Navigation — LOCAL, 12 Oct 2026
+
+Owner authorized local execution with “gassss” after the analysis/plan.
+[Implementation and evidence](docs/snappy-navigation-local.md): explicit 80ms
+fade/swap fallback; first-frame pointer feedback on shared CTA/Contact/Recruitment
+controls; reduced motion opacity only. Viewport HTML prefetch was tested and
+rejected: no-store HTML was fetched again on click in all four browser conditions.
+Implicit/ Navbar HTML prefetch disabled; fresh visibility loader/Auth/save unchanged.
+Node22 check/build 0 errors/0 warnings, 10 visibility tests, 42 recruitment tests,
+Navbar20, spacing40, SEO24, UX15, VT and public visibility28 PASS.
+Owner subsequently authorized “coba commit dan deploy” for this scope, including
+connected main push. Release SHA/deployment acceptance pending; baseline6811a50.
+No production content/visibility/provider mutation.
+Existing dirty documents preserved. No universal0ms or production timing claim.
+
+
 ## Instant Navigation & Contact Person Update — RELEASED (12 Oct 2026)
 
 Owner authorized commit and push for Instant Navigation & Contact Person Update.
