@@ -1,5 +1,12 @@
 # On Development full-screen plan
 
+Update integrasi, 11 Oktober 2026: komposisi ini sudah dipakai oleh kontrol
+Pages & Sections lokal dan masuk commit `51ce198`, belum dipush/live. About/HoF
+seed tetap off; original compositions dipakai saat status efektif aktif.
+Catatan awal di bawah bersifat historis. Current handoff:
+[kickoff aktif](page-section-visibility-kickoff.md) dan
+[plan release](page-section-visibility-production-release-plan.md).
+
 Owner approved implementation on 11 Oct 2026. Custom composition from the
 owner's background and approved conversation plan; no new Figma node exists.
 Reference artwork: `assets/on development/ondp.png`. Do not invent Figma IDs or

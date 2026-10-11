@@ -1,17 +1,104 @@
 # Handover — Data Sorcerers (community-web)
 
+## R4 release diizinkan — 11 Oct 2026
+
+Owner memberi instruksi eksplisit “commit dan push scope release tersebut,
+termasuk deployment main”. Scope: commit fitur51ce198 + fix packaging visibility
+
+- seluruh dokumen handoff/preflight terkait yang existing.
+  [Execution record](docs/page-section-visibility-r4-release.md) mencatat freeze/push/deployment/acceptance.
+  Baseline sebelum push12:12 UTC: loader valid19/21 revision seed, Home/ProjectsON,
+  About/HoFOFF; Current/alias READY144e681. Provider config dan live toggle/restore
+  tetap tidak diizinkan. Checkpoint PLAN ONLY dan pending commit di bawah historis;
+  izin release ini hanya untuk scope yang disebut, bukan future push umum.
+
+## R3 fix packaging lokal — 11 Oct 2026
+
+[Fix dan bukti rerun](docs/page-section-visibility-r3-function-fix-local.md): owner menyetujui move visibility entry ke
+server + update bridge import. Detector11 API +1 SSR expected12; Node22
+check/build, 54 tests dan compiled shared Auth/routing synthetic PASS.
+Production loader read-only tetap seed: Home/ProjectsON, About/HoFOFF,19/21.
+Fix belum committed; HEAD51ce198 bukan final candidate. Tidak push/deploy,
+provider/config mutation atau live toggle. R3 provider manifest/R5/R6 pending.
+Checkpoint proposal R3 di bawah merupakan bukti sebelum fix ini.
+
+## R3 provider preflight — 11 Oct 2026, 11:13–11:21 UTC
+
+[Bukti R3 dan proposal fix minimal](docs/page-section-visibility-r3-provider-preflight.md):
+backend production/target content+revision identik; Node22 build/check/tests10
+dan19 local SSR reads dengan real DB PASS; remote CMS prebuild/latest snapshot
+build terisolasi PASS. Engines22 mengesampingkan provider24; artifact22 terbukti.
+Release candidate51ce198 tertahan: CLI memilih12 standalone API +1 SSR expected13,
+melebihi Hobby12. Belum provider rejection/deploy. Proposal belum diterapkan:
+move visibility entry keluar root api/ dan update import bridge (expected12).
+Perlu izin fix source lokal karena scope aktif preflight/docs; tidak mengubah
+source/config/provider/SQL/save/toggle/commit/push dalam pass R3. R2 tetap PASS.
+
+## Update Paket A / R2 — 11 Oct 2026, 11:06–11:07 UTC
+
+[R2 production DB](docs/page-section-visibility-r2-production-db.md) selesai setelah owner “gass”
+dengan scope Paket A SQL exact + verifikasi yang diumumkan. Migration applied
+sekali, loader200 valid tiga reads, catalog/defaults/ACL/RLS/denials PASS;
+fingerprints existing identik. Cache reload tidak diperlukan. Home/Projects ON,
+About/HoF OFF di config19/21; web Current144e681 masih lama, fitur belum live.
+Status PLAN/R0 sebelum SQL di bawah adalah snapshot historis. Tidak
+provider/deploy/save/toggle/restore/commit/push. R3 gates dan instruksi baru
+“commit dan push” dengan scope release jelas tetap diperlukan; live toggle dan
+restore izin terpisah. Existing dirty/source/hash terjaga.
+
+## R0 read-only terbaru — 11 Oct 2026, 10:34–10:38 UTC
+
+[Hasil R0, readiness dan approval A/B/C](docs/page-section-visibility-r0-preflight.md):
+catalog visibility absent, public exposed, loader404/PGRST202; R1 mengajukan
+migration exact, belum apply. Current/alias READY `dpl_5Kp2u5fzhVTgnVUMtykugjKUef3o`
+pada remote SHA `144e681`, kandidat rollback aktual. Production masih About/HoF
+lama, belum chamber/tab visibility. Node provider24; secret env values/backend
+provider belum terbukti. Rerun lokal build/check+10 tests PASS; 44 screenshot
+production baseline, preview fixture4348 aktif saat pass. HEAD `51ce198` dan
+existing source/dirty docs dipertahankan. Tetap PLAN ONLY, belum commit/push atau
+mutation production; gate DB/API wajib sebelum approval release baru.
+
+## Handoff aktif AI baru — Pages & Sections, PLAN/PREFLIGHT ONLY (11 Oct 2026)
+
+Owner meminta seluruh konteks disinkronkan dan prompt rinci untuk AI baru.
+Baca [kickoff aktif](docs/page-section-visibility-kickoff.md) dan
+[plan release R0–R7](docs/page-section-visibility-production-release-plan.md)
+secara penuh bersama dokumen wajib dalam kickoff. Jangan memulai ulang P0–P6.
+
+- Implementasi dan refinement UI selesai lokal; commit
+  `51ce1984112283ad533e018dbebcb6b3730a138a` sudah dibuat, belum dipush.
+- Remote main terakhir `144e6812cda44c5f59b3152bffe6f0d027bc2e6b`; verifikasi ulang.
+- Loader API terakhir HTTP 404/PGRST202, 11 Oct 2026 09:48:07 UTC. Catalog/ACL/
+  schema cache belum dibuktikan lengkap; ini bukan alasan apply ulang buta.
+- SQL production/provider/deploy/live toggle belum dijalankan sesi ini.
+  Home/Projects default ON; About/HoF default Under Development.
+- Dokumen planning setelah commit masih dirty/untracked. Pertahankan semua
+  existing diff; jangan reset/stash/amend/force atau otomatis commit dokumen.
+
+Work order berikutnya saat owner menempel kickoff: baca penuh, periksa Git,
+jalankan preflight read-only yang tersedia, update plan/bukti, siapkan approval
+konkret. Jangan berhenti hanya untuk menanyakan arahan yang sudah ada di kickoff.
+Production SQL (termasuk cache reload), provider/config, deployment dan live
+save/toggle/restore tetap perlu izin terpisah. Database/API harus siap sebelum
+main push. Instruksi commit/push sebelumnya bukan izin umum untuk release baru;
+latest PLAN ONLY menahan push dan commit tambahan hingga instruksi owner baru.
+
+Entri di bawah merupakan checkpoint HISTORIS. “Future implementation”, “no
+commit” dan work order lama dibaca dalam konteks tanggal/pass-nya, bukan status
+terkini atau izin baru. Runtime belum boleh disebut live dari bukti fixture lokal.
+
 ## Pages & Sections release checkpoint (11 Oct 2026)
 
-Owner explicitly requested “commit and push”. Local commit is now authorized.
-Origin has one push URL, community-web; remote main matched local144e681 before
-this commit. Read-only Supabase visibility loader check returned404/PGRST202.
+Owner explicitly requested “commit and push”; local commit `51ce198` completed.
+Origin has one push URL, community-web; remote main matched `144e681` before
+that commit. Read-only Supabase visibility loader check returned HTTP 404/PGRST202.
 Master P7 requires DB before runtime deployment; main is documented auto-deploy.
 Do not push this release to main until separately authorized production migration
 and deployment prerequisites pass. No production SQL/provider/live toggle was
 performed. Concrete migration SHA, scope and sequence:
 [release checkpoint](docs/page-section-visibility-release-checkpoint.md).
-Earlier no-commit/push entries below are historical checkpoints, superseded by
-the current owner authorization; their production restrictions still apply.
+Earlier no-commit entries are historical checkpoints. Latest PLAN ONLY applies
+to new work and holds the pending push; production restrictions still apply.
 
 ## Pages & Sections UI refinement — LOKAL PASS (11 Oct 2026)
 
@@ -118,21 +205,21 @@ reduced-motion and normal entrance; browserErrors: []. Screenshots and metrics:
 and Hall of Frames assertions still target the original content pages; this
 pass uses the dedicated verifier for the approved replacement composition.
 
-## WORK ORDER AKTIF & PANDUAN UNTUK AI BARU (11 Oct 2026)
+## Panduan umum AI baru dan checkpoint historis (11 Oct 2026)
 
 > [!IMPORTANT]
 > **INSTRUKSI WAJIB UNTUK AI BARU:**
 >
 > 1. **BACA DOKUMEN INI & AGENTS.MD TERLEBIH DAHULU SEBELUM MELAKUKAN APAPUN.**
 > 2. **JANGAN LANGSUNG CODING ATAU MENGUBAH APAPUN TANPA INSTRUKSI DARI OWNER (FAIZ).**
-> 3. Faiz meminta kamu membaca konteks dan status terakhir terlebih dahulu. Setelah selesai membaca, sapa Faiz dan tanyakan arahan langkah selanjutnya sesuai rencananya.
+> 3. Ikuti handoff aktif di atas. Jika kickoff sudah memberi scope read-only/planning, selesaikan review itu dan sajikan hasil konkret; jangan meminta arahan umum lagi. Scope di luar izin yang tertulis memerlukan instruksi owner.
 > 4. **HUKUM ZERO EMOTE:** Dilarang keras menggunakan emoji/emotikon dalam bentuk apapun di kode, commit message, komentar, dokumentasi, dan respon chat.
 > 5. **COMMIT GUARD:** Dilarang melakukan git commit atau push sebelum ada perintah eksplisit "commit dan push" dari Faiz.
 > 6. **STRICT 8-POINT SPACING:** Seluruh nilai padding, margin, gap di `src/components/` wajib kelipatan 8 atau ekspresi dinamis CSS (`calc`, `clamp`, `max`, `%`).
 
 ---
 
-### Status Terkini Proyek (11 Oct 2026 - PASS):
+### Checkpoint historis sebelum Pages & Sections (11 Oct 2026 - PASS):
 
 1. **Refinement Kontras Teks Navbar (`src/components/Navbar.astro`) — SELESAI & PASS**:
    - Teks menu navbar non-aktif diperbarui dari `#707070` menjadi `#c5bad4` (_Silver Lavender Mist_), kontras > 8.4:1 (WCAG AAA).

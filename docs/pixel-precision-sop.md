@@ -1,5 +1,13 @@
 # SOP — Presisi piksel (WAJIB untuk semua section/halaman)
 
+Work order terkini, 11 Oktober 2026: Pages & Sections dan refinement selesai
+lokal, commit `51ce198` belum dipush/live. AI baru mengikuti
+[kickoff aktif](page-section-visibility-kickoff.md) dan
+[plan release](page-section-visibility-production-release-plan.md): planning/
+preflight dahulu, tanpa redesign. Work order CMS lama di bawah adalah sejarah;
+aturan SOP presisi, ZERO EMOTE dan STRICT 8-POINT tetap berlaku jika ada fix yang
+diizinkan. Komposisi custom admin/On Development tidak memiliki node Figma baru.
+
 ## Work order CMS berikutnya — auth, UI tetap terkunci
 
 [Master Work Plan auth CMS](cms-auth-supabase-plan.md) rinci **PLAN ONLY**;

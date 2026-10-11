@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import visibility from '../../../api/admin/site-visibility.js';
+import visibility from '../../../server/site-visibility-api.mjs';
 import projects from '../../../api/admin/projects.js';
 import team from '../../../api/admin/team.js';
 import media from '../../../api/admin/media.js';

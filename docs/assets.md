@@ -1,5 +1,12 @@
 # Asset provenance
 
+Status handoff 11 Oktober 2026: On Development dan kontrol Pages & Sections
+sudah diimplementasikan lokal, commit `51ce198` belum dipush/live. Pernyataan
+“visibility future work” pada checkpoint lama di bawah adalah historis.
+Provenance asset tetap dipertahankan. Lihat
+[kickoff aktif](page-section-visibility-kickoff.md) dan
+[plan release](page-section-visibility-production-release-plan.md).
+
 ## On Development full-screen implementation — LOCAL (11 Oct 2026)
 
 Owner approved the detailed plan in `docs/on-development-plan.md`.

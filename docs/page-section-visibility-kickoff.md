@@ -1,66 +1,154 @@
-# Kickoff for a new AI: Pages & Sections
+# Kickoff aktif untuk AI baru — Pages & Sections
 
-Execution update, 11 Oct 2026: owner submitted the local implementation request.
-P0–P6 execution and actual QA evidence are recorded in
-[page-section-visibility-local.md](page-section-visibility-local.md).
-Original planning/kickoff text below remains the specification/history; its
-“documentation only” status no longer describes this authorized local pass.
-Production actions and commit/push remain separately unauthorized.
+## R4 release diizinkan — 11 Oct 2026
 
-Copy the following prompt to start LOCAL implementation when the owner is ready.
-The prompt is not an authorization already given in the planning session.
+Owner memberi instruksi eksplisit “commit dan push scope release tersebut,
+termasuk deployment main”. Scope: commit fitur51ce198 + fix packaging visibility
+
+- seluruh dokumen handoff/preflight terkait yang existing.
+  [Execution record](page-section-visibility-r4-release.md) mencatat freeze/push/deployment/acceptance.
+  Baseline sebelum push12:12 UTC: loader valid19/21 revision seed, Home/ProjectsON,
+  About/HoFOFF; Current/alias READY144e681. Provider config dan live toggle/restore
+  tetap tidak diizinkan. Checkpoint PLAN ONLY dan pending commit di bawah historis;
+  izin release ini hanya untuk scope yang disebut, bukan future push umum.
+
+## R3 fix packaging lokal — 11 Oct 2026
+
+[Fix dan bukti rerun](page-section-visibility-r3-function-fix-local.md): owner menyetujui move visibility entry ke
+server + update bridge import. Detector11 API +1 SSR expected12; Node22
+check/build, 54 tests dan compiled shared Auth/routing synthetic PASS.
+Production loader read-only tetap seed: Home/ProjectsON, About/HoFOFF,19/21.
+Fix belum committed; HEAD51ce198 bukan final candidate. Tidak push/deploy,
+provider/config mutation atau live toggle. R3 provider manifest/R5/R6 pending.
+Checkpoint proposal R3 di bawah merupakan bukti sebelum fix ini.
+
+## R3 provider preflight — 11 Oct 2026, 11:13–11:21 UTC
+
+[Bukti R3 dan proposal fix minimal](page-section-visibility-r3-provider-preflight.md):
+backend production/target content+revision identik; Node22 build/check/tests10
+dan19 local SSR reads dengan real DB PASS; remote CMS prebuild/latest snapshot
+build terisolasi PASS. Engines22 mengesampingkan provider24; artifact22 terbukti.
+Release candidate51ce198 tertahan: CLI memilih12 standalone API +1 SSR expected13,
+melebihi Hobby12. Belum provider rejection/deploy. Proposal belum diterapkan:
+move visibility entry keluar root api/ dan update import bridge (expected12).
+Perlu izin fix source lokal karena scope aktif preflight/docs; tidak mengubah
+source/config/provider/SQL/save/toggle/commit/push dalam pass R3. R2 tetap PASS.
+
+## Update Paket A / R2 — 11 Oct 2026, 11:06–11:07 UTC
+
+[R2 production DB](page-section-visibility-r2-production-db.md) selesai setelah owner “gass”
+dengan scope Paket A SQL exact + verifikasi yang diumumkan. Migration applied
+sekali, loader200 valid tiga reads, catalog/defaults/ACL/RLS/denials PASS;
+fingerprints existing identik. Cache reload tidak diperlukan. Home/Projects ON,
+About/HoF OFF di config19/21; web Current144e681 masih lama, fitur belum live.
+Status PLAN/R0 sebelum SQL di bawah adalah snapshot historis. Tidak
+provider/deploy/save/toggle/restore/commit/push. R3 gates dan instruksi baru
+“commit dan push” dengan scope release jelas tetap diperlukan; live toggle dan
+restore izin terpisah. Existing dirty/source/hash terjaga.
+
+Checkpoint R0 11 Oktober 2026 10:34–10:38 UTC:
+[readiness, catalog, paket approval dan preview](page-section-visibility-r0-preflight.md).
+Catalog sekarang terbukti objek visibility absent, bukan hanya RPC404.
+Current/alias deployment lama terverifikasi; PLAN/PREFLIGHT ONLY tetap berlaku.
+Checkpoint ini melengkapi kondisi historis dalam blok handoff; tidak memberi izin
+SQL/cache reload/provider/deployment/toggle/restore/commit/push.
+
+Tanggal: 11 Oktober 2026. Scope aktif: baca konteks, preflight read-only dan
+rencana release konkret. Implementasi/UI P0–P6 selesai lokal; belum live.
+[Plan release rinci](page-section-visibility-production-release-plan.md) memuat
+R0–R7, gate, paket approval, QA, source map dan cara preview lokal.
+[Kickoff P0–P6 lama](page-section-visibility-local-kickoff-archive.md) hanya arsip.
+
+Salin seluruh blok berikut ke AI baru:
 
 ```text
-Implementasikan lokal kontrol Pages & Sections sesuai master plan.
+Lanjutkan Pages & Sections dari kondisi existing. PLAN/PREFLIGHT ONLY dahulu.
+Jangan mulai implementasi P0–P6 dari nol dan jangan menjalankan release dulu.
 
-Baca seluruh HANDOVER.md dan AGENTS.md, lalu
-docs/page-section-visibility-plan.md,
-docs/on-development-plan.md dan docs/pixel-precision-sop.md.
-Periksa git status/diff; preserve perubahan existing dan jangan reset/stash.
+Baca SELURUH dokumen berikut, bukan hanya header/summary:
+1. HANDOVER.md
+2. AGENTS.md
+3. docs/ai-handoff.md
+4. docs/page-section-visibility-plan.md
+5. docs/page-section-visibility-kickoff.md
+6. docs/page-section-visibility-local.md
+7. docs/page-section-visibility-ui-refinement-plan.md
+8. docs/page-section-visibility-ui-refinement-local.md
+9. docs/page-section-visibility-release-checkpoint.md
+10. docs/page-section-visibility-production-release-plan.md
+11. docs/on-development-plan.md
+12. docs/pixel-precision-sop.md
 
-Target: tab keempat admin untuk aktif/nonaktif page dan section. Halaman off
-menampilkan Page Under Development dengan background ondp.png yang sudah
-diimplementasikan; section off tidak dirender dan data tetap tersimpan.
-Home selalu aktif. About Us dan Hall of Frames tetap under development secara
-default. Section home.projects awalnya preserve baseline; siapkan kontrol untuk
-owner menonaktifkannya. Jangan melakukan mutation production dari prompt ini.
+Periksa git status, seluruh diff tracked/untracked relevan, HEAD, remote dan
+migration hash. Pertahankan semua perubahan existing, termasuk dokumen planning
+belum committed. Jangan reset, stash, amend, force-push atau menimpa kerja orang.
 
-Ikuti arsitektur rekomendasi runtime SSR selektif: sesudah save confirmed,
-kunjungan berikutnya membaca status terbaru tanpa menunggu rebuild. Lakukan
-spike Astro7/Vercel lokal dahulu, buktikan routing api/media tetap bekerja,
-prefetch/ClientRouter tidak menyajikan state stale, lalu lanjut P2-P6.
-Jangan mengklaim 0ms atau update otomatis tab pengunjung yang sudah terbuka.
+Kondisi handoff terakhir, WAJIB diverifikasi ulang:
+- P0–P6 dan refinement UI sudah lokal PASS; commit fitur
+  51ce1984112283ad533e018dbebcb6b3730a138a sudah dibuat, belum dipush.
+- Remote main terakhir 144e6812cda44c5f59b3152bffe6f0d027bc2e6b.
+- Origin community-web; remote production historis menunjuk repo sama.
+- Loader Supabase read-only terakhir HTTP 404/PGRST202 pada
+  2026-10-11T09:48:07Z. Ini API belum siap, bukan bukti catalog kosong.
+- SQL production/provider/deployment/live toggle belum dijalankan sesi ini.
+- Dokumen planning sesudah commit masih dirty/untracked; jangan hilangkan.
+- Preview terakhir http://127.0.0.1:4348/admin/#pages hanya fixture lokal;
+  periksa proses/port/artifact sebelum menganggapnya masih tersedia.
 
-Reuse shared CMS Auth/Origin/CSRF. Tambahkan registry/kontrak/SQL additive lokal,
-API settings, panel admin, conditional render, link dependency dan QA.
-Jangan menambah visibility ke schema snapshot CMS enam collection.
-Jangan panggil deploy hook ketika menyimpan visibility.
-Jangan mengubah RECRUITMENT_OPEN atau Auth user/grant/allowlist.
+Fitur existing: 19 page preferences dan 21 section preferences; section bukan
+hanya Home. Home 5, About 4, Hall of Frames 3, Recruitment 7, Partners 2.
+Contact, HoDS, role detail dan Apply memakai komposisi internal protected v1.
+Home selalu aktif; About/HoF default Under Development; home.projects tetap ON.
+Page off menampilkan Page Under Development; section off tidak ada di SSR HTML
+namun datanya tetap. Parent page menentukan status efektif child tanpa menimpa
+preferensinya. CTA mengikuti tujuan page/section; hero/nav tetap protected.
 
-Halaman detail HoDS/roles/apply ikut registry dan aturan parent. Navbar/Footer
-tetap mengizinkan membuka page under development; tombol rekomendasi hanya
-menuju page aktif. CTA ke section hidden harus ikut hilang atau Back memakai
-fallback parent page yang jelas. Restore original About/HoF compositions untuk
-mode active tanpa merusak typography/geometri/component existing.
+Request-time selective SSR membaca config tervalidasi sekali per request.
+Save confirmed membuat fresh visit berikutnya membaca revision terbaru tanpa
+rebuild/deploy hook. Bukan janji 0ms, bukan update otomatis tab yang sudah terbuka.
+Loader gagal sengaja 503; jangan fallback enabled-all atau ubah menjadi rebuild.
+Reuse shared CMS Auth, Origin, CSRF. Jangan mengubah schema enam collection CMS,
+RECRUITMENT_OPEN, akun, grant existing, allowlist, content atau storage.
 
-Kerjakan berurutan P0-P6 dan satu page/section per pass. Patuhi ZERO EMOTE,
-STRICT 8-POINT SPACING dan Bluu Next + Manrope serta Button existing.
-Lakukan QA meaningful contract/DB/auth/race/admin/public/SSR/no-JS/SEO.
-Update handover dan laporkan bukti serta risiko runtime/performance.
+Lakukan R0 read-only sesuai plan: verifikasi Git/backend/provider/env/routing,
+actual production deployment SHA/alias, catalog/ACL/cache dan baseline existing.
+Gunakan akses existing yang tersedia tanpa mencetak secret/cookie/PII. Jika
+akses tidak tersedia, catat pemeriksaan yang pending; jangan mengarang hasil.
+Pastikan loader SUPABASE_URL cocok dengan write project yejrdckcmlxrkklgtrwy.
+Node lokal 26.10, function artifact 24, engines package 22.x: periksa actual
+compatibility provider; jangan otomatis mengganti setting/dependency.
 
-Izin ini hanya implementasi lokal dan QA dengan fixture lokal/ephemeral.
-SQL production, config/provider mutation, deployment atau live toggle/restore
-memerlukan review konkret dan otorisasi owner setelah hasil siap ditinjau.
-Dilarang git commit atau push sampai saya berkata 'commit dan push'.
-Jangan bertanya ulang untuk pilihan rutin yang sudah tertulis dalam plan.
-Jika spike menemukan blocker arsitektur, jelaskan bukti dan opsi sebelum
-mengganti target instant menjadi static+rebuild.
+Siapkan hasil konkret: readiness matrix, blocker dengan bukti, pilihan R1
+catalog, paket A SQL exact project/file/hash/defaults/cache-reload scope,
+paket B exact SHA push+connected deployment+rollback candidate, paket C exact
+live target/revision/final-state. DB/API harus siap SEBELUM push main.
+Migration hanya supabase/migrations/20261011160000_site_visibility.sql,
+SHA256 62844c643ca608582334647824978663b758753c8623b87a6ac7622dd7a1b82c.
+Jangan apply seluruh migrations atau memakai save/no-op sebagai readiness probe.
+
+Izin prompt ini: pembacaan, preflight tanpa perubahan production, dan pembaruan
+dokumentasi rencana. QA fixture lokal/ephemeral tetap diizinkan bila diperlukan;
+bedakan hasil terdahulu dari rerun dan bukti production. Kerjakan tindakan yang
+sudah diizinkan sampai hasil review siap, jangan berhenti pada janji rencana.
+SQL production termasuk schema-cache reload, provider/config mutation,
+deployment, live toggle/restore perlu izin terpisah setelah hasil konkret siap.
+Instruksi commit and push terdahulu telah menghasilkan commit lokal di atas;
+permintaan terbaru PLAN ONLY. Jangan commit/push tambahan atau menjalankan push
+tertahan sampai saya memberi instruksi eksplisit baru 'commit dan push' beserta
+scope release/deployment yang jelas. Branch preview juga bisa memicu deployment.
+
+Patuhi ZERO EMOTE, STRICT 8-POINT SPACING, Bluu Next, Manrope dan Button existing.
+Jangan redesign UI atau mengubah kode dalam pass planning ini. Jika ditemukan
+perlu fix, sajikan scope/bukti dahulu; setelah diizinkan, satu page/section per
+pass, QA meaningful dan update dokumentasi. Jangan mengarang node Figma.
+
+Output pertama setelah review: apa yang sudah selesai lokal, yang belum live,
+working tree terbaru, bukti R0 verified/pending/failed, urutan R1–R7 beserta gate,
+paket approval konkret dan cara saya mengecek preview. Jangan menyatakan live
+sebelum exact deployment/alias dan acceptance terbukti. Jangan meminta password.
 ```
 
-Handoff success checklist:
-
-- Required documents read and working tree mapped.
-- Architecture spike proven before committing to broad SSR changes.
-- Local implementation authorized by owner using the prompt above or equivalent.
-- Live changes remain separate from local implementation.
-- Master plan is the source of IDs, behaviors, API/DB contracts and QA gates.
+AI baru membedakan tiga sumber kebenaran: kode/Git aktual, bukti QA lokal
+tercatat, serta keadaan production yang dibaca ulang. Catatan historis tidak
+memberi izin mutation baru. Bila workspace berbeda, ignored artifacts dan
+`/tmp` fixture belum tentu tersedia; jangan mengklaim hasil rerun tanpa bukti.
