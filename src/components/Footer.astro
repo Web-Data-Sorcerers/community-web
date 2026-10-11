@@ -54,22 +54,40 @@ const destinations: Record<string, string> = {
         </p>
       </div>
       <div class="socials">
-        <span class="social" title="Instagram">
+        <a
+          class="social"
+          href="https://www.instagram.com/datasorcerers"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Instagram"
+          aria-label="Instagram"
+          data-sfx="click"
+          data-sfx-hover="hover"
+        >
           <img
             src="/images/footer/instagram.svg"
             width="24"
             height="24"
             alt="Instagram"
           />
-        </span>
-        <span class="social" title="LinkedIn">
+        </a>
+        <a
+          class="social"
+          href="https://www.linkedin.com/company/data-sorcerers"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="LinkedIn"
+          aria-label="LinkedIn"
+          data-sfx="click"
+          data-sfx-hover="hover"
+        >
           <img
             src="/images/footer/linkedin.svg"
             width="24"
             height="24"
             alt="LinkedIn"
           />
-        </span>
+        </a>
       </div>
     </div>
     <nav class="footer-nav" aria-label="Footer navigation">
@@ -100,11 +118,11 @@ const destinations: Record<string, string> = {
         <li>
           Email:{' '}
           <a
-            href="mailto:datasorcerers@gmail.com"
+            href="mailto:contact@data-sorcerers.com"
             data-sfx="click"
             data-sfx-hover="hover"
           >
-            datasorcerers@gmail.com
+            contact@data-sorcerers.com
           </a>
         </li>
       </ul>
@@ -253,6 +271,17 @@ const destinations: Record<string, string> = {
     padding: 12px;
     border: 0.75px solid #fff;
     border-radius: 31.5px;
+    text-decoration: none;
+    color: inherit;
+    transition:
+      background 0.25s ease,
+      border-color 0.25s ease,
+      transform 0.25s ease;
+  }
+  .social:hover {
+    background: rgb(255 255 255 / 15%);
+    border-color: #e5c5ff;
+    transform: translateY(-2px);
   }
   .social img {
     display: block;

@@ -1,4 +1,6 @@
 // Native static admin browser with mocked HTTP transport; real Supabase identity is verified separately.
+import { existsSync } from 'node:fs';
+const distRoot = existsSync('dist/client') ? 'dist/client' : 'dist';
 import { chromium } from '@playwright/test';
 import assert from 'node:assert/strict';
 import sharp from 'sharp';
@@ -6,7 +8,7 @@ import { normalizeProjectImage } from '../server/cms-media.mjs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 
 const html = await readFile(
-  new URL('../dist/admin/index.html', import.meta.url),
+  new URL('../' + distRoot + '/admin/index.html', import.meta.url),
   'utf8',
 );
 const projects = JSON.parse(
@@ -57,7 +59,7 @@ try {
       };
       try {
         const body = await readFile(
-          new URL('../dist' + pathname, import.meta.url),
+          new URL('../' + distRoot + pathname, import.meta.url),
         );
         await route.fulfill({
           body,
@@ -175,6 +177,11 @@ try {
               csrf: 'mock-csrf',
             });
           }
+          if (url.includes('/api/admin/site-visibility'))
+            return Response.json(
+              { ok: false, error: { code: 'UNAUTHORIZED' } },
+              { status: 401 },
+            );
           if (url.includes('logout')) return Response.json({ ok: true });
           if (url.includes('/api/admin/team')) {
             return Response.json({

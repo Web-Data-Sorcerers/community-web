@@ -1,22 +1,4 @@
-import snapshot from '../../../data/cms-snapshot.json';
-
-export const prerender = true;
-
-export async function GET() {
-  return Response.json(
-    {
-      ok: true,
-      source: 'snapshot',
-      data: {
-        projects: snapshot.projects,
-        team: snapshot.team,
-        revision: 'snapshot',
-      },
-    },
-    {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    },
-  );
-}
+import content from '../../../../api/cms/content.js';
+import type { APIRoute } from 'astro';
+export const prerender = false;
+export const ALL: APIRoute = ({ request }) => content.fetch(request);

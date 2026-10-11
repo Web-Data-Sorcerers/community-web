@@ -1,4 +1,8 @@
 ---
+import { canNavigateToTarget } from '../data/site-visibility-registry.mjs';
+const canVisit = (page: string, section?: string) =>
+  !Astro.locals.visibility ||
+  canNavigateToTarget(Astro.locals.visibility, page, section);
 import TeamCard from './TeamCard.astro';
 import { leaderTeam, hodsTeams } from '../data/team';
 
@@ -117,7 +121,7 @@ const STEP = 948;
                   {group.members.map((member) => (
                     <TeamCard {...member} fade={group.fade} />
                   ))}
-                  {group.joinNow && (
+                  {group.joinNow && canVisit('recruitment') && (
                     <a class="team-card team-card--join" href="/recruitment">
                       <img
                         class="team-card-frame"

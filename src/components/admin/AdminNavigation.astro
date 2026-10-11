@@ -1,12 +1,13 @@
 ---
 interface Props {
-  active: 'projects' | 'team' | 'recruitment';
+  active: 'projects' | 'team' | 'recruitment' | 'pages';
 }
 const { active } = Astro.props;
 const modules = [
   { id: 'projects', label: 'Projects', href: '/admin/' },
   { id: 'team', label: 'Team', href: '/admin/team/' },
   { id: 'recruitment', label: 'Pendaftar', href: '/admin/recruitment/' },
+  { id: 'pages', label: 'Pages & Sections', href: '/admin/#pages' },
 ];
 ---
 

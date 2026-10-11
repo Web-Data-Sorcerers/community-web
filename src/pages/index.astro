@@ -1,4 +1,6 @@
 ---
+export const prerender = false;
+import { getSectionState } from '../data/site-visibility-registry.mjs';
 import Recruitment from '../components/Recruitment.astro';
 import Projects from '../components/Projects.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
@@ -9,17 +11,19 @@ import Hero from '../components/Hero.astro';
 import Philosophy from '../components/Philosophy.astro';
 import Domains from '../components/Domains.astro';
 import WhatWeDo from '../components/WhatWeDo.astro';
+const visible = (id: string) =>
+  getSectionState(Astro.locals.visibility!, 'home', id);
 ---
 
 <BaseLayout>
   <Navbar />
   <main id="main">
     <Hero />
-    <Philosophy />
-    <WhatWeDo />
-    <Domains />
-    <Projects />
-    <Recruitment />
+    {visible('philosophy') && <Philosophy />}
+    {visible('what-we-do') && <WhatWeDo />}
+    {visible('domains') && <Domains />}
+    {visible('projects') && <Projects />}
+    {visible('recruitment-cta') && <Recruitment />}
   </main>
   <Footer />
   <Motion />

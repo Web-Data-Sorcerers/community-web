@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import snapshotBundled from '../src/data/cms-snapshot.json' with { type: 'json' };
 
 const HASH_RE = /^[a-f0-9]{64}$/;
 const COLLECTIONS = new Set(['projects', 'team']);
@@ -66,7 +67,7 @@ export function createPublicMediaHandler({
 export function createPublicContentHandler({
   env = process.env,
   fetchImpl = fetch,
-  snapshotPath = new URL('../src/data/cms-snapshot.json', import.meta.url),
+  snapshotPath,
 } = {}) {
   return async function handleContent(request) {
     if (request.method !== 'GET') {
@@ -75,8 +76,9 @@ export function createPublicContentHandler({
 
     const loadFallback = async () => {
       try {
-        const text = await readFile(snapshotPath, 'utf8');
-        const snapshot = JSON.parse(text);
+        const snapshot = snapshotPath
+          ? JSON.parse(await readFile(snapshotPath, 'utf8'))
+          : structuredClone(snapshotBundled);
         return {
           ok: true,
           source: 'snapshot',

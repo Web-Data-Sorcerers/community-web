@@ -1,21 +1,185 @@
 # Handover — Data Sorcerers (community-web)
 
-## Work order aktif — auth CMS, PLAN ONLY untuk AI baru
+## Pages & Sections release checkpoint (11 Oct 2026)
 
-Runtime LIVE **925d577**, Partners A–E accepted di kedua primary domains.
-Keenam content collections Supabase; full GAS export tetap dependency.
-Checkpoint docs3229c5b + planning auth terbaru lokal, lihat git log/status;
-izin push925d577 consumed, konfirmasi sebelum push baru termasuk docs.
+Owner explicitly requested “commit and push”. Local commit is now authorized.
+Origin has one push URL, community-web; remote main matched local144e681 before
+this commit. Read-only Supabase visibility loader check returned404/PGRST202.
+Master P7 requires DB before runtime deployment; main is documented auto-deploy.
+Do not push this release to main until separately authorized production migration
+and deployment prerequisites pass. No production SQL/provider/live toggle was
+performed. Concrete migration SHA, scope and sequence:
+[release checkpoint](docs/page-section-visibility-release-checkpoint.md).
+Earlier no-commit/push entries below are historical checkpoints, superseded by
+the current owner authorization; their production restrictions still apply.
 
-Baca [kickoff migrasi](docs/cms-migration-kickoff.md) seluruhnya termasuk §6 →
-AGENTS → [ai-handoff](docs/ai-handoff.md) →
-[Auth CMS Master Work Plan](docs/cms-auth-supabase-plan.md) →
-[TODO](docs/cms-migration-todo.md) → [master plan](docs/cms-supabase-migration-plan.md)
-→ [CMS SOP](docs/cms-sop.md). Plan rinci A–E/security/SQL/QA/acceptance/rollback;
-Faiz meminta **eksekusi di AI baru**, sesi persiapan docs saja. Belum runtime/SQL/
-provider config/deps/deploy auth. Provider/dependency/owner/session gate pending.
-Recruitment allowlist existing tidak otomatis CMS allowlist. UI/data tetap;
-full test:cms tanpa env server. GAS removal belum diizinkan. NEXT historis arsip.
+## Pages & Sections UI refinement — LOKAL PASS (11 Oct 2026)
+
+Owner approved UI refinement after reviewing the initial implementation.
+Grouped/searchable page picker, mobile disclosure, one page toggle in detail,
+readable switches, saved/draft/effective explanations and impact summary are
+implemented. Conflict uses per-target comparison; uncertain saves retain exact
+request-ID retry. Sticky save toolbar appears only while draft/busy. Preview
+fixture has an explicit banner; shared application Auth remains unchanged.
+
+QA: 19 page passes and 21 section passes through the real local review transport
+and SSR; seven layouts, keyboard/search/draft persistence; 12 admin combinations,
+three races, 10 visibility tests, existing Projects/Team/Pendaftar four widths
+each, check/build/format/spacing PASS. Defaults preserved and fixture restored.
+No production/provider/deployment/live toggle or commit/push. Full evidence:
+[UI refinement local record](docs/page-section-visibility-ui-refinement-local.md).
+
+## Pages & Sections — IMPLEMENTASI LOKAL (11 Oct 2026)
+
+Owner submitted the kickoff and authorized P0–P6 local implementation and QA.
+Current execution record: [page-section-visibility-local.md](docs/page-section-visibility-local.md).
+The earlier PLAN ONLY entry below is retained as history and is superseded by
+this authorization and local implementation record.
+
+P0–P6 local acceptance PASS: check/build/format/spacing/SEO, 10 visibility tests,
+29 ephemeral SQL checks, existing CMS 98 PASS + 10 SKIP, Recruitment 42 PASS,
+admin 12 combinations/races, public 28 cases, default composition parity 19/19,
+responsive 468 combinations, Navbar 20 widths and View Transitions. Compiled
+secret findings: 0. See the execution record for exact fixtures and limits.
+
+Fourth admin tab is integrated into all three existing shell entry routes.
+Nineteen page preferences and twenty-one content section preferences use a
+separate registry/config/RPC; Home, heroes and navigation are protected.
+About Us and Hall of Frames remain Under Development by default. Projects
+controls are ready; home.projects remains true in the seed and production was
+not toggled. Disabled sections are absent from SSR HTML; CMS data is preserved.
+Known disabled pages use the approved chamber, filtered action destinations,
+HTTP 200 and noindex, follow. Detail/application preferences inherit their parent.
+
+Selective SSR was tested before integration. Every public request loads one
+validated configuration with three no-store headers; failed reads return 503.
+Confirmed saves affect the next fresh request without a deployment hook/rebuild.
+No 0ms promise, open-tab polling or automatic open-tab update. Persisted pageshow
+checks revision and reloads when changed. Shared CMS Auth/Origin/CSRF are reused.
+Local additive SQL proposal: 20261011160000_site_visibility.sql, not applied live.
+Six-collection CMS schema/snapshot, RECRUITMENT_OPEN, accounts, grants and
+allowlist remain unchanged. Existing dirty work was preserved.
+
+Production SQL/provider configuration/deployment/live toggles need separate
+owner authorization after review. Do not commit or push without the exact
+instruction “commit dan push”.
+
+## Pages & Sections visibility — PLAN ONLY (11 Oct 2026)
+
+Owner requested a detailed plan and new-AI kickoff. Master:
+[page-section-visibility-plan.md](docs/page-section-visibility-plan.md).
+Kickoff: [page-section-visibility-kickoff.md](docs/page-section-visibility-kickoff.md).
+Recommended future architecture is request-time visibility with selective Astro
+SSR, so a confirmed save affects the next fresh visit without waiting for a
+rebuild. This is a proposal requiring the local Astro7/Vercel routing/freshness
+spike before implementation, not a feature already built or a 0ms guarantee.
+
+Plan defines 19 public page switches, per-page top-level content section flags,
+protected Home/heroes/navigation, inactive-page On Development rendering,
+filtered active CTA destinations, parent inheritance and preserved content.
+Contact/detail internals remain protected compositions in v1. Shared CMS Auth,
+new separate config/registry/RPC/admin tab, no deployment hook on visibility
+save; existing six-collection CMS schema and recruitment intake flag unchanged.
+Default seed preserves About/HoF off and all existing section preferences;
+home.projects=false is the proposed first owner mutation, not executed.
+
+This session changes documentation only. No feature implementation, SQL apply,
+provider/config/content mutation, commit or push. Next AI reads the entire master
+and awaits an owner request for local execution; copyable kickoff authorizes
+P0-P6 local work when submitted by the owner, not production actions.
+
+## On Development full-screen implementation — LOCAL (11 Oct 2026)
+
+Owner approved the detailed plan in `docs/on-development-plan.md`.
+About Us and Hall of Frames now use the owner's `assets/on development/ondp.png`
+background, an explicit "Page Under Development" heading, Bluu Next Bold 700
+and Manrope. Existing Navbar retains the current-page state; large Footer is
+omitted on these two routes. Four existing Button links point to Home,
+Recruitment, Partners and Contact. Former ritual text and large SVG artifacts
+are replaced. Original content components and Team lab remain preserved.
+
+Native desktop and portrait mobile WebP assets are reproducible via
+`node scripts/generate-on-development-assets.mjs`; no upscale. Layout uses
+100svh minimum height, natural growth for short screens, 8-point spacing,
+safe areas, and a reduced-motion fallback. This is an owner-approved custom
+composition, not a new Figma node or a pixel match to the former page designs.
+
+Admin page/section visibility controls and disabling Projects remain future
+work. No commit, push, deployment, backend or CMS content mutation authorized
+in this implementation pass. Targeted QA: `scripts/verify-on-development.mjs`.
+
+Local QA: check 0 errors / 0 warnings (36 existing hints), static build 24
+pages, format, spacing (40 components), SEO (24 pages), and Navbar (20 widths)
+PASS. Targeted browser QA PASS: 14 layouts across both routes, short screens,
+enlarged text, decoded mobile/desktop backgrounds, font/current-page state,
+keyboard focus, mobile menu, all four Astro client links and Back navigation,
+reduced-motion and normal entrance; browserErrors: []. Screenshots and metrics:
+`artifacts/on-development/`. Full legacy visual suite was not rerun: its About
+and Hall of Frames assertions still target the original content pages; this
+pass uses the dedicated verifier for the approved replacement composition.
+
+## WORK ORDER AKTIF & PANDUAN UNTUK AI BARU (11 Oct 2026)
+
+> [!IMPORTANT]
+> **INSTRUKSI WAJIB UNTUK AI BARU:**
+>
+> 1. **BACA DOKUMEN INI & AGENTS.MD TERLEBIH DAHULU SEBELUM MELAKUKAN APAPUN.**
+> 2. **JANGAN LANGSUNG CODING ATAU MENGUBAH APAPUN TANPA INSTRUKSI DARI OWNER (FAIZ).**
+> 3. Faiz meminta kamu membaca konteks dan status terakhir terlebih dahulu. Setelah selesai membaca, sapa Faiz dan tanyakan arahan langkah selanjutnya sesuai rencananya.
+> 4. **HUKUM ZERO EMOTE:** Dilarang keras menggunakan emoji/emotikon dalam bentuk apapun di kode, commit message, komentar, dokumentasi, dan respon chat.
+> 5. **COMMIT GUARD:** Dilarang melakukan git commit atau push sebelum ada perintah eksplisit "commit dan push" dari Faiz.
+> 6. **STRICT 8-POINT SPACING:** Seluruh nilai padding, margin, gap di `src/components/` wajib kelipatan 8 atau ekspresi dinamis CSS (`calc`, `clamp`, `max`, `%`).
+
+---
+
+### Status Terkini Proyek (11 Oct 2026 - PASS):
+
+1. **Refinement Kontras Teks Navbar (`src/components/Navbar.astro`) — SELESAI & PASS**:
+   - Teks menu navbar non-aktif diperbarui dari `#707070` menjadi `#c5bad4` (_Silver Lavender Mist_), kontras > 8.4:1 (WCAG AAA).
+   - Ditambahkan efek hover violet shimmer (`text-shadow: 0 0 12px rgba(155, 123, 255, 0.45);`) dan active state glow putih.
+   - Menu mobile `.mobile-menu .nav-link` diselaraskan ke `#c5bad4`.
+
+2. **Arcane Development Chamber (`src/components/ArcaneChamber.astro`) — SELESAI & PASS**:
+   - Halaman On Development mewah bergaya Harry Potter / Arcane wizarding untuk `/about/` dan `/hall-of-frames/`.
+   - `/about/` (The Inner Sanctum: Grand Archives Transmutation Circle & Celestial Astrolabe SVG berputar).
+   - `/hall-of-frames/` (The Celestial Reliquary: Floating Baroque Frame berornamen dengan living nebula portal).
+   - Menggunakan tipografi serif `--font-display: 'Bluu Next'`, Manrope body, cues audio Web Audio (`data-sfx="select"`, `data-sfx-hover="hover"`), alchemical status pill, dan navigasi portal aksi.
+   - Komponen lama About Us dan Hall of Frames tetap utuh dan tersimpan di `src/components/`.
+   - Sandbox pengujian tim ditempatkan di `src/pages/lab/team.astro` (dikecualikan dari sitemap publik dan SEO).
+
+3. **Integrasi Kontak Resmi & Media Sosial — SELESAI & PASS**:
+   - Email resmi: `contact@data-sorcerers.com` (terpasang di `Footer.astro` dan kartu `ContactHero.astro` dengan link interaktif `mailto:`).
+   - LinkedIn: `https://www.linkedin.com/company/data-sorcerers` (terpasang di `Footer.astro` sebagai link interaktif).
+   - Instagram: `https://www.instagram.com/datasorcerers` (terpasang di `Footer.astro` sebagai link interaktif).
+
+4. **Kesiapan QA Terverifikasi Penuh**:
+   - `npm run check`: PASS (0 errors, 0 warnings, 301 files)
+   - `npm run format:check`: PASS (Prettier)
+   - `npm run build`: PASS (0 error / 24 pages)
+   - `npm run audit:spacing`: PASS (Strict 8-point audit pada 40 komponen)
+   - `npm run audit:navbar`: ALL PASS (20 breakpoint, 320px - 2560px)
+   - `npm run seo:audit`: PASS (24 pages)
+   - `npm run test:recruitment`: 42 PASS / 0 FAIL
+   - `npm run test:cms`: 98 PASS + 10 Team SKIP / 0 FAIL
+   - `node --test tests/cms-public.test.mjs`: 4 PASS / 0 FAIL
+
+---
+
+### Agenda & Rencana yang Menunggu Arahan Owner (Faiz):
+
+1. **Aset Baru di Workspace: `assets/on development/Celestial Cathedral in the Void.png`**:
+   - Gambar beresolusi tinggi (1.7MB) baru saja diletakkan di folder aset oleh Owner.
+   - **Opsi Rencana**: Mengoptimasi gambar ini menjadi WebP (`public/images/on-development/cathedral.webp`) dan memasangnya sebagai background atmosphere halus (_ambient backdrop_) di `ArcaneChamber.astro` jika diinginkan oleh Faiz.
+2. **Status Git Saat Ini (Uncommitted)**:
+   - Menunggu arahan dari Faiz apakah ingin meninjau atau melakukan commit & push.
+3. **Instruksi untuk AI Baru**:
+   - Konfirmasi kepada Faiz bahwa kamu sudah membaca `HANDOVER.md` dan `AGENTS.md`.
+   - Tanyakan kepada Faiz apa langkah selanjutnya yang ingin dijalankan.
+   - **JANGAN** membuat asumsi atau mengeksekusi perubahan kode tanpa persetujuan Faiz.
+
+---
+
+## ARSIP CHECKPOINT SEBELUMNYA
 
 ## ARSIP CHECKPOINT — Recruitment pass 2 Supabase LIVE (7 Oct 2026)
 

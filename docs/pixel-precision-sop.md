@@ -682,3 +682,21 @@ Semua hero boleh pakai `<video>` looping sebagai background, dengan syarat:
 
 **Tabel pengecualian spacing** (§Hukum Spacing) berlaku juga di hero; seluruh
 padding/gap/margin hero tetap kelipatan 8 atau ada di tabel.
+
+## Pages & Sections custom admin surface (11 Oct 2026, local)
+
+No new Figma node exists for this owner-authorized admin composition. The design
+record is [page-section-visibility-local.md](page-section-visibility-local.md).
+Use Bluu Next Bold 700, Manrope, existing Button variants and Dark Arcane tokens.
+New spacing uses 8/16/24/32px; desktop list/detail grid collapses into one mobile
+column. Native labeled switches retain focus through draft rendering. Existing
+public geometry/artwork is preserved when active; hiding a section removes its
+whole component and spacing. Generalized disabled pages reuse the approved
+On Development composition. No new spacing exception or artwork is introduced.
+
+Refinement admin berikutnya dicatat di
+[page-section-visibility-ui-refinement-local.md](page-section-visibility-ui-refinement-local.md):
+304px sidebar / flexible detail align-start; mobile picker disclosure below
+1024px; native switches, accessible focus and scoped global-style overrides.
+Sticky toolbar appears only with draft/busy. Seven layout checks include short
+screen and CSS zoom 200%; no new Figma reference or spacing exception.

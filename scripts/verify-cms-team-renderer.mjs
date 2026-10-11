@@ -103,7 +103,9 @@ try {
         });
         const errors = [];
         page.on('pageerror', (e) => errors.push(e.message));
-        await page.goto('http://127.0.0.1:4333/about/', { waitUntil: 'load' });
+        await page.goto('http://127.0.0.1:4333/lab/team/', {
+          waitUntil: 'load',
+        });
         await page.evaluate(() => document.fonts.ready);
         const checkRow = async (selector, expected) => {
           const row = page.locator(selector);
@@ -187,11 +189,11 @@ try {
           await page.waitForURL('http://127.0.0.1:4333/');
           await page.evaluate(() => {
             const a = document.createElement('a');
-            a.href = '/about/';
+            a.href = '/lab/team/';
             document.body.append(a);
             a.click();
           });
-          await page.waitForURL('http://127.0.0.1:4333/about/');
+          await page.waitForURL('http://127.0.0.1:4333/lab/team/');
           await page.locator('[data-hods-next]').click();
           assert.equal(
             await page

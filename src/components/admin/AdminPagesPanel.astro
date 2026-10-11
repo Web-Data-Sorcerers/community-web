@@ -1,0 +1,665 @@
+---
+import Button from '../Button.astro';
+---
+
+<section id="panel-pages" data-panel="pages" hidden>
+  <header class="pages-heading">
+    <h1>Pages &amp; Sections</h1>
+    <p>Pilih halaman, atur bagian yang tampil, lalu simpan perubahan.</p>
+  </header>
+  <aside id="review-notice" class="pages-notice" hidden>
+    <strong>Preview lokal</strong>
+    <p>
+      Perubahan hanya disimpan ke fixture lokal. Production tidak berubah. Tab
+      admin lainnya tidak memuat data asli pada preview ini.
+    </p>
+  </aside>
+  <p id="status" role="status" aria-live="polite">
+    Memeriksa sesi…
+  </p>
+  <Button id="bootstrap-reload" variant="explore" disabled={false}>
+    Periksa sesi dan muat ulang
+  </Button>
+  <form id="login-form" hidden>
+    <label>
+      Email{' '}
+      <input id="login-email" type="email" autocomplete="username" required />
+    </label>
+    <label>
+      Kata sandi{' '}
+      <input
+        id="login-password"
+        type="password"
+        autocomplete="current-password"
+        required
+      />
+    </label>
+    <Button
+      id="login-submit"
+      variant="community"
+      type="submit"
+      disabled={false}
+    >
+      Masuk
+    </Button>
+  </form>
+  <div id="workspace" hidden>
+    <div class="pages-session-actions">
+      <p>
+        Konten tetap tersimpan. Status penerimaan pendaftaran tidak berubah.
+      </p>
+      <div class="pages-actions">
+        <Button id="reload" variant="explore" disabled={false}>
+          Muat ulang
+        </Button>
+        <Button id="logout" variant="explore" disabled={false}>
+          Keluar
+        </Button>
+      </div>
+    </div>
+    <div id="conflict" class="pages-notice" hidden>
+      <h2>Pengaturan berubah saat Anda mengedit</h2>
+      <p>
+        Draft Anda tetap tersedia. Bandingkan dengan status terbaru sebelum
+        menerapkan ulang dan menyimpan.
+      </p>
+      <div id="conflict-state"></div>
+      <div class="pages-actions">
+        <Button id="conflict-reload" variant="explore" disabled={false}>
+          Gunakan status terbaru
+        </Button>
+        <Button id="conflict-reapply" variant="community" disabled={false}>
+          Terapkan ulang draft
+        </Button>
+      </div>
+    </div>
+    <div id="uncertain" class="pages-notice" hidden>
+      <h2>Hasil simpan belum diketahui</h2>
+      <p>
+        Sambungan terputus atau server belum memberi konfirmasi. Periksa hasil
+        dengan mengirim ulang permintaan yang sama; draft tetap tersedia.
+      </p>
+      <Button id="retry" variant="community" disabled={false}>
+        Periksa hasil simpan
+      </Button>
+    </div>
+    <div class="pages-grid">
+      <aside class="pages-picker">
+        <div class="picker-heading">
+          <h2>Pilih halaman</h2>
+          <button
+            id="page-picker-toggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="page-picker-body"
+          >
+            <span id="selected-page-label">Home</span>
+            <span class="picker-action">Ganti halaman</span>
+          </button>
+        </div>
+        <div id="page-picker-body">
+          <label class="page-search-label" for="page-search">
+            Cari halaman
+          </label>
+          <input
+            id="page-search"
+            type="search"
+            placeholder="Nama atau alamat halaman"
+            autocomplete="off"
+            aria-controls="page-list"
+          />
+          <nav id="page-list" aria-label="Pilih halaman"></nav>
+          <p id="search-empty" hidden>
+            Tidak ada halaman yang cocok.
+          </p>
+          <button id="clear-search" type="button" hidden>
+            Reset pencarian
+          </button>
+        </div>
+      </aside>
+      <div class="pages-editor">
+        <section id="page-detail" aria-label="Pengaturan halaman"></section>
+        <section
+          id="change-summary"
+          aria-labelledby="change-summary-title"
+          hidden
+        >
+          <h2 id="change-summary-title">Perubahan yang belum disimpan</h2>
+          <ul id="change-list"></ul>
+          <p>
+            Perubahan berlaku pada kunjungan atau refresh setelah simpan
+            berhasil.
+          </p>
+        </section>
+      </div>
+    </div>
+    <div class="pages-toolbar">
+      <div class="save-context">
+        <p id="pending-count" aria-live="polite">
+          Tidak ada perubahan.
+        </p>
+        <p>Halaman yang sudah terbuka tidak otomatis berubah.</p>
+      </div>
+      <div class="pages-actions">
+        <Button id="cancel" variant="explore" disabled={false}>
+          Batalkan perubahan
+        </Button>
+        <Button id="save" variant="community" disabled={false}>
+          Simpan perubahan
+        </Button>
+      </div>
+    </div>
+  </div>
+  <div class="pages-toast" id="toast" role="status" hidden></div>
+</section>
+<style>
+  #panel-pages,
+  #workspace,
+  #login-form,
+  .pages-heading,
+  .pages-editor,
+  .pages-notice {
+    display: grid;
+    gap: 24px;
+  }
+  #panel-pages {
+    padding-bottom: 32px;
+  }
+  .pages-heading {
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    backdrop-filter: none;
+    box-shadow: none;
+  }
+  .pages-heading p {
+    color: #c5bad4;
+  }
+  h1 {
+    font: 700 clamp(32px, 4vw, 48px)/1.2 var(--font-display);
+    margin: 0;
+  }
+  h2 {
+    font: 700 24px/1.3 var(--font-display);
+    margin: 0;
+  }
+  p {
+    margin: 0;
+    color: #c5bad4;
+    max-width: 72ch;
+  }
+  #status {
+    display: block;
+    max-width: none;
+    margin: 0;
+    padding: 16px;
+    border: 0;
+    border-left: 2px solid var(--accent);
+    border-radius: 8px;
+    background: var(--surface);
+    color: #ede8ff;
+  }
+  .pages-notice {
+    gap: 16px;
+    padding: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border-glass);
+    border-radius: 16px;
+  }
+  #review-notice {
+    gap: 8px;
+    padding: 16px;
+    border-color: #9b7bff;
+  }
+  #login-form {
+    max-width: 640px;
+  }
+  label {
+    display: grid;
+    gap: 8px;
+    color: var(--text);
+    font: 400 16px/1.5 var(--font-body);
+    letter-spacing: normal;
+  }
+  input {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    font: inherit;
+    color: inherit;
+    background: var(--surface-sub);
+    border: 1px solid var(--border-glass);
+    padding: 8px 16px;
+    border-radius: 8px;
+  }
+  .pages-session-actions,
+  .pages-toolbar,
+  .pages-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+  }
+  .pages-session-actions,
+  .pages-toolbar {
+    justify-content: space-between;
+  }
+  .pages-session-actions > p {
+    flex: 1 1 320px;
+    font-size: 14px;
+  }
+  .pages-grid {
+    display: grid;
+    grid-template-columns: 304px minmax(0, 1fr);
+    align-items: start;
+    gap: 24px;
+  }
+  .pages-picker,
+  .pages-editor,
+  #page-detail {
+    min-width: 0;
+  }
+  .pages-picker {
+    border-top: 1px solid var(--border-glass);
+    padding-top: 24px;
+  }
+  .picker-heading {
+    margin-bottom: 16px;
+  }
+  #page-picker-toggle {
+    display: none;
+  }
+  #page-search {
+    margin: 8px 0 16px;
+  }
+  .page-search-label {
+    font-size: 14px;
+    color: #c5bad4;
+  }
+  #page-list {
+    display: grid;
+    gap: 16px;
+  }
+  #page-detail,
+  #change-summary {
+    padding: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border-glass);
+    border-radius: 16px;
+  }
+  #page-detail {
+    display: grid;
+    gap: 24px;
+  }
+  #change-summary {
+    display: grid;
+    gap: 16px;
+  }
+  #change-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 16px;
+  }
+  #conflict-state {
+    display: grid;
+    gap: 16px;
+    max-height: 320px;
+    overflow: auto;
+  }
+  .pages-toolbar {
+    position: relative;
+    bottom: 16px;
+    z-index: 10;
+    padding: 16px 24px;
+    background: var(--surface-sub);
+    border: 1px solid #9b7bff;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgb(0 0 0 / 40%);
+  }
+  :global(#panel-pages.has-pending .pages-toolbar) {
+    position: sticky;
+  }
+  .save-context {
+    display: grid;
+    gap: 8px;
+    flex: 1 1 240px;
+  }
+  .save-context p:last-child {
+    font-size: 14px;
+  }
+  #pending-count {
+    color: #fff;
+    font-weight: 700;
+  }
+  #clear-search {
+    font: inherit;
+    color: #ede8ff;
+    background: transparent;
+    border: 1px solid var(--border-glass);
+    border-radius: 8px;
+    padding: 8px 16px;
+    min-height: 48px;
+    margin-top: 8px;
+    cursor: pointer;
+  }
+  :global(#panel-pages .page-group) {
+    border-bottom: 1px solid var(--border-glass);
+    padding-bottom: 16px;
+  }
+  :global(#panel-pages .page-group > summary) {
+    color: #ede8ff;
+    font-weight: 700;
+    min-height: 48px;
+    padding: 8px;
+    cursor: pointer;
+  }
+  :global(#panel-pages .page-group-list) {
+    display: grid;
+    gap: 8px;
+    padding-top: 8px;
+  }
+  :global(#panel-pages .page-choice) {
+    display: grid;
+    gap: 8px;
+    width: 100%;
+    padding: 16px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    text-align: left;
+    background: transparent;
+    font: inherit;
+    color: #fff;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+  }
+  :global(#panel-pages .page-choice:hover) {
+    background: var(--surface);
+  }
+  :global(#panel-pages .page-choice[aria-current='page']) {
+    border-color: var(--accent);
+    background: var(--surface);
+    box-shadow: inset 2px 0 0 var(--accent);
+  }
+  :global(#panel-pages .page-choice-title) {
+    font-weight: 700;
+  }
+  :global(#panel-pages .page-choice-meta),
+  :global(#panel-pages .page-path),
+  :global(#panel-pages .switch-description),
+  :global(#panel-pages .change-description) {
+    color: #c5bad4;
+    font-size: 14px;
+    overflow-wrap: anywhere;
+  }
+  :global(#panel-pages .detail-heading) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: start;
+    gap: 16px;
+  }
+  :global(#panel-pages .detail-heading > div) {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+  }
+  :global(#panel-pages .detail-heading h2) {
+    font: 700 32px/1.2 var(--font-display);
+    margin: 0;
+    overflow-wrap: anywhere;
+    scroll-margin-top: 24px;
+  }
+  :global(#panel-pages .detail-link) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
+    color: #ede8ff;
+    text-underline-offset: 4px;
+  }
+  :global(#panel-pages .page-statuses) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+  :global(#panel-pages .page-status-item) {
+    display: grid;
+    align-content: start;
+    gap: 8px;
+  }
+  :global(#panel-pages .page-status-item > span:first-child) {
+    color: #c5bad4;
+    font-size: 14px;
+  }
+  :global(#panel-pages .visibility-badge) {
+    width: fit-content;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: var(--surface-sub);
+    color: #ede8ff;
+    font-size: 14px;
+  }
+  :global(#panel-pages .visibility-badge[data-active='true']) {
+    box-shadow: inset 2px 0 0 #9b7bff;
+  }
+  :global(#panel-pages .detail-notice) {
+    border-left: 2px solid var(--accent);
+    padding: 8px 16px;
+    color: #ede8ff;
+    font-size: 14px;
+  }
+  :global(#panel-pages .section-heading) {
+    display: grid;
+    gap: 8px;
+  }
+  :global(#panel-pages .section-heading h3) {
+    font: 700 20px/1.5 var(--font-body);
+    margin: 0;
+  }
+  :global(#panel-pages .section-list) {
+    display: grid;
+  }
+  :global(#panel-pages .visibility-switch) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border-glass);
+    cursor: pointer;
+    color: #fff;
+    font: 400 16px/1.5 var(--font-body);
+    letter-spacing: normal;
+    scroll-margin-bottom: 256px;
+  }
+  :global(#panel-pages .visibility-switch .switch-description) {
+    font-weight: 400;
+  }
+  :global(#panel-pages .switch-copy) {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+  }
+  :global(#panel-pages .switch-title) {
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+  :global(#panel-pages .switch-state) {
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #ede8ff;
+  }
+  :global(#panel-pages input[role='switch']) {
+    appearance: none;
+    position: relative;
+    width: 48px;
+    height: 32px;
+    min-height: 32px;
+    flex-shrink: 0;
+    padding: 0;
+    margin: 0;
+    border: 1px solid #a8a3b8;
+    border-radius: 16px;
+    background: #22213a;
+    cursor: pointer;
+  }
+  :global(#panel-pages input[role='switch']::after) {
+    content: '';
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    top: 3px;
+    left: 3px;
+    border-radius: 50%;
+    background: #fff;
+  }
+  :global(#panel-pages input[role='switch']:checked) {
+    background: #9b7bff;
+    border-color: #9b7bff;
+  }
+  :global(#panel-pages input[role='switch']:checked::after) {
+    transform: translateX(16px);
+  }
+  :global(#panel-pages input[role='switch']:disabled) {
+    opacity: 0.6;
+    cursor: default;
+  }
+  :global(#panel-pages .change-item),
+  :global(#panel-pages .conflict-item) {
+    display: grid;
+    gap: 8px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-glass);
+    overflow-wrap: anywhere;
+  }
+  :global(#panel-pages :focus-visible) {
+    outline: 2px solid #9b7bff;
+    outline-offset: 4px;
+  }
+  :global(#panel-pages .button) {
+    min-height: 48px;
+    font-family: var(--font-body);
+    max-width: 100%;
+    white-space: normal;
+    height: auto;
+    line-height: 1.5;
+  }
+  :global(#panel-pages .button:disabled) {
+    opacity: 0.6;
+    cursor: default;
+  }
+  :global(#panel-pages .button:not(:disabled)) {
+    cursor: pointer;
+  }
+  :global(#panel-pages .is-loading::before) {
+    content: '';
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    border: 2px solid #c5bad4;
+    border-right-color: transparent;
+    border-radius: 50%;
+    margin-right: 8px;
+  }
+  .pages-toast {
+    position: fixed;
+    right: 24px;
+    top: 24px;
+    left: 24px;
+    max-width: 480px;
+    margin-left: auto;
+    padding: 16px 24px;
+    background: #141122;
+    color: #fff;
+    border: 1px solid #9b7bff;
+    border-radius: 16px;
+    z-index: 100;
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    :global(#panel-pages .is-loading::before) {
+      animation: spin 1s linear infinite;
+    }
+    :global(#panel-pages input[role='switch']::after) {
+      transition: transform 0.15s ease;
+    }
+  }
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @media (max-width: 1023px) {
+    .pages-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .pages-picker {
+      padding: 16px;
+      background: var(--surface-sub);
+      border: 1px solid var(--border-glass);
+      border-radius: 16px;
+    }
+    .picker-heading {
+      margin: 0;
+    }
+    .picker-heading h2 {
+      font: 700 16px/1.5 var(--font-body);
+      margin-bottom: 8px;
+    }
+    #page-picker-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      width: 100%;
+      min-height: 48px;
+      padding: 8px 16px;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      background: var(--surface);
+      color: #fff;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+    .picker-action {
+      color: #c5bad4;
+      font-size: 14px;
+    }
+    #page-picker-body {
+      display: none;
+      padding-top: 24px;
+    }
+    :global(#panel-pages.picker-open #page-picker-body) {
+      display: block;
+    }
+  }
+  @media (max-width: 600px) {
+    #page-detail,
+    #change-summary,
+    .pages-notice {
+      padding: 16px;
+    }
+    .pages-toolbar {
+      bottom: max(8px, env(safe-area-inset-bottom));
+      padding: 16px;
+    }
+    .pages-toolbar .pages-actions {
+      width: 100%;
+      gap: 8px;
+    }
+    :global(#panel-pages .pages-toolbar .button) {
+      flex: 1 1 160px;
+    }
+    :global(#panel-pages .page-statuses) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

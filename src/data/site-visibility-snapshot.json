@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "revision": "00000000-0000-4000-8000-000000000001",
+  "pages": {
+    "home": {
+      "enabled": true,
+      "sections": {
+        "philosophy": true,
+        "what-we-do": true,
+        "domains": true,
+        "projects": true,
+        "recruitment-cta": true
+      }
+    },
+    "about": {
+      "enabled": false,
+      "sections": {
+        "vision-mission": true,
+        "philosophy": true,
+        "ecosystem": true,
+        "team": true
+      }
+    },
+    "hall-of-frames": {
+      "enabled": false,
+      "sections": {
+        "featured": true,
+        "projects": true,
+        "milestones": true
+      }
+    },
+    "recruitment": {
+      "enabled": true,
+      "sections": {
+        "who-should-join": true,
+        "what-you-will-do": true,
+        "available-roles": true,
+        "timeline": true,
+        "faq": true,
+        "snippets": true,
+        "cta": true
+      }
+    },
+    "partners": {
+      "enabled": true,
+      "sections": {
+        "partners": true,
+        "why-partners": true
+      }
+    },
+    "contact": {
+      "enabled": true,
+      "sections": {}
+    },
+    "hods-data": {
+      "enabled": true,
+      "sections": {}
+    },
+    "hods-core": {
+      "enabled": true,
+      "sections": {}
+    },
+    "hods-language": {
+      "enabled": true,
+      "sections": {}
+    },
+    "hods-vision": {
+      "enabled": true,
+      "sections": {}
+    },
+    "hods-product": {
+      "enabled": true,
+      "sections": {}
+    },
+    "hods-growth": {
+      "enabled": true,
+      "sections": {}
+    },
+    "role-data": {
+      "enabled": true,
+      "sections": {}
+    },
+    "role-core": {
+      "enabled": true,
+      "sections": {}
+    },
+    "role-language": {
+      "enabled": true,
+      "sections": {}
+    },
+    "role-vision": {
+      "enabled": true,
+      "sections": {}
+    },
+    "role-product": {
+      "enabled": true,
+      "sections": {}
+    },
+    "role-growth": {
+      "enabled": true,
+      "sections": {}
+    },
+    "recruitment-apply": {
+      "enabled": true,
+      "sections": {}
+    }
+  }
+}

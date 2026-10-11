@@ -1,0 +1,189 @@
+---
+import Button from './Button.astro';
+
+import {
+  PAGE_BY_ID,
+  developmentDestinations,
+} from '../data/site-visibility-registry.mjs';
+interface Props {
+  chamber?: 'about' | 'hof';
+  pageId?: string;
+}
+const { chamber, pageId = chamber === 'about' ? 'about' : 'hall-of-frames' } =
+  Astro.props;
+const pageName = PAGE_BY_ID[pageId]?.label ?? 'Data Sorcerers';
+const destinations = developmentDestinations(Astro.locals.visibility!, pageId);
+---
+
+<section class="arcane-chamber" aria-labelledby="chamber-title">
+  <picture class="chamber-background" aria-hidden="true">
+    <source
+      media="(max-width: 600px)"
+      srcset="/images/on-development/chamber-mobile-640.webp 640w, /images/on-development/chamber-mobile-752.webp 752w"
+      sizes="100vw"
+    />
+    <img
+      src="/images/on-development/chamber.webp"
+      srcset="/images/on-development/chamber-1280.webp 1280w, /images/on-development/chamber.webp 1672w"
+      sizes="100vw"
+      width="1672"
+      height="941"
+      alt=""
+      loading="eager"
+      fetchpriority="high"
+      decoding="async"
+    />
+  </picture>
+  <div class="chamber-overlay" aria-hidden="true"></div>
+  <div class="chamber-container">
+    <div class="chamber-copy">
+      <p class="chamber-page">{pageName}</p>
+      <h1 id="chamber-title">Page Under Development</h1>
+      <p class="chamber-description">
+        We’re currently working on this page. Explore the available pages below
+        while we prepare it.
+      </p>
+      <nav class="chamber-actions" aria-label="Explore available pages">
+        {destinations.map(({ label, href, variant }) => (
+          <Button href={href} variant={variant as 'community' | 'explore'}>
+            {label}
+          </Button>
+        ))}
+      </nav>
+    </div>
+  </div>
+</section>
+
+<style>
+  .arcane-chamber {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    align-items: center;
+    min-height: 100vh;
+    min-height: 100svh;
+    padding: calc(144px + env(safe-area-inset-top, 0px)) var(--page-gutter)
+      calc(64px + env(safe-area-inset-bottom, 0px));
+    background: #050507;
+  }
+  .chamber-background,
+  .chamber-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+  .chamber-background img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+  .chamber-overlay {
+    background:
+      linear-gradient(
+        180deg,
+        rgb(5 5 7 / 55%),
+        transparent 28%,
+        rgb(5 5 7 / 35%)
+      ),
+      linear-gradient(
+        90deg,
+        rgb(5 5 7 / 80%),
+        rgb(5 5 7 / 55%) 42%,
+        rgb(5 5 7 / 8%) 78%
+      );
+  }
+  .chamber-container {
+    width: 100%;
+    max-width: 1440px;
+    margin-inline: auto;
+  }
+  .chamber-copy {
+    max-width: 640px;
+  }
+  .chamber-page {
+    margin: 0 0 8px;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.5;
+    color: #ede8ff;
+  }
+  h1 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(32px, 5vw, 72px);
+    font-weight: 700;
+    line-height: 1.12;
+    color: #fff;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+  }
+  .chamber-description {
+    max-width: 480px;
+    margin: 24px 0 0;
+    font-size: clamp(16px, 1.25vw, 18px);
+    font-weight: 400;
+    line-height: 1.6;
+    color: #ede8ff;
+  }
+  .chamber-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 32px;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .chamber-copy {
+      animation: chamber-enter 0.6s ease-out both;
+    }
+    @keyframes chamber-enter {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+  }
+  @media (max-width: 600px) {
+    .arcane-chamber {
+      padding-inline: 24px;
+    }
+    .chamber-background img {
+      object-position: 65% center;
+    }
+    .chamber-overlay {
+      background: linear-gradient(
+        180deg,
+        rgb(5 5 7 / 60%),
+        rgb(5 5 7 / 72%) 45%,
+        rgb(5 5 7 / 55%)
+      );
+    }
+    .chamber-copy {
+      margin-inline: auto;
+      text-align: center;
+    }
+    h1 {
+      font-size: clamp(32px, 8vw, 48px);
+    }
+    .chamber-description {
+      margin-inline: auto;
+    }
+    .chamber-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .chamber-actions :global(.button) {
+      width: 100%;
+      min-width: 0;
+    }
+  }
+  @media (max-width: 360px) {
+    .chamber-actions {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

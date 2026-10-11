@@ -11,8 +11,14 @@ import {
   getInstance as getRecruitment,
 } from './recruitment-admin.js';
 
-const TABS = ['projects', 'team', 'recruitment'];
+import {
+  mount as mountPages,
+  getInstance as getPages,
+} from './site-visibility-editor.js';
+const TABS = ['projects', 'team', 'recruitment', 'pages'];
+let initializedRoot;
 const PANEL_ID = {
+  pages: 'panel-pages',
   projects: 'panel-projects',
   team: 'panel-team',
   recruitment: 'panel-recruitment',
@@ -26,6 +32,8 @@ function getPanelRoot(tab) {
 
 function getModule(tab) {
   switch (tab) {
+    case 'pages':
+      return { mount: mountPages, get: getPages };
     case 'projects':
       return { mount: mountProjects, get: getProjects };
     case 'team':
@@ -49,7 +57,7 @@ function showTab(tab) {
   if (
     isAnyDirty() &&
     !confirm(
-      'Ada perubahan yang belum disimpan. Pindah tab dan abaikan perubahan?',
+      'Ada perubahan yang belum disimpan. Tetap pindah tab? Draft tetap tersedia.',
     )
   ) {
     return;
@@ -103,7 +111,8 @@ function mountIfNeeded(tab, isPrewarm = false) {
 function updateNav(tab) {
   document.querySelectorAll('.admin-module-link').forEach((link) => {
     const isActive = link.dataset.tab === tab;
-    link.setAttribute('aria-current', isActive ? 'page' : undefined);
+    if (isActive) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
     link.classList.toggle('active', isActive);
   });
 }
@@ -111,6 +120,7 @@ function updateNav(tab) {
 function getTabFromPath() {
   const path = location.pathname;
   const hash = location.hash.replace('#', '');
+  if (hash === 'pages') return 'pages';
   if (path.endsWith('/team/') || hash === 'team') return 'team';
   if (path.endsWith('/recruitment/') || hash === 'recruitment')
     return 'recruitment';
@@ -118,7 +128,15 @@ function getTabFromPath() {
 }
 
 function initShell(initialTab) {
-  const tab = initialTab || getTabFromPath();
+  const root = getPanelRoot('projects');
+  if (initializedRoot === root) return;
+  initializedRoot = root;
+  mounted = {};
+  document.addEventListener('ds:admin-session-ended', () => {
+    for (const tab of TABS) getModule(tab).get(tab)?.expireSession?.();
+  });
+  const tab =
+    location.hash === '#pages' ? 'pages' : initialTab || getTabFromPath();
   activeTab = tab;
   for (const t of TABS) {
     const panel = getPanelRoot(t);

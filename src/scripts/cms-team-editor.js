@@ -10,6 +10,7 @@ export function mount(root, opts = {}) {
   const form = $('project-form');
   let state, selected, csrf;
   let dirty = false;
+  let sessionGeneration = 0;
   const scopes = {
     read: false,
     mutation: false,
@@ -139,6 +140,7 @@ export function mount(root, opts = {}) {
     $('retry').hidden = true;
   };
   const rpc = async (operation, payload) => {
+    const generation = sessionGeneration;
     const response = await fetch('/api/admin/team', {
       method: operation === 'load' ? 'GET' : 'POST',
       credentials: 'same-origin',
@@ -157,6 +159,8 @@ export function mount(root, opts = {}) {
           }),
     });
     const result = await response.json();
+    if (generation !== sessionGeneration)
+      return { ok: false, error: { code: 'UNAUTHORIZED' } };
     if (result.error?.code === 'UNAUTHORIZED') expire();
     if (result.ok) {
       csrf = result.csrf;
@@ -644,6 +648,7 @@ export function mount(root, opts = {}) {
           showToast('error', 'Gagal Keluar', errText);
           return;
         }
+        document.dispatchEvent(new CustomEvent('ds:admin-session-ended'));
         dirty = false;
         state = undefined;
         selected = undefined;
@@ -703,6 +708,7 @@ export function mount(root, opts = {}) {
         }
         $('login-password').value = '';
         loginForm.hidden = true;
+        document.dispatchEvent(new CustomEvent('ds:admin-session-started'));
         message('Masuk. Memuat Team…');
         showToast(
           'success',
@@ -736,6 +742,16 @@ export function mount(root, opts = {}) {
       root.hidden = true;
     },
     isDirty: () => dirty || scopes.mutation || scopes.upload,
+    expireSession() {
+      sessionGeneration++;
+      dirty = false;
+      state = selected = csrf = undefined;
+      form.reset();
+      $('project-list').replaceChildren();
+      $('image-preview').removeAttribute('src');
+      $('image-preview').hidden = true;
+      expire();
+    },
     teardown() {
       dirty = false;
       state = undefined;

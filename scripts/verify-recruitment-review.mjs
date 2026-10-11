@@ -1,4 +1,6 @@
 // Synthetic browser-only transport. No owner session or live applicant data.
+import { existsSync } from 'node:fs';
+const distRoot = existsSync('dist/client') ? 'dist/client' : 'dist';
 import { chromium } from '@playwright/test';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import assert from 'node:assert/strict';
@@ -10,7 +12,7 @@ import {
 import { APPLICATION_FIELDS } from '../server/recruitment-contract.mjs';
 const out = 'artifacts/recruitment-review';
 await mkdir(out, { recursive: true });
-const html = await readFile('dist/admin/recruitment/index.html', 'utf8');
+const html = await readFile(distRoot + '/admin/recruitment/index.html', 'utf8');
 const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium',
   headless: true,
@@ -350,8 +352,8 @@ try {
         url.pathname === '/admin/recruitment/'
       ) {
         const filePath = url.pathname.endsWith('/')
-          ? 'dist' + url.pathname + 'index.html'
-          : 'dist' + url.pathname;
+          ? distRoot + url.pathname + 'index.html'
+          : distRoot + url.pathname;
         try {
           const content = await readFile(filePath);
           return route.fulfill({ contentType: 'text/html', body: content });
@@ -360,7 +362,7 @@ try {
         }
       }
       try {
-        const body = await readFile('dist' + url.pathname);
+        const body = await readFile(distRoot + url.pathname);
         return route.fulfill({
           body,
           contentType:

@@ -11,6 +11,7 @@ export function mount(root, opts = {}) {
   let state;
   let selected;
   let dirty = false;
+  let sessionGeneration = 0;
   const scopes = {
     read: false,
     mutation: false,
@@ -212,6 +213,7 @@ export function mount(root, opts = {}) {
     adminRetryPublication: 'retry',
   };
   const rpc = async (name, payload) => {
+    const generation = sessionGeneration;
     const load = name === 'adminLoadProjects';
     const response = await fetch('/api/admin/projects', {
       method: load ? 'GET' : 'POST',
@@ -231,6 +233,8 @@ export function mount(root, opts = {}) {
           }),
     });
     const result = await response.json();
+    if (generation !== sessionGeneration)
+      return { ok: false, error: { code: 'UNAUTHORIZED' } };
     if (result.error?.code === 'UNAUTHORIZED') {
       expire();
       return result;
@@ -664,6 +668,7 @@ export function mount(root, opts = {}) {
           showToast('error', 'Gagal Keluar', errText);
           return;
         }
+        document.dispatchEvent(new CustomEvent('ds:admin-session-ended'));
         dirty = false;
         state = undefined;
         form.reset();
@@ -724,6 +729,7 @@ export function mount(root, opts = {}) {
         }
         $('login-password').value = '';
         loginForm.hidden = true;
+        document.dispatchEvent(new CustomEvent('ds:admin-session-started'));
         message('Masuk. Memuat projects…');
         showToast(
           'success',
@@ -757,6 +763,16 @@ export function mount(root, opts = {}) {
       root.hidden = true;
     },
     isDirty: () => dirty || scopes.mutation || scopes.upload,
+    expireSession() {
+      sessionGeneration++;
+      dirty = false;
+      state = selected = csrf = undefined;
+      form.reset();
+      $('project-list').replaceChildren();
+      $('image-preview').removeAttribute('src');
+      $('image-preview').hidden = true;
+      expire();
+    },
     teardown() {
       dirty = false;
       state = undefined;

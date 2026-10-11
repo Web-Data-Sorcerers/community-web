@@ -1,4 +1,8 @@
 ---
+import { canNavigateToTarget } from '../data/site-visibility-registry.mjs';
+const canVisit = (page: string, section?: string) =>
+  !Astro.locals.visibility ||
+  canNavigateToTarget(Astro.locals.visibility, page, section);
 import Button from './Button.astro';
 import type { RoleDetail } from '../data/roles';
 interface Props {
@@ -17,7 +21,11 @@ const waMessage = encodeURIComponent(
     <div class:list={['role-head', { tight: role.tight }]}>
       <a
         class="back"
-        href="/recruitment#available-roles"
+        href={
+          canVisit('recruitment', 'available-roles')
+            ? '/recruitment#available-roles'
+            : '/recruitment/'
+        }
         data-sfx="select"
         data-sfx-hover="hover"
       >
@@ -53,9 +61,11 @@ const waMessage = encodeURIComponent(
               <span>{role.deadline}</span>
             </div>
           </div>
-          <Button variant="apply" href={`/recruitment/apply?role=${role.id}`}>
-            Apply Now
-          </Button>
+          {canVisit('recruitment-apply') && (
+            <Button variant="apply" href={`/recruitment/apply?role=${role.id}`}>
+              Apply Now
+            </Button>
+          )}
         </div>
       </div>
     </div>

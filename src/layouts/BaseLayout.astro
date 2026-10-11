@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { getPageState, PAGE_BY_ID } from '../data/site-visibility-registry.mjs';
 import { ClientRouter } from 'astro:transitions';
 import Splash from '../components/Splash.astro';
 import Sound from '../components/Sound.astro';
@@ -18,9 +19,16 @@ const {
   noindex = false,
 } = Astro.props;
 
+const visibility = Astro.locals.visibility;
+const inactive =
+  visibility && !getPageState(visibility, Astro.locals.visibilityPageId);
 const site =
   Astro.site ?? new URL('https://data-sorcerers-community-sigma.vercel.app');
-const pageUrl = new URL(Astro.url.pathname, site).href;
+const canonicalPath = visibility
+  ? (PAGE_BY_ID[Astro.locals.visibilityPageId ?? '']?.path ??
+    Astro.url.pathname)
+  : Astro.url.pathname;
+const pageUrl = new URL(canonicalPath, site).href;
 const imageUrl = new URL(image, site).href;
 const imageAlt = 'Data Sorcerers — Sorcery in Data, Magic in AI';
 
@@ -54,7 +62,13 @@ const structuredData = [
     <meta name="description" content={description} />
     <meta
       name="robots"
-      content={noindex ? 'noindex, nofollow' : 'index, follow'}
+      content={
+        inactive
+          ? 'noindex, follow'
+          : noindex
+            ? 'noindex, nofollow'
+            : 'index, follow'
+      }
     />
     <link rel="canonical" href={pageUrl} />
     <meta name="theme-color" content="#050507" />
@@ -63,6 +77,12 @@ const structuredData = [
          navigation. Component scripts are re-run per page via `astro:page-load`
          because Astro does not re-execute bundled scripts on a swap. -->
     <ClientRouter />
+    {visibility && (
+      <meta name="ds-visibility-revision" content={visibility.revision} />
+    )}
+    <script>
+      import '../scripts/site-visibility-navigation.js';
+    </script>
     <meta name="author" content="Data Sorcerers" />
 
     <link rel="icon" href="/favicon.ico" sizes="any" />

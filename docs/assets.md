@@ -1,5 +1,35 @@
 # Asset provenance
 
+## On Development full-screen implementation — LOCAL (11 Oct 2026)
+
+Owner approved the detailed plan in `docs/on-development-plan.md`.
+About Us and Hall of Frames now use the owner's `assets/on development/ondp.png`
+background, an explicit "Page Under Development" heading, Bluu Next Bold 700
+and Manrope. Existing Navbar retains the current-page state; large Footer is
+omitted on these two routes. Four existing Button links point to Home,
+Recruitment, Partners and Contact. Former ritual text and large SVG artifacts
+are replaced. Original content components and Team lab remain preserved.
+
+Native desktop and portrait mobile WebP assets are reproducible via
+`node scripts/generate-on-development-assets.mjs`; no upscale. Layout uses
+100svh minimum height, natural growth for short screens, 8-point spacing,
+safe areas, and a reduced-motion fallback. This is an owner-approved custom
+composition, not a new Figma node or a pixel match to the former page designs.
+
+Admin page/section visibility controls and disabling Projects remain future
+work. No commit, push, deployment, backend or CMS content mutation authorized
+in this implementation pass. Targeted QA: `scripts/verify-on-development.mjs`.
+
+Local QA: check 0 errors / 0 warnings (36 existing hints), static build 24
+pages, format, spacing (40 components), SEO (24 pages), and Navbar (20 widths)
+PASS. Targeted browser QA PASS: 14 layouts across both routes, short screens,
+enlarged text, decoded mobile/desktop backgrounds, font/current-page state,
+keyboard focus, mobile menu, all four Astro client links and Back navigation,
+reduced-motion and normal entrance; browserErrors: []. Screenshots and metrics:
+`artifacts/on-development/`. Full legacy visual suite was not rerun: its About
+and Hall of Frames assertions still target the original content pages; this
+pass uses the dedicated verifier for the approved replacement composition.
+
 ## Team photo fit — LOKAL, QA PASS (8 Oct 2026)
 
 Owner screenshot meminta foto upload otomatis pas di kartu. Existing uploaded
@@ -2946,3 +2976,16 @@ Public artwork/fonts/reference/geometry tetap. Recruitment detail menampilkan
 semua canonical fields secara text-safe, tabel scroll hanya di wrapper.
 Target320/390/768/1440. Lihat admin-unified-recruitment-plan.md untuk work order,
 auth shared-session, QA dan batas acceptance live.
+
+## Visibility integration (11 Oct 2026, local)
+
+Pages & Sections reuses the approved On Development desktop/portrait WebP assets
+and all original public artwork. No additional image or audio asset was generated.
+The chamber is now shared across the 19 code-owned public routes when disabled;
+page labels and available action buttons are supplied by request-time visibility.
+Default About/Hall of Frames presentation is preserved. See
+[local execution](page-section-visibility-local.md).
+
+Pages & Sections UI refinement (11 Oct 2026): reuse console fonts, colors and
+Button variants; no new artwork or font asset. Layout/QA record:
+[page-section-visibility-ui-refinement-local.md](page-section-visibility-ui-refinement-local.md).

@@ -1,6 +1,9 @@
 ---
 interface Props {
   href?: string;
+  id?: string;
+  disabled?: boolean;
+  type?: 'button' | 'submit';
   compact?: boolean;
   variant?:
     | 'primary'
@@ -11,7 +14,14 @@ interface Props {
     | 'community'
     | 'explore';
 }
-const { href, variant = 'primary', compact = false } = Astro.props;
+const {
+  href,
+  id,
+  disabled = true,
+  type = 'button',
+  variant = 'primary',
+  compact = false,
+} = Astro.props;
 ---
 
 {href ? (
@@ -26,9 +36,11 @@ const { href, variant = 'primary', compact = false } = Astro.props;
 ) : (
   <button
     class:list={['button', variant, { compact }]}
-    type="button"
-    aria-disabled="true"
-    data-sfx="error"
+    id={id}
+    type={type}
+    aria-disabled={disabled ? 'true' : undefined}
+    disabled={id ? disabled : undefined}
+    data-sfx={disabled ? 'error' : 'click'}
     data-sfx-hover="hover"
   >
     <slot />

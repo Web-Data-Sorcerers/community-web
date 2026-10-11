@@ -1,13 +1,16 @@
 ---
+export const prerender = false;
+import { getPageState } from '../../../data/site-visibility-registry.mjs';
+import ArcaneChamber from '../../../components/ArcaneChamber.astro';
+import Navbar from '../../../components/Navbar.astro';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import RoleDetail from '../../../components/RoleDetail.astro';
 import { roles } from '../../../data/roles';
 
-export function getStaticPaths() {
-  return roles.map((role) => ({ params: { id: role.id }, props: { role } }));
-}
-
-const { role } = Astro.props;
+const role = roles.find((item) => item.id === Astro.params.id);
+if (!role) return new Response('Not found', { status: 404 });
+const pageId = 'role-' + role.id;
+const enabled = getPageState(Astro.locals.visibility!, pageId);
 
 const firstSentence = role.about.split(/(?<=\.)\s/)[0];
 let description = firstSentence;
@@ -22,5 +25,14 @@ else if (description.length < 60)
   description={description}
   type="article"
 >
-  <RoleDetail role={role} />
+  {enabled ? (
+    <RoleDetail role={role} />
+  ) : (
+    <>
+      <Navbar active="Recruitment" />
+      <main id="main">
+        <ArcaneChamber pageId={pageId} />
+      </main>
+    </>
+  )}
 </BaseLayout>

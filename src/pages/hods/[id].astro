@@ -1,13 +1,16 @@
 ---
+export const prerender = false;
+import { getPageState } from '../../data/site-visibility-registry.mjs';
+import ArcaneChamber from '../../components/ArcaneChamber.astro';
+import Navbar from '../../components/Navbar.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import HoDSDetail from '../../components/HoDSDetail.astro';
 import { hods } from '../../data/hods';
 
-export function getStaticPaths() {
-  return hods.map((hod) => ({ params: { id: hod.id }, props: { hod } }));
-}
-
-const { hod } = Astro.props;
+const hod = hods.find((item) => item.id === Astro.params.id);
+if (!hod) return new Response('Not found', { status: 404 });
+const pageId = 'hods-' + hod.id;
+const enabled = getPageState(Astro.locals.visibility!, pageId);
 ---
 
 <BaseLayout
@@ -15,5 +18,14 @@ const { hod } = Astro.props;
   description={hod.description}
   type="article"
 >
-  <HoDSDetail hod={hod} />
+  {enabled ? (
+    <HoDSDetail hod={hod} />
+  ) : (
+    <>
+      <Navbar active="Home" />
+      <main id="main">
+        <ArcaneChamber pageId={pageId} />
+      </main>
+    </>
+  )}
 </BaseLayout>

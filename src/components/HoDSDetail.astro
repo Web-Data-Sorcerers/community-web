@@ -1,17 +1,32 @@
 ---
+import { canNavigateToTarget } from '../data/site-visibility-registry.mjs';
+const canVisit = (page: string, section?: string) =>
+  !Astro.locals.visibility ||
+  canNavigateToTarget(Astro.locals.visibility, page, section);
 import type { HodDetail } from '../data/hods';
 interface Props {
   hod: HodDetail;
 }
 const { hod } = Astro.props;
+const fromRecruitment =
+  Astro.url.searchParams.get('from') === 'recruitment' &&
+  canVisit('recruitment');
+const backPage = fromRecruitment ? 'recruitment' : 'home';
+const backSection = fromRecruitment ? 'who-should-join' : 'domains';
+const backPath = fromRecruitment ? '/recruitment/' : '/';
+const backHref = canVisit(backPage, backSection)
+  ? (fromRecruitment ? '/recruitment' : '/') + '#' + backSection
+  : backPath;
 ---
 
 <main class="hods-detail">
   <span class="detail-wave" aria-hidden="true" />
   <div class="hods-detail-inner">
-    <a class="back" href="/#domains" data-sfx="select" data-sfx-hover="hover">
+    <a class="back" href={backHref} data-sfx="select" data-sfx-hover="hover">
       <img src="/images/hods/arrow.svg" width="24" height="24" alt="" />
-      <span>Back to HoDS</span>
+      <span>
+        {fromRecruitment ? 'Back to Who Should Join' : 'Back to HoDS'}
+      </span>
     </a>
 
     <div class="role-card">
@@ -86,18 +101,6 @@ const { hod } = Astro.props;
   // Re-run after every client-side navigation: the DOM and the `from` query are
   // both new, so the back link and the tabs must be (re)wired each time.
   const initHoDSDetail = () => {
-    // The card that opened this page decides where "back" returns to. The pages
-    // are static, so the `from` query is applied on the client.
-    if (new URLSearchParams(location.search).get('from') === 'recruitment') {
-      const back =
-        document.querySelector<HTMLAnchorElement>('.hods-detail .back');
-      if (back) {
-        back.href = '/recruitment#who-should-join';
-        const label = back.querySelector('span');
-        if (label) label.textContent = 'Back to Who Should Join';
-      }
-    }
-
     document.querySelectorAll<HTMLElement>('.hods-detail').forEach((root) => {
       const tabs = [...root.querySelectorAll<HTMLButtonElement>('.tab')];
       const panels = [...root.querySelectorAll<HTMLElement>('.panel')];

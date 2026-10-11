@@ -2,8 +2,9 @@
 const info = [
   {
     title: 'Email Us',
-    value: 'datasorcerers.id@gmail.com',
+    value: 'contact@data-sorcerers.com',
     icon: 'email',
+    href: 'mailto:contact@data-sorcerers.com',
   },
   {
     title: 'WhatsApp',
@@ -43,35 +44,43 @@ const info = [
         </p>
       </div>
       <div class="hero-cards">
-        {info.map((item) => (
-          <article class="info-card">
-            <img
-              class="info-icon"
-              src={`/images/contact/icon-${item.icon}.webp`}
-              srcset={`/images/contact/icon-${item.icon}.webp 1x, /images/contact/icon-${item.icon}-2x.webp 2x`}
-              width="61"
-              height="45"
-              alt=""
-              loading="lazy"
-              decoding="async"
-            />
-            <span class="info-text">
-              <span class="info-title">{item.title}</span>
-              <span class="info-value">{item.value}</span>
-            </span>
-            <span class="info-arrow" aria-hidden="true">
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                <path
-                  d="M9.21053 0.789474L0.789474 9.21053M9.21053 7.80702V0.789474H2.19298"
-                  stroke="white"
-                  stroke-width="1.57895"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </span>
-          </article>
-        ))}
+        {info.map((item) => {
+          const Tag = item.href ? 'a' : 'article';
+          return (
+            <Tag
+              class="info-card"
+              href={item.href}
+              data-sfx={item.href ? 'click' : undefined}
+              data-sfx-hover={item.href ? 'hover' : undefined}
+            >
+              <img
+                class="info-icon"
+                src={`/images/contact/icon-${item.icon}.webp`}
+                srcset={`/images/contact/icon-${item.icon}.webp 1x, /images/contact/icon-${item.icon}-2x.webp 2x`}
+                width="61"
+                height="45"
+                alt=""
+                loading="lazy"
+                decoding="async"
+              />
+              <span class="info-text">
+                <span class="info-title">{item.title}</span>
+                <span class="info-value">{item.value}</span>
+              </span>
+              <span class="info-arrow" aria-hidden="true">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                  <path
+                    d="M9.21053 0.789474L0.789474 9.21053M9.21053 7.80702V0.789474H2.19298"
+                    stroke="white"
+                    stroke-width="1.57895"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
+            </Tag>
+          );
+        })}
       </div>
     </div>
     <form class="contact-form">
@@ -237,6 +246,13 @@ const info = [
     border-radius: 20px;
     background: rgb(255 255 255 / 12%);
     min-width: 0;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.25s ease;
+  }
+
+  a.info-card:hover {
+    background: rgb(255 255 255 / 18%);
   }
 
   .info-icon {

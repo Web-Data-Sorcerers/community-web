@@ -1,10 +1,17 @@
 ---
+import { canNavigateToTarget } from '../data/site-visibility-registry.mjs';
+const canVisit = (page: string, section?: string) =>
+  !Astro.locals.visibility ||
+  canNavigateToTarget(Astro.locals.visibility, page, section);
 import DomainCard from './DomainCard.astro';
 import { domains } from '../data/domains';
 interface Props {
   base?: string;
   suffix?: string;
 }
+const visibleDomains = domains.filter((domain) =>
+  canVisit('hods-' + domain.id),
+);
 const { base = '/hods', suffix = '' } = Astro.props;
 ---
 
@@ -25,9 +32,13 @@ const { base = '/hods', suffix = '' } = Astro.props;
     class="domain-rail"
     tabindex="0"
     role="region"
-    aria-label="Domains — scroll horizontally to explore all six"
+    aria-label={
+      visibleDomains.length === 6
+        ? 'Domains — scroll horizontally to explore all six'
+        : 'Domains — scroll horizontally to explore available domains'
+    }
   >
-    {domains.map((domain) => (
+    {visibleDomains.map((domain) => (
       <DomainCard domain={domain} href={`${base}/${domain.id}${suffix}`} />
     ))}
   </div>

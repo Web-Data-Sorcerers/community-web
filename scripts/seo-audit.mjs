@@ -4,7 +4,8 @@ import { existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import assert from 'node:assert/strict';
 
-const DIST = 'dist';
+import { VISIBILITY_PAGES } from '../src/data/site-visibility-registry.mjs';
+const DIST = existsSync('dist/client') ? 'dist/client' : 'dist';
 
 const walk = async (dir) => {
   const out = [];
@@ -18,9 +19,24 @@ const walk = async (dir) => {
 
 const files = await walk(DIST);
 const htmlFiles = files.filter((f) => f.endsWith('.html'));
+const documents = await Promise.all(
+  htmlFiles.map(async (file) => ({
+    route: '/' + relative(DIST, file).replace(/index\.html$/, ''),
+    html: await readFile(file, 'utf8'),
+  })),
+);
+if (process.env.PREVIEW_URL) {
+  for (const page of VISIBILITY_PAGES) {
+    const response = await fetch(new URL(page.path, process.env.PREVIEW_URL), {
+      cache: 'no-store',
+    });
+    assert.equal(response.status, 200, page.path);
+    documents.push({ route: page.path, html: await response.text() });
+  }
+}
 assert.ok(
-  htmlFiles.length >= 14,
-  `expected 14+ pages, found ${htmlFiles.length}`,
+  documents.length >= 24,
+  'SSR SEO audit requires PREVIEW_URL and all 24 documents',
 );
 
 const metasOf = (html) =>
@@ -42,9 +58,7 @@ const issues = [];
 const titles = new Map();
 let origin = null;
 
-for (const file of htmlFiles) {
-  const route = '/' + relative(DIST, file).replace(/index\.html$/, '');
-  const html = await readFile(file, 'utf8');
+for (const { route, html } of documents) {
   const metas = metasOf(html);
   if (
     route.startsWith('/admin/') &&
@@ -171,7 +185,11 @@ else {
     const rel = loc.slice(origin.length).replace(/^\//, '');
     const target = join(DIST, rel, 'index.html');
     const targetDirect = join(DIST, rel || 'index.html');
-    if (!existsSync(target) && !existsSync(targetDirect))
+    if (
+      !VISIBILITY_PAGES.some((page) => page.path === new URL(loc).pathname) &&
+      !existsSync(target) &&
+      !existsSync(targetDirect)
+    )
       issues.push(`sitemap url has no page: ${loc}`);
   }
 }
@@ -182,5 +200,5 @@ if (issues.length) {
   process.exit(1);
 }
 console.log(
-  `SEO AUDIT PASS — ${htmlFiles.length} pages, canonical origin ${origin}, robots + sitemap + OG image OK.`,
+  `SEO AUDIT PASS — ${documents.length} pages, canonical origin ${origin}, robots + sitemap + OG image OK.`,
 );

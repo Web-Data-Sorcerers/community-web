@@ -1556,6 +1556,7 @@ export function mount(root, opts = {}) {
         });
         if (gen !== session) return;
         if (r.ok || r.status === 401) {
+          document.dispatchEvent(new CustomEvent('ds:admin-session-ended'));
           endSession();
           message('Sudah keluar dari admin.');
           showToast('info', 'Sesi Berakhir', 'Sudah keluar dari admin.');
@@ -1613,6 +1614,7 @@ export function mount(root, opts = {}) {
         session++;
         csrf = d.csrf;
         loggedIn();
+        document.dispatchEvent(new CustomEvent('ds:admin-session-started'));
         showToast(
           'success',
           'Akses Diberikan',

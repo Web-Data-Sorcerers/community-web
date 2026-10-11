@@ -1,8 +1,12 @@
 ---
+export const prerender = false;
+import { getPageState } from '../../data/site-visibility-registry.mjs';
+import ArcaneChamber from '../../components/ArcaneChamber.astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Navbar from '../../components/Navbar.astro';
 import Footer from '../../components/Footer.astro';
 import RecruitmentForm from '../../components/recruitment/RecruitmentForm.astro';
+const enabled = getPageState(Astro.locals.visibility!, 'recruitment-apply');
 ---
 
 <BaseLayout
@@ -11,7 +15,11 @@ import RecruitmentForm from '../../components/recruitment/RecruitmentForm.astro'
 >
   <Navbar active="Recruitment" />
   <main id="main">
-    <RecruitmentForm />
+    {enabled ? (
+      <RecruitmentForm />
+    ) : (
+      <ArcaneChamber pageId="recruitment-apply" />
+    )}
   </main>
-  <Footer />
+  {enabled && <Footer />}
 </BaseLayout>

@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+const distRoot = existsSync('dist/client') ? 'dist/client' : 'dist';
 import { chromium } from '@playwright/test';
 import assert from 'node:assert/strict';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
@@ -167,7 +169,7 @@ try {
           url.pathname === '/'
             ? 'admin/team/index.html'
             : url.pathname.slice(1);
-        const body = await readFile(new URL('dist/' + path, root));
+        const body = await readFile(new URL(distRoot + '/' + path, root));
         const types = {
           html: 'text/html',
           js: 'text/javascript',

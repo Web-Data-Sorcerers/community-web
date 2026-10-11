@@ -1,5 +1,6 @@
 ---
 import AdminNavigation from '../../components/admin/AdminNavigation.astro';
+import AdminPagesPanel from '../../components/admin/AdminPagesPanel.astro';
 import AdminProjectsPanel from '../../components/admin/AdminProjectsPanel.astro';
 import AdminTeamPanel from '../../components/admin/AdminTeamPanel.astro';
 import AdminRecruitmentPanel from '../../components/admin/AdminRecruitmentPanel.astro';
@@ -106,6 +107,7 @@ const image = new URL('/og/og-default.jpg', Astro.site).href;
       <AdminProjectsPanel />
       <AdminTeamPanel />
       <AdminRecruitmentPanel />
+      <AdminPagesPanel />
       <noscript>
         <p>Aktifkan JavaScript untuk mengelola admin.</p>
       </noscript>

@@ -1,5 +1,123 @@
 # AI handoff — current context
 
+## Pages & Sections release checkpoint (11 Oct 2026)
+
+Owner explicitly requested “commit and push”. Local commit is now authorized.
+Origin has one push URL, community-web; remote main matched local144e681 before
+this commit. Read-only Supabase visibility loader check returned404/PGRST202.
+Master P7 requires DB before runtime deployment; main is documented auto-deploy.
+Do not push this release to main until separately authorized production migration
+and deployment prerequisites pass. No production SQL/provider/live toggle was
+performed. Concrete migration SHA, scope and sequence:
+[release checkpoint](page-section-visibility-release-checkpoint.md).
+Earlier no-commit/push entries below are historical checkpoints, superseded by
+the current owner authorization; their production restrictions still apply.
+
+## Pages & Sections UI refinement — LOKAL PASS (11 Oct 2026)
+
+Owner approved UI refinement after reviewing the initial implementation.
+Grouped/searchable page picker, mobile disclosure, one page toggle in detail,
+readable switches, saved/draft/effective explanations and impact summary are
+implemented. Conflict uses per-target comparison; uncertain saves retain exact
+request-ID retry. Sticky save toolbar appears only while draft/busy. Preview
+fixture has an explicit banner; shared application Auth remains unchanged.
+
+QA: 19 page passes and 21 section passes through the real local review transport
+and SSR; seven layouts, keyboard/search/draft persistence; 12 admin combinations,
+three races, 10 visibility tests, existing Projects/Team/Pendaftar four widths
+each, check/build/format/spacing PASS. Defaults preserved and fixture restored.
+No production/provider/deployment/live toggle or commit/push. Full evidence:
+[UI refinement local record](page-section-visibility-ui-refinement-local.md).
+
+## Pages & Sections — IMPLEMENTASI LOKAL (11 Oct 2026)
+
+Owner submitted the kickoff and authorized P0–P6 local implementation and QA.
+Current execution record: [page-section-visibility-local.md](page-section-visibility-local.md).
+The earlier PLAN ONLY entry below is retained as history and is superseded by
+this authorization and local implementation record.
+
+P0–P6 local acceptance PASS: check/build/format/spacing/SEO, 10 visibility tests,
+29 ephemeral SQL checks, existing CMS 98 PASS + 10 SKIP, Recruitment 42 PASS,
+admin 12 combinations/races, public 28 cases, default composition parity 19/19,
+responsive 468 combinations, Navbar 20 widths and View Transitions. Compiled
+secret findings: 0. See the execution record for exact fixtures and limits.
+
+Fourth admin tab is integrated into all three existing shell entry routes.
+Nineteen page preferences and twenty-one content section preferences use a
+separate registry/config/RPC; Home, heroes and navigation are protected.
+About Us and Hall of Frames remain Under Development by default. Projects
+controls are ready; home.projects remains true in the seed and production was
+not toggled. Disabled sections are absent from SSR HTML; CMS data is preserved.
+Known disabled pages use the approved chamber, filtered action destinations,
+HTTP 200 and noindex, follow. Detail/application preferences inherit their parent.
+
+Selective SSR was tested before integration. Every public request loads one
+validated configuration with three no-store headers; failed reads return 503.
+Confirmed saves affect the next fresh request without a deployment hook/rebuild.
+No 0ms promise, open-tab polling or automatic open-tab update. Persisted pageshow
+checks revision and reloads when changed. Shared CMS Auth/Origin/CSRF are reused.
+Local additive SQL proposal: 20261011160000_site_visibility.sql, not applied live.
+Six-collection CMS schema/snapshot, RECRUITMENT_OPEN, accounts, grants and
+allowlist remain unchanged. Existing dirty work was preserved.
+
+Production SQL/provider configuration/deployment/live toggles need separate
+owner authorization after review. Do not commit or push without the exact
+instruction “commit dan push”.
+
+## Pages & Sections visibility — PLAN ONLY (11 Oct 2026)
+
+Owner requested a detailed plan and new-AI kickoff. Master:
+[page-section-visibility-plan.md](page-section-visibility-plan.md).
+Kickoff: [page-section-visibility-kickoff.md](page-section-visibility-kickoff.md).
+Recommended future architecture is request-time visibility with selective Astro
+SSR, so a confirmed save affects the next fresh visit without waiting for a
+rebuild. This is a proposal requiring the local Astro7/Vercel routing/freshness
+spike before implementation, not a feature already built or a 0ms guarantee.
+
+Plan defines 19 public page switches, per-page top-level content section flags,
+protected Home/heroes/navigation, inactive-page On Development rendering,
+filtered active CTA destinations, parent inheritance and preserved content.
+Contact/detail internals remain protected compositions in v1. Shared CMS Auth,
+new separate config/registry/RPC/admin tab, no deployment hook on visibility
+save; existing six-collection CMS schema and recruitment intake flag unchanged.
+Default seed preserves About/HoF off and all existing section preferences;
+home.projects=false is the proposed first owner mutation, not executed.
+
+This session changes documentation only. No feature implementation, SQL apply,
+provider/config/content mutation, commit or push. Next AI reads the entire master
+and awaits an owner request for local execution; copyable kickoff authorizes
+P0-P6 local work when submitted by the owner, not production actions.
+
+## On Development full-screen implementation — LOCAL (11 Oct 2026)
+
+Owner approved the detailed plan in `docs/on-development-plan.md`.
+About Us and Hall of Frames now use the owner's `assets/on development/ondp.png`
+background, an explicit "Page Under Development" heading, Bluu Next Bold 700
+and Manrope. Existing Navbar retains the current-page state; large Footer is
+omitted on these two routes. Four existing Button links point to Home,
+Recruitment, Partners and Contact. Former ritual text and large SVG artifacts
+are replaced. Original content components and Team lab remain preserved.
+
+Native desktop and portrait mobile WebP assets are reproducible via
+`node scripts/generate-on-development-assets.mjs`; no upscale. Layout uses
+100svh minimum height, natural growth for short screens, 8-point spacing,
+safe areas, and a reduced-motion fallback. This is an owner-approved custom
+composition, not a new Figma node or a pixel match to the former page designs.
+
+Admin page/section visibility controls and disabling Projects remain future
+work. No commit, push, deployment, backend or CMS content mutation authorized
+in this implementation pass. Targeted QA: `scripts/verify-on-development.mjs`.
+
+Local QA: check 0 errors / 0 warnings (36 existing hints), static build 24
+pages, format, spacing (40 components), SEO (24 pages), and Navbar (20 widths)
+PASS. Targeted browser QA PASS: 14 layouts across both routes, short screens,
+enlarged text, decoded mobile/desktop backgrounds, font/current-page state,
+keyboard focus, mobile menu, all four Astro client links and Back navigation,
+reduced-motion and normal entrance; browserErrors: []. Screenshots and metrics:
+`artifacts/on-development/`. Full legacy visual suite was not rerun: its About
+and Hall of Frames assertions still target the original content pages; this
+pass uses the dedicated verifier for the approved replacement composition.
+
 ## Admin SPA shell (Varian A) + Mock Verify & Full QA — LOKAL PASS (9 Oct 2026)
 
 Owner minta SPA shell (Opsi 2 Varian A): satu halaman `/admin/` dengan 3 panel

@@ -1,4 +1,8 @@
 ---
+import { canNavigateToTarget } from '../data/site-visibility-registry.mjs';
+const canVisit = (page: string, section?: string) =>
+  !Astro.locals.visibility ||
+  canNavigateToTarget(Astro.locals.visibility, page, section);
 import { roles } from '../data/roles';
 import { domains } from '../data/domains';
 
@@ -15,39 +19,41 @@ const domainTitle = Object.fromEntries(domains.map((d) => [d.id, d.title]));
     <p>Select a role to view full details, requirements, and apply.</p>
   </header>
   <div class="role-list">
-    {roles.map((role) => (
-      <a
-        class="role-row"
-        href={`/recruitment/roles/${role.id}`}
-        data-sfx="open"
-        data-sfx-hover="hover"
-      >
-        <div class="role-card">
-          <span class="role-glow" aria-hidden="true" />
-          <div class="role-head">
-            <h3 class="role-name">{domainTitle[role.id] ?? role.title}</h3>
-            <p class="role-summary">{role.tagline}</p>
+    {roles
+      .filter((role) => canVisit('role-' + role.id))
+      .map((role) => (
+        <a
+          class="role-row"
+          href={`/recruitment/roles/${role.id}`}
+          data-sfx="open"
+          data-sfx-hover="hover"
+        >
+          <div class="role-card">
+            <span class="role-glow" aria-hidden="true" />
+            <div class="role-head">
+              <h3 class="role-name">{domainTitle[role.id] ?? role.title}</h3>
+              <p class="role-summary">{role.tagline}</p>
+            </div>
+            <div class="role-foot">
+              <span class="role-link">
+                View Details
+                <svg
+                  class="role-link-icon"
+                  viewBox="0 0 20 20"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M11.2248 7.10967C11.1144 6.99119 11.0543 6.83449 11.0572 6.67257C11.06 6.51065 11.1256 6.35616 11.2402 6.24165C11.3547 6.12714 11.5092 6.06155 11.6711 6.05869C11.833 6.05583 11.9897 6.11594 12.1082 6.22634L15.4415 9.55967C15.5585 9.67686 15.6243 9.83571 15.6243 10.0013C15.6243 10.167 15.5585 10.3258 15.4415 10.443L12.1082 13.7763C12.051 13.8377 11.982 13.887 11.9053 13.9212C11.8286 13.9553 11.7459 13.9737 11.6619 13.9752C11.578 13.9766 11.4947 13.9612 11.4168 13.9298C11.339 13.8983 11.2683 13.8516 11.209 13.7922C11.1496 13.7329 11.1028 13.6622 11.0714 13.5843C11.04 13.5065 11.0245 13.4232 11.026 13.3392C11.0275 13.2553 11.0459 13.1726 11.08 13.0959C11.1142 13.0192 11.1634 12.9502 11.2248 12.893L13.4915 10.6263H5.4165C5.25074 10.6263 5.09177 10.5605 4.97456 10.4433C4.85735 10.3261 4.7915 10.1671 4.7915 10.0013C4.7915 9.83558 4.85735 9.67661 4.97456 9.5594C5.09177 9.44219 5.25074 9.37634 5.4165 9.37634H13.4915L11.2248 7.10967Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </span>
+              <span class="role-divider" aria-hidden="true" />
+            </div>
           </div>
-          <div class="role-foot">
-            <span class="role-link">
-              View Details
-              <svg
-                class="role-link-icon"
-                viewBox="0 0 20 20"
-                aria-hidden="true"
-                focusable="false"
-              >
-                <path
-                  d="M11.2248 7.10967C11.1144 6.99119 11.0543 6.83449 11.0572 6.67257C11.06 6.51065 11.1256 6.35616 11.2402 6.24165C11.3547 6.12714 11.5092 6.06155 11.6711 6.05869C11.833 6.05583 11.9897 6.11594 12.1082 6.22634L15.4415 9.55967C15.5585 9.67686 15.6243 9.83571 15.6243 10.0013C15.6243 10.167 15.5585 10.3258 15.4415 10.443L12.1082 13.7763C12.051 13.8377 11.982 13.887 11.9053 13.9212C11.8286 13.9553 11.7459 13.9737 11.6619 13.9752C11.578 13.9766 11.4947 13.9612 11.4168 13.9298C11.339 13.8983 11.2683 13.8516 11.209 13.7922C11.1496 13.7329 11.1028 13.6622 11.0714 13.5843C11.04 13.5065 11.0245 13.4232 11.026 13.3392C11.0275 13.2553 11.0459 13.1726 11.08 13.0959C11.1142 13.0192 11.1634 12.9502 11.2248 12.893L13.4915 10.6263H5.4165C5.25074 10.6263 5.09177 10.5605 4.97456 10.4433C4.85735 10.3261 4.7915 10.1671 4.7915 10.0013C4.7915 9.83558 4.85735 9.67661 4.97456 9.5594C5.09177 9.44219 5.25074 9.37634 5.4165 9.37634H13.4915L11.2248 7.10967Z"
-                  fill="currentColor"
-                />
-              </svg>
-            </span>
-            <span class="role-divider" aria-hidden="true" />
-          </div>
-        </div>
-      </a>
-    ))}
+        </a>
+      ))}
   </div>
 </section>
 <style>

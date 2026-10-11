@@ -1,4 +1,8 @@
 ---
+import { canNavigateToTarget } from '../data/site-visibility-registry.mjs';
+const canVisit = (page: string, section?: string) =>
+  !Astro.locals.visibility ||
+  canNavigateToTarget(Astro.locals.visibility, page, section);
 import Button from './Button.astro';
 ---
 
@@ -19,9 +23,11 @@ import Button from './Button.astro';
       </p>
     </div>
     <div class="recruitment-actions">
-      <Button variant="community" href="/recruitment">
-        Join the Community
-      </Button>
+      {canVisit('recruitment') && (
+        <Button variant="community" href="/recruitment">
+          Join the Community
+        </Button>
+      )}
     </div>
     <div class="glow-frame" aria-hidden="true">
       <div class="glow-art">
