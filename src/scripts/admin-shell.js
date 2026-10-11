@@ -85,9 +85,12 @@ function mountIfNeeded(tab, isPrewarm = false) {
   mounted[tab] = true;
   const ws = root.querySelector('#workspace');
   const loginForm = root.querySelector('#login-form');
+  const loginButton = root.querySelector('#login');
   if (link) {
     const isReady = () =>
-      (ws && !ws.hidden) || (loginForm && !loginForm.hidden);
+      (ws && !ws.hidden) ||
+      (loginForm && !loginForm.hidden) ||
+      (loginButton && !loginButton.hidden);
     if (isReady()) {
       link.classList.remove('is-loading');
     } else {
@@ -99,6 +102,11 @@ function mountIfNeeded(tab, isPrewarm = false) {
       });
       if (ws)
         observer.observe(ws, { attributes: true, attributeFilter: ['hidden'] });
+      if (loginButton)
+        observer.observe(loginButton, {
+          attributes: true,
+          attributeFilter: ['hidden'],
+        });
       if (loginForm)
         observer.observe(loginForm, {
           attributes: true,
@@ -145,17 +153,64 @@ function initShell(initialTab) {
   updateNav(tab);
   mountIfNeeded(tab);
 
-  const prewarmRemainingTabs = () => {
-    TABS.filter((t) => t !== activeTab).forEach((t) => {
-      mountIfNeeded(t, true);
-    });
+  // Do not compete with the active panel's bootstrap. Warm one panel at a
+  // time after its predecessor reaches workspace/login readiness.
+  let warming;
+  let queued = false;
+  const ready = (target) => {
+    const panel = getPanelRoot(target);
+    const workspace = panel?.querySelector('#workspace');
+    const login = panel?.querySelector('#login-form');
+    const loginButton = panel?.querySelector('#login');
+    return (
+      (workspace && !workspace.hidden) ||
+      (login && !login.hidden) ||
+      (loginButton && !loginButton.hidden)
+    );
   };
-
-  if (typeof requestIdleCallback !== 'undefined') {
-    requestIdleCallback(prewarmRemainingTabs, { timeout: 1200 });
-  } else {
-    setTimeout(prewarmRemainingTabs, 400);
+  const observer = new MutationObserver(scheduleWarm);
+  for (const t of TABS) {
+    const panel = getPanelRoot(t);
+    if (panel)
+      observer.observe(panel, {
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['hidden'],
+      });
   }
+  function scheduleWarm() {
+    if (
+      queued ||
+      !root?.isConnected ||
+      !ready(activeTab) ||
+      (warming && !ready(warming))
+    )
+      return;
+    const next = TABS.find((t) => !mounted[t]);
+    if (!next) {
+      observer.disconnect();
+      return;
+    }
+    queued = true;
+    const run = () => {
+      queued = false;
+      if (!root.isConnected) {
+        observer.disconnect();
+        return;
+      }
+      if (!ready(activeTab) || (warming && !ready(warming))) return;
+      const target = TABS.find((t) => !mounted[t]);
+      if (target) {
+        warming = target;
+        mountIfNeeded(target, true);
+      }
+      scheduleWarm();
+    };
+    if (typeof requestIdleCallback !== 'undefined') {
+      requestIdleCallback(run, { timeout: 1200 });
+    } else setTimeout(run, 400);
+  }
+  scheduleWarm();
 
   document.querySelectorAll('.admin-module-link').forEach((link) => {
     link.addEventListener('click', (e) => {

@@ -462,13 +462,19 @@ const destinations: Record<string, string> = {
     }
   }
   @media (prefers-reduced-motion: no-preference) {
-    .navbar.is-ready .brand,
-    .navbar.is-ready .desktop-nav .nav-link,
-    .navbar.is-ready .desktop-cta :global(.button) {
+    :global(html:not(.nav-warm)) .navbar.is-ready .brand,
+    :global(html:not(.nav-warm)) .navbar.is-ready .desktop-nav .nav-link,
+    :global(html:not(.nav-warm))
+      .navbar.is-ready
+      .desktop-cta
+      :global(.button) {
       animation: nav-in 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) both;
       animation-delay: calc(var(--i, 0) * 55ms + 80ms);
     }
-    .navbar.is-ready .desktop-cta :global(.button) {
+    :global(html:not(.nav-warm))
+      .navbar.is-ready
+      .desktop-cta
+      :global(.button) {
       animation-delay: 0.5s;
     }
   }

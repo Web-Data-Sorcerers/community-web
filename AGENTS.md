@@ -1,5 +1,113 @@
 # AGENTS.md — instructions for AI agents
 
+## Navigation performance P2/P3 — LOCAL QA FREEZE PASS, AWAITING RELEASE AUTHORIZATION (11 Oct 2026)
+
+Owner instructed “gasss” after reviewing the technical plan. Local QA freeze executed across all gates and verified PASS.
+Exact local source: P2 (astro.config.mjs, Navbar.astro, BaseLayout.astro, site-visibility-navigation.js) and P3 (admin-shell.js).
+Top loading bar is confirmed permanently deleted; bottom-left text status “.navigation-status” verified.
+QA gates passed:
+- Typecheck & syntax: npm run check PASS (0 errors, 0 warnings, 335 files).
+- Prettier: P2 and P3 modified source files formatted with zero issues.
+- Spacing: npm run audit:spacing PASS (Strict 8-point audit on 40 components).
+- Packaging: scripts/verify-navigation-package.mjs PASS (11 root APIs + 1 SSR = 12 functions, sin1 region in vercel.json).
+- Public UX: scripts/verify-navigation-ux.mjs PASS (15 cases, 0 errors across 4 viewports 320/390/768/1440, reduced and normal motion, error/abort/watchdog resilience, 0 top progress bar).
+- Prefetch: scripts/verify-navigation-prefetch.mjs PASS (0 speculative HTML requests on controlled routes).
+- Admin scheduling: scripts/verify-navigation-admin.mjs PASS (0 competing background requests during active tab bootstrap, 19-68ms tab switching).
+- View Transitions: scripts/verify-vt.mjs PASS (all 26 assertions pass, 0 page errors).
+- Navbar: scripts/navbar-audit.mjs PASS (all 20 widths pass, exact Figma geometry).
+- SEO: scripts/seo-audit.mjs PASS (24 pages, canonical origin, robots + sitemap OK).
+- Regression test suites: tests/site-visibility*.test.mjs (10 PASS), tests/cms*.test.mjs (98 PASS / 10 SKIP), tests/recruitment*.test.mjs (42 PASS).
+- Security audit: 0 secrets in src/.
+Production baseline unchanged: HEAD/remote 45cc864, Current/alias READY dpl_7bredDjDLDsY18nxTqGHymQgsVnS, sin1, revision 716138bd-f7b2-4ae9-ba05-e6be5158d801, HomeON/projectsOFF/AboutHoFOFF.
+No production writes, deploy, commit or push executed. Awaiting explicit scoped “commit dan push” instruction from owner before releasing P2. Rollback target for P2 is P1 sin1 (45cc864 / dpl_7bredDjDLDsY18nxTqGHymQgsVnS).
+
+## Next AI — PLAN ONLY requested after P1 (11 Oct 2026)
+
+Owner is moving to a new AI and explicitly requests a detailed plan FIRST.
+[Active PLAN ONLY kickoff + first prompt](docs/navigation-performance-next-ai-plan-kickoff.md) and
+[Detailed remaining-work plan](docs/navigation-performance-next-phase-plan.md) supersede historical implementation
+prompts for the next turn. Read all27 listed documents; review existing dirty
+P2/P3, do not restart Pages & Sections or P1. No new source changes/build/fixture
+mutation/commit/push/deploy/live writes. Read-only preflight and docs allowed.
+Latest recheck14:56:10 UTC: HEAD/remote45cc864, Current/alias READY
+dpl_7bredDjDLDsY18nxTqGHymQgsVnS, Node22/12functions/deployed sin1,
+revision716138bd-f7b2-4ae9-ba05-e6be5158d801, HomeON/projectsOFF/AboutHoFOFF.
+Owner removed local top progress bar; do not restore it from older8px proposal.
+Keep all existing dirty/untracked work. Future P2 rollback candidate is accepted
+P1sin1/45cc864, separately authorized; P1 approval is not a new release permit.
+
+
+## Navigation performance P1 — RELEASED, read-only acceptance PASS (11 Oct 2026)
+
+Owner explicitly authorized P1 commit/push + connected main deployment.
+[Exact release scope, timing and acceptance](docs/navigation-performance-p1-release.md): SHA45cc86466b573fa067f0c98281e391afff502e75,
+Current/alias READY dpl_7bredDjDLDsY18nxTqGHymQgsVnS, actual Node22/12functions,
+deployment sin1 corroborated by26 dynamic response reads. Final14:33:17 UTC:
+19public/6admin forms/private401/revision/content/media/intake PASS. Visibility
+and public CMS hash/media unchanged:716138bd-f7b2-4ae9-ba05-e6be5158d801,
+HomeON/home.projects=false/AboutHoFOFF,19/21. Runtime sample50 rows zero5xx,
+native errors/crashes. Serial Chromium80before/80after observed median
+1072.9→280.6ms; host/network/cold-state limits recorded, not a universal promise.
+One five-file P1 commit/push; P2 UX/P3 admin remain local, not released. Owner
+review removed local top progress line; status feedback retained. Post-deploy
+acceptance docs remain dirty, no second commit/push. No SQL/provider/dashboard/
+env/live save/toggle/restore/upload/submit/deploy hook or rollback. Old9ff/iad1
+checkpoints below are historical. Further releases need new explicit scoped
+“commit dan push”; rollback9ff candidate needs separate approval.
+
+
+## Navigation performance — LOCAL QA, production read-only (11 Oct 2026)
+
+Owner submitted the local-execution prompt; all22 read-order entries read fully.
+[Local implementation, evidence and release scopes](docs/navigation-performance-local.md):
+region sin1 candidate, immediate navigation feedback/warm navbar/explicit
+prefetch, reproduced admin bounded prewarm completed locally. Node22 build
+and isolated packed boot/Auth/freshness PASS including region-only HEAD archive;
+11 root API +1SSR expected12. Tests150 PASS/10 SKIP; public28, Pages UI47,
+admin12+races3, existing three CMS panels4 widths each, Navbar20 and VT PASS.
+Production remains9ffce5e/Current dpl_oioXmVjBR1efQZMCMTWvj87Tyy2C, READY,
+actual Node22/12 functions/compute iad1. Last read13:52:57 UTC retained revision
+716138bd-f7b2-4ae9-ba05-e6be5158d801: HomeON,home.projects=false,About/HoFOFF.
+No production write, provider change, deploy/hook, SQL, commit/push or rollback.
+Region effective/production performance and owner positive Auth/save pending.
+Owner loopback preview http://127.0.0.1:4356/admin/#pages uses explicit local
+review fixture; save affects only /tmp. Existing dirty docs preserved.
+P1 region/P2 UX/P3 admin source scopes are separately reviewable; new exact
+“commit dan push” instruction required before release. Old PLAN ONLY below
+is historical; it does not revoke the owner's current local authorization.
+
+## Navigation performance — PLAN ONLY (11 Oct 2026, 13:16 UTC)
+
+Owner requested a detailed plan after reporting slow navigation/buttons.
+[New-AI handoff and copyable local-execution prompt](docs/navigation-performance-new-ai-kickoff.md)
+is prepared; it authorizes local execution only when owner sends that prompt.
+[Investigation](docs/navigation-performance-investigation.md) and
+[N0–N7 plan](docs/navigation-performance-plan.md): measured public wait is
+mostly HTML/preparation; compute iad1, database Singapore. Proposed ordered
+packages: region, navigation feedback/warm navbar/explicit prefetch, then
+conditional authenticated-admin fix. No source/provider/deploy/save/commit/push
+in this planning pass. New scoped authorization is required for implementation
+and subsequent production/release actions.
+Read-only recheck HEAD/remote9ffce5e; live revision
+716138bd-f7b2-4ae9-ba05-e6be5158d801, HomeON, home.projects=false, About/HoFOFF.
+This externally observed config supersedes the seed stated in the earlier
+release acceptance snapshot below; agent did not save or restore it. Preserve
+owner preferences. Owner positive Auth/live-write acceptance remains unproven.
+
+## Current production — 9ffce5e, public/API read-only PASS (11 Oct 2026)
+
+[Final evidence and remaining acceptance](docs/page-section-visibility-r7-header-release.md): HEAD/remote
+9ffce5ea859a87cd44f4126e9e7c6c60240cb857, Current READY
+dpl_oioXmVjBR1efQZMCMTWvj87Tyy2C and primary alias matched. Actual Node22,
+12 functions. Final19public200/revision/no-store,3admin +6slash forms
+no-store/noindex,visibility401/revision200,content/media/intake PASS.
+Browser88 layouts +4 DOM-settled navigation/Back widths PASS on preceding
+f8 runtime with identical app/CSS. Home/ProjectsON,About/HoF Under Development,
+19/21 seed retained. Owner login/config GET and R6 live save pending; no live
+toggle/restore, extra SQL, provider env/plan changes or deploy hook.
+Latest acceptance notes dirty docs; no further commit/push without new scoped
+instruction. Earlier PLAN/pending push/runtime failure text is historical.
+
 ## R7 runtime recovered / admin header release approved — 11 Oct 2026
 
 [Results and scoped header fix](docs/page-section-visibility-r7-header-release.md): f8a87ca deployment READY and
