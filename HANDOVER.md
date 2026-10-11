@@ -1,5 +1,16 @@
 # Handover — Data Sorcerers (community-web)
 
+## R7 runtime recovered / admin header release approved — 11 Oct 2026
+
+[Results and scoped header fix](docs/page-section-visibility-r7-header-release.md): f8a87ca deployment READY and
+alias matched;19 public200/revision/no-store, visibility401/revision API200,
+content/media/intake PASS. Actual Node22,12 functions; runtime sample50 rows
+zero5xx/native errors. Admin slashless headers PASS, trailing slash headers FAIL.
+Owner explicitly approved commit/push one added /admin/(.*) header pattern +
+evidence docs, including main deployment. New SHA/acceptance pending at freeze.
+Live Auth positive GET/R6 save remains pending; no production saves/toggles.
+Earlier current032fdf9 failure/pending repair approval text below historical.
+
 ## R7 repair release authorized — 11 Oct 2026
 
 Owner explicitly instructed “commit dan push fix runtime/routing beserta
