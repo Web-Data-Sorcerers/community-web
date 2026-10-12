@@ -1,5 +1,16 @@
 # Asset provenance
 
+Latest owner audio override: removed local speaker orb; automatic audio attempt
+and procedural splash effects, no new artwork/audio asset. Browser autoplay
+policy respected; no guaranteed first-frame sound. Owner authorized scoped release.
+
+Magical ambient local12 Oct2026: original procedural celesta/harp/pads, no
+audio asset/dependency/download. sound-ambient.ts generates in-memory loops;
+Waltz selected by owner; no public speaker control. No new Figma node/artwork.
+Scoped release authorized, acceptance pending.
+Record: magical-ambient-local.md.
+
+
 Home splash local trigger update12 Oct2026: Home reload replays existing splash;
 other pages/client swaps bypass it. No artwork/geometry/spacing/font/duration
 changes. Reduced motion and settled nav state preserved. Evidence:

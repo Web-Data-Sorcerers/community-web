@@ -1,5 +1,20 @@
 # SOP — Sound system (Data Sorcerers)
 
+Current release candidate12 Oct2026: Enchanted Castle Waltz selected by owner,
+54-second original3/4 score at80BPM. Library/Castle remain lab comparisons.
+No public speaker control; audio default on, stored ds:sound ignored by explicit
+owner instruction. Normal autoplay attempt respects browser policy; suspended
+context falls back to real gestures. Active Home splash has a ritual bed/glass
+accents; completion/swap stops it and delayed completion cue is discarded.
+Reduced motion disables background/splash audio.
+
+New required module src/scripts/sound-ambient.ts renders/caches seamless buffers
+with OfflineAudioContext; no network audio/new dependencies/timer scheduler.
+Tune score/chords/voices in that module and MASTER_GAIN/AMBIENT_GAIN in sound.ts.
+Historical orb/storage/drone/gesture-only startup and single-file portability
+descriptions below are superseded. Owner authorized “commit dan push”; acceptance
+pending. [Current implementation and evidence](magical-ambient-local.md).
+
 Sound di situs ini **100% prosedural (Web Audio API)**: tidak ada file audio yang
 diunduh, tidak ada dependency baru, tidak ada isu copyright/atribusi. Semua cue
 disintesis saat dipanggil. Dokumen ini acuan kalau nambah/mengubah bunyi.

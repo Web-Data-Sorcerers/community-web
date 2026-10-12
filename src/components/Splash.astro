@@ -466,7 +466,9 @@ const polygon = (n: number, r: number, offset: number) =>
       render(true);
       announce();
       window.dispatchEvent(
-        new CustomEvent('ds:sfx', { detail: { cue: 'success' } }),
+        new CustomEvent('ds:sfx', {
+          detail: { cue: 'success', source: 'splash' },
+        }),
       );
       el.classList.add('is-leaving');
       window.setTimeout(remove, 800);

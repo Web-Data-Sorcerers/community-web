@@ -14,14 +14,49 @@
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const wired = window as unknown as { __dsSoundWired?: boolean };
 
-  // Sound is on by default.
+  // Owner explicitly chose always-on audio without a floating control.
   sound.setMuted(false);
+  const syncSplash = () =>
+    sound.setSplashActive(
+      !reduceMotion.matches &&
+        document.documentElement.classList.contains('splash-armed') &&
+        !document.documentElement.classList.contains('splash-done'),
+    );
 
   // Everything below is registered once and works by delegation on `document`
   // (which the ClientRouter keeps alive), so it survives swaps without piling up.
   if (!wired.__dsSoundWired) {
     wired.__dsSoundWired = true;
+    document.addEventListener('astro:page-load', syncSplash);
+    window.addEventListener('ds:splash-done', () =>
+      sound.setSplashActive(false),
+    );
+    document.addEventListener('astro:before-swap', () =>
+      sound.setSplashActive(false),
+    );
     sound.setAmbientAllowed(!reduceMotion.matches);
+    reduceMotion.addEventListener('change', () => {
+      sound.setAmbientAllowed(!reduceMotion.matches);
+      syncSplash();
+    });
+    // Audition choices reuse the singleton; mute and reduced-motion gates stay
+    // in the engine/wrapper rather than individual page controls.
+    window.addEventListener('ds:ambient', (event) => {
+      const profile = (event as CustomEvent<{ profile?: string }>).detail
+        ?.profile;
+      if (
+        profile === 'library' ||
+        profile === 'castle' ||
+        profile === 'waltz'
+      ) {
+        sound.setAmbientProfile(profile);
+      }
+    });
+
+    syncSplash();
+    // A normal autoplay request only: the browser may keep the context suspended.
+    // Never hold the splash/navigation or queue a late loading sound for it.
+    if (!reduceMotion.matches) sound.unlock();
 
     // First real gesture unlocks the context (iOS Safari requires touchstart/touchend/click).
     const unlock = () => sound.unlock();
@@ -40,8 +75,10 @@
     // off under reduced motion so audits (which force `reduce`) stay silent.
     if (!reduceMotion.matches) {
       window.addEventListener('ds:sfx', (event) => {
-        const cue = (event as CustomEvent<{ cue?: Cue }>).detail?.cue;
-        if (cue) sound.play(cue);
+        const detail = (event as CustomEvent<{ cue?: Cue; source?: string }>)
+          .detail;
+        if (detail?.source === 'splash' && !sound.isReady) return;
+        if (detail?.cue) sound.play(detail.cue);
       });
 
       // Page transition: internal links get the short "seal" cue instead of

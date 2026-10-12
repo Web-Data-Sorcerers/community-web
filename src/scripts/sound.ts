@@ -1,3 +1,5 @@
+import { renderAmbient, type AmbientProfile } from './sound-ambient';
+
 // Procedural "arcane" sound palette. Every cue is synthesised on demand with
 // the Web Audio API, so there are no audio assets to download and nothing to
 // license. The engine stays inert until a user gesture unlocks the AudioContext
@@ -38,6 +40,121 @@ class SoundEngine {
   private ambientGain: GainNode | null = null;
   private ambientBuilt = false;
   private ambientAllowed = true;
+  private ambientProfile: AmbientProfile = 'waltz';
+  private ambientSource: AudioBufferSourceNode | null = null;
+  private ambientGeneration = 0;
+
+  private splashActive = false;
+  private splashGain: GainNode | null = null;
+  private splashNodes: OscillatorNode[] = [];
+
+  setSplashActive(active: boolean): void {
+    this.splashActive = active;
+    this.syncSplash();
+  }
+
+  private syncSplash(): void {
+    const ctx = this.ctx;
+    if (!ctx || !this.master) return;
+    if (
+      !this.splashActive ||
+      !this.ambientAllowed ||
+      this.muted ||
+      ctx.state !== 'running' ||
+      document.hidden
+    ) {
+      const out = this.splashGain;
+      if (out) {
+        out.gain.cancelScheduledValues(ctx.currentTime);
+        out.gain.setTargetAtTime(0, ctx.currentTime, 0.06);
+        const nodes = this.splashNodes;
+        let remaining = nodes.length;
+        for (const osc of nodes) {
+          osc.addEventListener(
+            'ended',
+            () => {
+              if (--remaining === 0) out.disconnect();
+            },
+            { once: true },
+          );
+          // Already-ended chimes are removed from the live array below.
+          osc.stop(ctx.currentTime + 0.25);
+        }
+        if (!remaining) out.disconnect();
+        this.splashGain = null;
+        this.splashNodes = [];
+      }
+      return;
+    }
+    if (this.splashGain) return;
+    const out = ctx.createGain();
+    out.gain.value = 0;
+    out.gain.linearRampToValueAtTime(0.65, ctx.currentTime + 0.25);
+    out.connect(this.master);
+    this.splashGain = out;
+    const add = (
+      freq: number,
+      delay: number,
+      level: number,
+      duration?: number,
+    ) => {
+      const osc = ctx.createOscillator();
+      const envelope = ctx.createGain();
+      const start = ctx.currentTime + delay;
+      osc.frequency.value = freq;
+      envelope.gain.setValueAtTime(0.00001, start);
+      envelope.gain.exponentialRampToValueAtTime(level, start + 0.06);
+      if (duration)
+        envelope.gain.exponentialRampToValueAtTime(0.00001, start + duration);
+      osc.connect(envelope);
+      envelope.connect(out);
+      this.splashNodes.push(osc);
+      osc.addEventListener(
+        'ended',
+        () => {
+          osc.disconnect();
+          envelope.disconnect();
+          this.splashNodes = this.splashNodes.filter((node) => node !== osc);
+        },
+        { once: true },
+      );
+      osc.start(start);
+      if (duration) osc.stop(start + duration + 0.02);
+    };
+    // A quiet ritual bed with sparse glass accents while the seal turns.
+    add(146.83, 0, 0.035);
+    add(220, 0, 0.018);
+    add(293.66, 0, 0.012);
+    [587.33, 698.46, 880, 830.61, 659.25, 587.33].forEach((freq, i) =>
+      add(freq, 0.12 + i * 0.7, 0.045, 1.15),
+    );
+  }
+
+  get ambientPreset(): AmbientProfile {
+    return this.ambientProfile;
+  }
+
+  // Lab selection is in-memory; navigation keeps the same composition/context.
+  setAmbientProfile(profile: AmbientProfile): void {
+    if (profile === this.ambientProfile) return;
+    this.ambientProfile = profile;
+    this.ambientGeneration++;
+    const old = this.ambientSource;
+    const oldGain = this.ambientGain;
+    if (old && oldGain && this.ctx) {
+      oldGain.gain.cancelScheduledValues(this.ctx.currentTime);
+      oldGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.15);
+      old.onended = () => {
+        old.disconnect();
+        oldGain.disconnect();
+      };
+      old.stop(this.ctx.currentTime + 1);
+    }
+    this.ambientSource = null;
+    this.ambientGain = null;
+    this.ambientBuilt = false;
+    this.syncAmbient();
+  }
 
   get isMuted(): boolean {
     return this.muted;
@@ -59,20 +176,23 @@ class SoundEngine {
       );
     }
     this.syncAmbient();
+    this.syncSplash();
   }
 
   // Ambient is opt-out (e.g. reduced motion) without affecting one-shot cues.
   setAmbientAllowed(allowed: boolean): void {
     this.ambientAllowed = allowed;
     this.syncAmbient();
+    this.syncSplash();
   }
 
   // Create/resume the context from a user gesture so later hover cues (which
   // are not gestures) can play.
   unlock(): void {
     const ctx = this.ensure();
-    if (ctx && ctx.state === 'suspended') void ctx.resume();
+    if (ctx && ctx.state === 'suspended') void ctx.resume().catch(() => {});
     this.syncAmbient();
+    this.syncSplash();
   }
 
   play(cue: Cue): void {
@@ -260,7 +380,10 @@ class SoundEngine {
       this.master.connect(compressor);
       compressor.connect(this.ctx.destination);
       // Resume can resolve asynchronously after `unlock()`; start the pad then.
-      this.ctx.onstatechange = () => this.syncAmbient();
+      this.ctx.onstatechange = () => {
+        this.syncAmbient();
+        this.syncSplash();
+      };
     }
     if (!this.reverbBuilt) {
       this.reverbBuilt = true;
@@ -269,81 +392,47 @@ class SoundEngine {
     return this.ctx;
   }
 
-  // A slow, evolving drone bed. Kept deliberately small (four detuned sines +
-  // one filtered noise loop, no per-frame JS) so it can run continuously.
+  // Render a sparse original score off the live audio thread, then loop its
+  // seamless buffer. No recurring JS timer, network audio or new context.
   private buildAmbient(ctx: AudioContext): void {
     this.ambientBuilt = true;
-    if (!this.master) return;
-    const out = ctx.createGain();
-    out.gain.value = 0;
-    out.connect(this.master);
-    if (this.reverbIn) {
-      const send = ctx.createGain();
-      send.gain.value = 0.5;
-      out.connect(send);
-      send.connect(this.reverbIn);
-    }
-    this.ambientGain = out;
+    const generation = this.ambientGeneration;
+    void renderAmbient(this.ambientProfile)
+      .then((buffer) => {
+        if (generation !== this.ambientGeneration || !this.master) return;
+        const out = ctx.createGain();
+        out.gain.value = 0;
+        out.connect(this.master);
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.loop = true;
+        source.connect(out);
+        this.ambientGain = out;
+        this.ambientSource = source;
+        source.start();
+        this.syncAmbient();
+      })
+      .catch(() => {
+        // Ambient failure must leave navigation and the existing cues usable.
+        // Do not retry on every gesture if offline rendering is unavailable.
+      });
+    document.addEventListener(
+      'visibilitychange',
+      () => {
+        this.syncAmbient();
+        this.syncSplash();
+      },
+      {
+        signal: this.ambientVisibilitySignal(),
+      },
+    );
+  }
 
-    // Everything sits on a "breath" gain that swells and relaxes slowly.
-    const breath = ctx.createGain();
-    breath.gain.value = 0.7;
-    breath.connect(out);
-    const lfo = ctx.createOscillator();
-    lfo.frequency.value = 0.05;
-    const lfoDepth = ctx.createGain();
-    lfoDepth.gain.value = 0.3;
-    lfo.connect(lfoDepth);
-    lfoDepth.connect(breath.gain);
-    lfo.start();
-
-    const voices: [number, number, number][] = [
-      [110, 0.34, 0],
-      [164.81, 0.22, 5],
-      [220, 0.16, -6],
-      [329.63, 0.08, 4],
-    ];
-    for (const [freq, amp, detune] of voices) {
-      const osc = ctx.createOscillator();
-      osc.type = 'sine';
-      osc.frequency.value = freq;
-      osc.detune.value = detune;
-      const gain = ctx.createGain();
-      gain.gain.value = amp;
-      osc.connect(gain);
-      gain.connect(breath);
-      osc.start();
-    }
-
-    // Filtered noise "wind" whose cutoff drifts even more slowly.
-    const length = Math.floor(ctx.sampleRate * 3);
-    const buffer = ctx.createBuffer(1, length, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1;
-    const noise = ctx.createBufferSource();
-    noise.buffer = buffer;
-    noise.loop = true;
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 420;
-    filter.Q.value = 0.6;
-    const noiseGain = ctx.createGain();
-    noiseGain.gain.value = 0.08;
-    noise.connect(filter);
-    filter.connect(noiseGain);
-    noiseGain.connect(breath);
-    const filterLfo = ctx.createOscillator();
-    filterLfo.frequency.value = 0.03;
-    const filterDepth = ctx.createGain();
-    filterDepth.gain.value = 160;
-    filterLfo.connect(filterDepth);
-    filterDepth.connect(filter.frequency);
-    filterLfo.start();
-    noise.start();
-
-    if (typeof document !== 'undefined') {
-      document.addEventListener('visibilitychange', () => this.syncAmbient());
-    }
+  private ambientVisibilityController: AbortController | null = null;
+  private ambientVisibilitySignal(): AbortSignal {
+    this.ambientVisibilityController?.abort();
+    this.ambientVisibilityController = new AbortController();
+    return this.ambientVisibilityController.signal;
   }
 
   // Target the pad only while sound is on, the context runs and the tab is
@@ -351,6 +440,14 @@ class SoundEngine {
   private syncAmbient(): void {
     const ctx = this.ctx;
     if (!ctx) return;
+    if (
+      !this.ambientBuilt &&
+      (!this.ambientAllowed ||
+        this.muted ||
+        ctx.state !== 'running' ||
+        document.hidden)
+    )
+      return;
     if (!this.ambientBuilt) this.buildAmbient(ctx);
     if (!this.ambientGain) return;
     const on =

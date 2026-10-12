@@ -1,5 +1,20 @@
 # AI handoff — current context
 
+## Magical ambient — RELEASE AUTHORIZED, 12 Oct 2026
+
+Owner “lanjut yang suara tadi” authorized local Library/Castle auditions.
+Then “coba deh” authorized third Enchanted Castle Waltz (54s,3/4,80BPM).
+Original68/64BPM scores in sound-ambient.ts; lazy OfflineAudioContext render,
+seamless in-memory buffer loop, singleton persistence/stale-result guard.
+Owner subsequently requested removing orb and always-on audio; orb removed,
+old mute storage ignored. Normal autoplay attempt plus real-gesture fallback;
+ritual splash bed stops on finish/swap, blocked late completion cue discarded. Existing cue/navigation contracts retained.
+Lab: http://127.0.0.1:4368/lab/sound/. Owner accepted Waltz with “okeee boleh
+tuh bro”; Waltz now selected default. Owner now authorized “commit dan push”
+for this audio/splash scope; release acceptance pending, baselinecff4126. Existing dirty
+work preserved. [Record](magical-ambient-local.md).
+
+
 ## Home refresh splash — RELEASE AUTHORIZED, 12 Oct 2026
 
 Owner chose “Munculkan ulang hanya saat refresh Home”. BaseLayout now allows
