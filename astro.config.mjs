@@ -2,6 +2,7 @@ import { VISIBILITY_PAGES } from './src/data/site-visibility-registry.mjs';
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 import vercel from '@astrojs/vercel';
+import { navigationStyleManifest } from './scripts/navigation-style-manifest.mjs';
 
 // Canonical origin used for absolute URLs (canonical, Open Graph, sitemap).
 // Override with SITE_URL in the deploy environment if the domain changes.
@@ -17,6 +18,7 @@ export default defineConfig({
   prefetch: { prefetchAll: false, defaultStrategy: 'hover' },
   // Keep the internal sound audition page out of the public sitemap.
   integrations: [
+    navigationStyleManifest(),
     sitemap({
       customPages: VISIBILITY_PAGES.map(
         (page) => new URL(page.path, site).href,

@@ -40,6 +40,9 @@ createServer(async (req, res) => {
           'Content-Type',
           types[extname(file)] || 'application/octet-stream',
         );
+        // Match Vercel's immutable hashed assets without caching public SSR.
+        if (url.pathname.startsWith('/_astro/'))
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
         res.end(req.method === 'HEAD' ? undefined : bytes);
         return;
       } catch {}

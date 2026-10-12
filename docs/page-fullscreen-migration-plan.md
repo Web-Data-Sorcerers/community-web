@@ -435,3 +435,7 @@ and spacing unchanged. See recruitment-timeline-card-followup.md.
 12 Oct local static-divider correction: reviewed owner card role 4.png; keep
 full-width exported fade above View Details, now with1px minimum and no flex
 shrink for visible rendering. Short underline unchanged. No release actions.
+
+12 Oct navigation follow-up is infrastructure only: idle CSS warming and
+request timing, no section composition/geometry/fonts/artwork changes.
+Plan and acceptance: navigation-next-local.md. Local only; no release.
