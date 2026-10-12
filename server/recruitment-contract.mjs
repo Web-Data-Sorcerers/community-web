@@ -64,8 +64,6 @@ export const REQUIRED_CHOICES = [
   'current_level',
   'primary_hods',
   'time_commitment',
-  'best_description',
-  'independent_learning',
   'agreement_1',
   'agreement_2',
   'agreement_3',

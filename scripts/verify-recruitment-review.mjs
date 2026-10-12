@@ -19,7 +19,7 @@ const browser = await chromium.launch({
 });
 const report = [];
 try {
-  for (const width of [320, 390, 768, 1440]) {
+  for (const width of [320, 390, 768, 1024, 1280, 1440]) {
     const page = await browser.newPage({
       viewport: { width, height: 900 },
       reducedMotion: 'reduce',
@@ -542,6 +542,21 @@ try {
       (await recPanel.locator('#detail-summary').textContent()).includes('WIB'),
     );
     await checkOverflow();
+    const geometry = await recPanel
+      .locator('.detail-main-pane')
+      .evaluate((el) => {
+        const box = el.getBoundingClientRect();
+        return { width: box.width, padding: getComputedStyle(el).paddingLeft };
+      });
+    assert.equal(geometry.padding, '0px');
+    if (width >= 1280) assert(geometry.width >= width - 416);
+    assert.equal(await page.locator('main').count(), 1);
+    assert.equal(
+      await recPanel
+        .locator('#review-feedback')
+        .evaluate((el) => getComputedStyle(el).paddingLeft),
+      '0px',
+    );
     await page.screenshot({
       path: `${out}/detail-${width}.png`,
       fullPage: true,

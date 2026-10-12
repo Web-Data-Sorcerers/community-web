@@ -1,3 +1,4 @@
+import { createSessionResumer } from './admin-session.js';
 import {
   STATUSES,
   TRANSITIONS,
@@ -805,13 +806,21 @@ export function mount(root, opts = {}) {
     if (byId('analytics-visuals')) byId('analytics-visuals').hidden = true;
     byId('table-wrapper').hidden = true;
     byId('pagination').hidden = true;
+    const facts = create('div', undefined, 'summary-facts');
+    for (const [label, value] of [
+      ['Email', data.fields.email || '—'],
+      ['Domain', data.fields.primary_hods || '—'],
+      ['Diterima', date(data.received_at)],
+      ['Status seleksi', STATUSES[data.review.status]],
+    ]) {
+      const fact = create('p');
+      fact.append(create('strong', label), create('span', value));
+      facts.append(fact);
+    }
     byId('detail-summary').replaceChildren(
-      create('strong', data.fields.full_name || 'Pendaftar'),
-      create(
-        'p',
-        `${data.fields.email || ''} · ${data.fields.primary_hods || ''}`,
-      ),
-      create('p', `Diterima ${date(data.received_at)} · Resi ${data.receipt}`),
+      create('strong', data.fields.full_name || 'Pendaftar', 'summary-name'),
+      facts,
+      create('p', `Resi: ${data.receipt}`, 'summary-receipt'),
     );
     byId('review-meta').textContent =
       `${STATUSES[data.review.status]} · Revisi ${data.review.version} · ${data.review.reviewer_label || 'Belum ditinjau'} · ${date(data.review.updated_at)}`;
@@ -1614,13 +1623,18 @@ export function mount(root, opts = {}) {
         session++;
         csrf = d.csrf;
         loggedIn();
-        document.dispatchEvent(new CustomEvent('ds:admin-session-started'));
         showToast(
           'success',
           'Akses Diberikan',
           'Selamat datang di konsol admin.',
         );
+        await initialRead;
         await bootstrap();
+        document.dispatchEvent(
+          new CustomEvent('ds:admin-session-started', {
+            detail: { panel: root.id },
+          }),
+        );
       } catch {
         message('Koneksi terputus.', true);
         showToast(
@@ -1650,7 +1664,14 @@ export function mount(root, opts = {}) {
     byId('login-submit').disabled = true;
   }
   init();
+  let initialRead;
+  const ensureSession = createSessionResumer(root, {
+    initialRead: () => initialRead,
+    load: bootstrap,
+    isDirty: () => Boolean(current) || saving || Boolean(mutationPending),
+  });
   const instance = {
+    ensureSession,
     show() {
       root.hidden = false;
     },
@@ -1670,7 +1691,7 @@ export function mount(root, opts = {}) {
     _root: root,
   };
   INSTANCES.set(id, instance);
-  bootstrap().finally(() => {
+  initialRead = bootstrap().finally(() => {
     if (byId('login-submit')) byId('login-submit').disabled = false;
   });
   return instance;

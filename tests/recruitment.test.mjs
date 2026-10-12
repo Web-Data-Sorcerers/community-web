@@ -87,6 +87,43 @@ test('contract validates every domain and rejects incomplete/foreign answers', (
       contract.validateApplication({ ...fields(), ...changed }),
     );
 });
+test('short form accepts removed questions missing while consent stays required', () => {
+  const input = fields();
+  for (const key of [
+    'best_description',
+    'independent_learning',
+    'team_comfort',
+    'team_roles',
+    'team_story',
+  ])
+    delete input[key];
+  const result = contract.validateApplication(input);
+  assert.equal(result.best_description, '');
+  assert.equal(result.independent_learning, '');
+  assert.equal(result.team_comfort, '');
+  assert.deepEqual(result.team_roles, []);
+  for (const key of ['agreement_1', 'agreement_2', 'agreement_3'])
+    assert.throws(() => contract.validateApplication({ ...input, [key]: '' }));
+  for (const changed of [
+    { best_description: 'Z' },
+    { independent_learning: 'fake' },
+    { team_comfort: '8' },
+    { team_roles: ['fake'] },
+  ])
+    assert.throws(() => contract.validateApplication({ ...input, ...changed }));
+});
+test('historical complete payload keeps its canonical hash after simplification', () => {
+  const validated = contract.validateApplication({
+    ...fields(),
+    team_comfort: '4',
+    team_roles: ['Problem Solver'],
+    team_story: 'Historical teamwork answer',
+  });
+  assert.equal(
+    canonicalContentHash(validated),
+    '93e531ddd5377be47d8c2205bf0f7a04faf2678b9105d97164f2ffd94f81e079',
+  );
+});
 test('missing configuration and closed intake fail closed', async () => {
   for (const settings of [
     {},

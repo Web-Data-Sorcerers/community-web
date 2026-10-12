@@ -9,6 +9,8 @@ interface Props {
   role: RoleDetail;
 }
 const { role } = Astro.props;
+// Temporarily hidden at the owner's request; retain the contact data for restore.
+const showContactPerson = false;
 const waNumber = role.whatsapp ?? '6285171516704';
 const waMessage = encodeURIComponent(
   `Halo Kak ${role.contact}, saya ingin bertanya mengenai recruitment role ${role.title} di Data Sorcerers.`,
@@ -88,21 +90,23 @@ const waMessage = encodeURIComponent(
       </section>
     </div>
 
-    <a
-      class="contact"
-      href={`https://wa.me/${waNumber}?text=${waMessage}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={`Hubungi Contact Person ${role.contact} via WhatsApp`}
-      data-sfx="click"
-      data-sfx-hover="hover"
-    >
-      <h2>CONTACT PERSON</h2>
-      <div class="contact-person">
-        <img src="/images/roles/whatsapp.svg" width="24" height="24" alt="" />
-        <span>{role.contact}</span>
-      </div>
-    </a>
+    {showContactPerson && (
+      <a
+        class="contact"
+        href={`https://wa.me/${waNumber}?text=${waMessage}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={`Hubungi Contact Person ${role.contact} via WhatsApp`}
+        data-sfx="click"
+        data-sfx-hover="hover"
+      >
+        <h2>CONTACT PERSON</h2>
+        <div class="contact-person">
+          <img src="/images/roles/whatsapp.svg" width="24" height="24" alt="" />
+          <span>{role.contact}</span>
+        </div>
+      </a>
+    )}
   </div>
 </main>
 <style>

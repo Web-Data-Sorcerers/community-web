@@ -1,5 +1,17 @@
 # Page Full-Screen Migration Plan — Hero Gambar + Section 100svh
 
+12 Oct2026 local follow-up complete: wider applicant detail/shorter application
+form/shared admin login. Public full-screen heroes unchanged from latest local
+Home artwork override; no new Figma frame/artwork. Required agreement remains,
+historical data preserved. No new release. See recruitment-simplification-detail-plan.md
+and admin-shared-session-local.md; existing older milestones retained below.
+
+Latest local override,12 Oct 2026: Home uses owner terbaru.png native1586×992
+WebP quality96; full100svh image positioning, typography and spacing retained.
+Role Contact Person temporarily omitted; registration focus selector repaired.
+Admin shared-login proposal remains PLAN ONLY. Evidence: home-art-contact-form-followup.md.
+No new release; production remains2a79695. Historical checkpoints below retained.
+
 Status handoff 11 Oktober 2026: kontrol Pages & Sections sudah lokal PASS,
 commit `51ce198` belum dipush/live. Catatan future visibility/work order terdahulu
 di bawah adalah sejarah, bukan instruksi mengulang implementasi. Scope berikutnya

@@ -17,6 +17,43 @@ import {
 } from './site-visibility-editor.js';
 const TABS = ['projects', 'team', 'recruitment', 'pages'];
 let initializedRoot;
+let shellListeners;
+let sessionState = 'checking';
+let sessionGeneration = 0;
+let resumeQueue = Promise.resolve();
+let resumeCount = 0;
+let kickWarm = () => {};
+
+function setSessionState(state) {
+  sessionState = state;
+  initializedRoot?.closest('.admin-shell')?.setAttribute('data-session', state);
+}
+function resumePanels(tabs) {
+  const mine = sessionGeneration;
+  resumeCount++;
+  resumeQueue = resumeQueue
+    .catch(() => {})
+    .then(async () => {
+      for (const tab of tabs) {
+        if (
+          mine !== sessionGeneration ||
+          sessionState !== 'authenticated' ||
+          !initializedRoot?.isConnected
+        )
+          break;
+        try {
+          await getModule(tab).get(tab)?.ensureSession?.();
+        } catch {
+          /* Explicit retry remains available. */
+        }
+      }
+    })
+    .finally(() => {
+      resumeCount--;
+      kickWarm();
+    });
+  return resumeQueue;
+}
 const PANEL_ID = {
   pages: 'panel-pages',
   projects: 'panel-projects',
@@ -72,6 +109,7 @@ function showTab(tab) {
   const hash = tab === 'projects' ? '' : tab;
   history.replaceState({ tab }, '', hash ? '/admin/#' + hash : '/admin/');
   mountIfNeeded(tab);
+  if (sessionState === 'authenticated') void resumePanels([tab]);
 }
 
 function mountIfNeeded(tab, isPrewarm = false) {
@@ -138,11 +176,32 @@ function getTabFromPath() {
 function initShell(initialTab) {
   const root = getPanelRoot('projects');
   if (initializedRoot === root) return;
+  shellListeners?.abort();
+  shellListeners = new AbortController();
   initializedRoot = root;
+  sessionGeneration++;
+  setSessionState('checking');
   mounted = {};
-  document.addEventListener('ds:admin-session-ended', () => {
-    for (const tab of TABS) getModule(tab).get(tab)?.expireSession?.();
-  });
+  document.addEventListener(
+    'ds:admin-session-started',
+    () => {
+      setSessionState('authenticated');
+      void resumePanels([
+        activeTab,
+        ...TABS.filter((t) => t !== activeTab && mounted[t]),
+      ]);
+    },
+    { signal: shellListeners.signal },
+  );
+  document.addEventListener(
+    'ds:admin-session-ended',
+    () => {
+      sessionGeneration++;
+      setSessionState('expired');
+      for (const tab of TABS) getModule(tab).get(tab)?.expireSession?.();
+    },
+    { signal: shellListeners.signal },
+  );
   const tab =
     location.hash === '#pages' ? 'pages' : initialTab || getTabFromPath();
   activeTab = tab;
@@ -168,7 +227,21 @@ function initShell(initialTab) {
       (loginButton && !loginButton.hidden)
     );
   };
-  const observer = new MutationObserver(scheduleWarm);
+  const observer = new MutationObserver(() => {
+    if (
+      TABS.some((t) => {
+        const workspace = getPanelRoot(t)?.querySelector('#workspace');
+        return workspace && !workspace.hidden;
+      })
+    )
+      setSessionState('authenticated');
+    else if (sessionState === 'checking' && ready(activeTab))
+      setSessionState('anonymous');
+    scheduleWarm();
+  });
+  shellListeners.signal.addEventListener('abort', () => observer.disconnect(), {
+    once: true,
+  });
   for (const t of TABS) {
     const panel = getPanelRoot(t);
     if (panel)
@@ -181,16 +254,14 @@ function initShell(initialTab) {
   function scheduleWarm() {
     if (
       queued ||
+      resumeCount > 0 ||
       !root?.isConnected ||
       !ready(activeTab) ||
       (warming && !ready(warming))
     )
       return;
     const next = TABS.find((t) => !mounted[t]);
-    if (!next) {
-      observer.disconnect();
-      return;
-    }
+    if (!next) return;
     queued = true;
     const run = () => {
       queued = false;
@@ -198,7 +269,8 @@ function initShell(initialTab) {
         observer.disconnect();
         return;
       }
-      if (!ready(activeTab) || (warming && !ready(warming))) return;
+      if (resumeCount > 0 || !ready(activeTab) || (warming && !ready(warming)))
+        return;
       const target = TABS.find((t) => !mounted[t]);
       if (target) {
         warming = target;
@@ -210,25 +282,38 @@ function initShell(initialTab) {
       requestIdleCallback(run, { timeout: 1200 });
     } else setTimeout(run, 400);
   }
+  kickWarm = scheduleWarm;
   scheduleWarm();
 
   document.querySelectorAll('.admin-module-link').forEach((link) => {
-    link.addEventListener('click', (e) => {
-      if (e.button !== 0 || e.metaKey || e.ctrlKey) return;
-      e.preventDefault();
-      showTab(link.dataset.tab);
-    });
+    link.addEventListener(
+      'click',
+      (e) => {
+        if (e.button !== 0 || e.metaKey || e.ctrlKey) return;
+        e.preventDefault();
+        showTab(link.dataset.tab);
+      },
+      { signal: shellListeners.signal },
+    );
   });
-  window.addEventListener('beforeunload', (e) => {
-    if (isAnyDirty()) {
-      e.preventDefault();
-      e.returnValue = '';
-    }
-  });
-  window.addEventListener('popstate', () => {
-    const t = getTabFromPath();
-    if (t !== activeTab) showTab(t);
-  });
+  window.addEventListener(
+    'beforeunload',
+    (e) => {
+      if (isAnyDirty()) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    },
+    { signal: shellListeners.signal },
+  );
+  window.addEventListener(
+    'popstate',
+    () => {
+      const t = getTabFromPath();
+      if (t !== activeTab) showTab(t);
+    },
+    { signal: shellListeners.signal },
+  );
 }
 
 export { initShell, showTab, mountIfNeeded, isAnyDirty };

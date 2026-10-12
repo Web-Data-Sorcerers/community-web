@@ -1,3 +1,4 @@
+import { createSessionResumer } from './admin-session.js';
 import {
   VISIBILITY_PAGES,
   PAGE_BY_ID,
@@ -674,8 +675,13 @@ export function mount(root, opts = {}) {
       busy = false;
       $('login-submit').disabled = false;
       if (r.response?.ok && r.result.ok) {
-        document.dispatchEvent(new CustomEvent('ds:admin-session-started'));
+        await initialRead;
         await load();
+        document.dispatchEvent(
+          new CustomEvent('ds:admin-session-started', {
+            detail: { panel: root.id },
+          }),
+        );
       } else message('Login belum berhasil. Periksa akun owner.');
     },
     { signal: listeners.signal },
@@ -683,14 +689,14 @@ export function mount(root, opts = {}) {
   document.addEventListener('ds:admin-session-ended', expireSession, {
     signal: listeners.signal,
   });
-  document.addEventListener(
-    'ds:admin-session-started',
-    () => {
-      if (!saved && !busy) void load();
-    },
-    { signal: listeners.signal },
-  );
+  let initialRead;
+  const ensureSession = createSessionResumer(root, {
+    initialRead: () => initialRead,
+    load,
+    isDirty: () => busy || !!uncertain || changes().length > 0,
+  });
   const instance = {
+    ensureSession,
     isDirty: () => busy || !!uncertain || changes().length > 0,
     load,
     expireSession,
@@ -703,6 +709,6 @@ export function mount(root, opts = {}) {
     _root: root,
   };
   instances.set(root.id, instance);
-  void load();
+  initialRead = load();
   return instance;
 }

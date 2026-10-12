@@ -1,5 +1,50 @@
 # AI handoff — current context
 
+## Recruitment/Home/admin release authorized — 12 Oct 2026
+
+Owner explicitly said “commit and push” for remaining nine-point checklist work:
+Home artwork, role Contact Person hide, form focus/simplification, wider applicant
+detail and shared admin session. Timeline/card lines already released. One scoped
+commit/main push with connected deployment; baseline2a79695/remote matched.
+Local QA PASS; live acceptance/new SHA pending. No live application/admin saves,
+SQL/provider/env mutation. Existing unrelated dirty docs/assets preserved.
+Release record: [release](recruitment-admin-release.md).
+
+
+## Recruitment detail/form/shared session — LOCAL, 12 Oct 2026
+
+Owner authorized remaining plans with “eksusi plan yang belum dan gas”.
+Detail uses up to1440px shell, wide answers/two short-field columns,320px review
+sidebar; answers precede review controls on mobile. Form removes teamwork25–27
+and old34–35; retained questions renumbered, Community Agreement unnumbered and
+all three consents still required. Historical fields stay valid optional data;
+old records retained and canonical payload hash/exact pending retry preserved.
+Shell resumes anonymous panels after one shared login, serially and without
+reloading healthy/draft/busy editors. Existing secure cookie/ACL/CSRF unchanged.
+Node22 check/build0errors/0warnings;44recruitment,98CMS+10SKIP,13session/visibility
+unit tests PASS. Shared-login16conditions×4destinations, CMS panels4widths each,
+review6widths, Pages12cases/races3, public28 and packed shared Auth/freshSSR PASS.
+Long-answer layout390/1440 in both motion modes PASS; WebKit unavailable, real
+owner/Safari acceptance pending. No production writes or commit/push/deploy;
+latest release2a79695. Existing dirty docs and owner assets preserved.
+Implementation/evidence: [detail/form record](recruitment-simplification-detail-plan.md) and [shared session](admin-shared-session-local.md).
+
+
+## Home artwork/contact/form — LOCAL, 12 Oct 2026
+
+Owner requested latest artwork for Home only, temporary role Contact Person
+hide and empty outlined registration-box fix. Implemented locally; admin shared
+login is PLAN ONLY by explicit owner choice. Native1586×992 high-quality WebP,
+no upscale; all six role Apply Now destinations preserved. Text-input sibling
+focus outline restricted to radio/checkbox; errors/keyboard focus retained.
+Node22 check/build0errors/0warnings, recruitment42, spacing40, browser416cases
+and focused-input8conditions PASS. No admin/Auth/backend/visibility mutation,
+commit/push/deploy. Latest release remains2a79695. Existing dirty docs/assets
+preserved. Plan/evidence: [home-art-contact-form-followup](docs/home-art-contact-form-followup.md).
+
+
+
+
 ## Snappy Navigation — local follow-up, 12 Oct 2026
 
 Owner approved local execution (“gassss”). Read

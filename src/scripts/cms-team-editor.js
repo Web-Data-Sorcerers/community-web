@@ -1,3 +1,4 @@
+import { createSessionResumer } from './admin-session.js';
 import { prepareImageForUpload } from './admin-image.js';
 
 const INSTANCES = new Map();
@@ -165,6 +166,7 @@ export function mount(root, opts = {}) {
     if (result.ok) {
       csrf = result.csrf;
       if ($('login')) $('login').hidden = true;
+      if ($('login-form')) $('login-form').hidden = true;
       if ($('logout')) $('logout').hidden = false;
     }
     return result;
@@ -708,14 +710,19 @@ export function mount(root, opts = {}) {
         }
         $('login-password').value = '';
         loginForm.hidden = true;
-        document.dispatchEvent(new CustomEvent('ds:admin-session-started'));
         message('Masuk. Memuat Team…');
         showToast(
           'success',
           'Akses Diberikan',
           'Selamat datang di konsol admin.',
         );
-        void load();
+        await initialRead;
+        await load();
+        document.dispatchEvent(
+          new CustomEvent('ds:admin-session-started', {
+            detail: { panel: root.id },
+          }),
+        );
       } catch {
         const errText = 'Koneksi terputus. Coba masuk lagi.';
         message(errText, true);
@@ -734,7 +741,14 @@ export function mount(root, opts = {}) {
       event.returnValue = '';
     }
   });
+  let initialRead;
+  const ensureSession = createSessionResumer(root, {
+    initialRead: () => initialRead,
+    load,
+    isDirty: () => dirty || scopes.mutation || scopes.upload,
+  });
   const instance = {
+    ensureSession,
     show() {
       root.hidden = false;
     },
@@ -764,7 +778,7 @@ export function mount(root, opts = {}) {
     _root: root,
   };
   INSTANCES.set(id, instance);
-  load();
+  initialRead = load();
   return instance;
 }
 

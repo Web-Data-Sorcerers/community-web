@@ -91,10 +91,24 @@ const image = new URL('/og/og-default.jpg', Astro.site).href;
         font: 400 16px/1.5 var(--font-body);
         min-height: 100vh;
       }
-      main {
+      .admin-shell {
         max-width: 1280px;
         margin: 0 auto;
         padding: 32px 24px;
+      }
+      .admin-shell:has(
+        #panel-recruitment:not([hidden]) #detail-area:not([hidden])
+      ) {
+        max-width: 1440px;
+        padding-inline: 32px;
+      }
+      @media (max-width: 767px) {
+        .admin-shell,
+        .admin-shell:has(
+          #panel-recruitment:not([hidden]) #detail-area:not([hidden])
+        ) {
+          padding: 24px 16px;
+        }
       }
       [hidden] {
         display: none !important;
@@ -102,7 +116,7 @@ const image = new URL('/og/og-default.jpg', Astro.site).href;
     </style>
   </head>
   <body>
-    <main>
+    <main class="admin-shell">
       <AdminNavigation active="recruitment" />
       <AdminProjectsPanel />
       <AdminTeamPanel />

@@ -6,12 +6,9 @@ import {
   LEARNING_METHODS_OPTIONS,
   PROJECT_EXPERIENCE_OPTIONS,
   DESIRED_OUTPUT_OPTIONS,
-  TEAM_ROLES_OPTIONS,
   TIME_COMMITMENT_OPTIONS,
   CONTRIBUTION_TYPE_OPTIONS,
   CROSS_HODS_OPTIONS,
-  BEST_DESCRIPTION_OPTIONS,
-  INDEPENDENT_LEARNING_OPTIONS,
   AGREEMENT_STATEMENTS,
 } from '../../data/recruitment-form';
 ---
@@ -718,88 +715,20 @@ import {
       <!-- STEP 4: COMMITMENT & VALUES -->
       <fieldset class="form-step" data-step-panel="4" tabindex="-1">
         <legend class="sr-only">
-          Step 4: Collaboration, Commitment, Motivation, and Agreement
+          Step 4: Commitment, Motivation, and Agreement
         </legend>
 
-        <!-- Section 08: Collaboration -->
+        <!-- Section 08: Commitment -->
         <div class="section-card">
           <div class="section-title-row">
             <span class="section-badge">SECTION 08</span>
-            <h2>Collaboration & Teamwork</h2>
-          </div>
-
-          <div class="fields-stack">
-            <div class="field">
-              <span class="field-label">
-                25. How comfortable are you working in a team?
-              </span>
-              <span class="field-desc">
-                Skala kenyamanan berkolaborasi dengan tim lintas disiplin.
-              </span>
-              <div class="linear-scale-group">
-                <span class="scale-label-start">1: Prefer working alone</span>
-                <div class="scale-buttons">
-                  {[1, 2, 3, 4, 5].map((num) => (
-                    <label class="scale-radio-label">
-                      <input
-                        type="radio"
-                        name="team_comfort"
-                        value={num}
-                        checked={num === 4}
-                      />
-                      <span class="scale-number">{num}</span>
-                    </label>
-                  ))}
-                </div>
-                <span class="scale-label-end">
-                  5: Very comfortable collaborating
-                </span>
-              </div>
-            </div>
-
-            <div class="field">
-              <span class="field-label">
-                26. What role do you usually take in a team?
-              </span>
-              <div class="pills-grid">
-                {TEAM_ROLES_OPTIONS.map((role) => (
-                  <label class="pill-checkbox-label">
-                    <input type="checkbox" name="team_roles" value={role} />
-                    <span class="pill-content">{role}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <label class="field">
-              <span class="field-label">
-                27. Tell us about a time you worked with others to solve a
-                problem.
-              </span>
-              <span class="field-desc">
-                Bisa dari project kuliah, organisasi, hackathon, pekerjaan, atau
-                kolaborasi open-source.
-              </span>
-              <textarea
-                name="team_story"
-                rows="3"
-                placeholder="Ceritakan peran dan pengalaman Anda ketika bekerja bersama tim..."
-              ></textarea>
-            </label>
-          </div>
-        </div>
-
-        <!-- Section 09: Commitment -->
-        <div class="section-card">
-          <div class="section-title-row">
-            <span class="section-badge">SECTION 09</span>
             <h2>Commitment & Availability</h2>
           </div>
 
           <div class="fields-stack">
             <div class="field">
               <span class="field-label">
-                28. How much time can you realistically contribute each week?{' '}
+                25. How much time can you realistically contribute each week?{' '}
                 <mark class="req">*</mark>
               </span>
               <span class="field-desc">
@@ -824,7 +753,7 @@ import {
 
             <div class="field">
               <span class="field-label">
-                29. What type of contribution are you most interested in?
+                26. What type of contribution are you most interested in?
               </span>
               <div class="pills-grid">
                 {CONTRIBUTION_TYPE_OPTIONS.map((contrib) => (
@@ -842,7 +771,7 @@ import {
 
             <div class="field">
               <span class="field-label">
-                30. Are you willing to contribute to projects outside your
+                27. Are you willing to contribute to projects outside your
                 primary HoDS when needed?
               </span>
               <span class="field-desc">
@@ -865,17 +794,17 @@ import {
           </div>
         </div>
 
-        <!-- Section 10: Motivation -->
+        <!-- Section 09: Motivation -->
         <div class="section-card">
           <div class="section-title-row">
-            <span class="section-badge">SECTION 10</span>
+            <span class="section-badge">SECTION 09</span>
             <h2>Motivation & Goals</h2>
           </div>
 
           <div class="fields-stack">
             <label class="field">
               <span class="field-label">
-                31. Why do you want to join Data Sorcerers?{' '}
+                28. Why do you want to join Data Sorcerers?{' '}
                 <mark class="req">*</mark>
               </span>
               <textarea
@@ -889,7 +818,7 @@ import {
 
             <label class="field">
               <span class="field-label">
-                32. What do you want to contribute to Data Sorcerers?
+                29. What do you want to contribute to Data Sorcerers?
               </span>
               <textarea
                 name="what_to_contribute"
@@ -900,7 +829,7 @@ import {
 
             <label class="field">
               <span class="field-label">
-                33. What do you want to build, explore, or research with us?
+                30. What do you want to build, explore, or research with us?
               </span>
               <textarea
                 name="what_to_build_together"
@@ -911,66 +840,17 @@ import {
           </div>
         </div>
 
-        <!-- Section 11: Final Check -->
+        <!-- Section 10: Final Check -->
         <div class="section-card">
           <div class="section-title-row">
-            <span class="section-badge">SECTION 11</span>
-            <h2>Final Check & Agreement</h2>
+            <span class="section-badge">SECTION 10</span>
+            <h2>Community Agreement</h2>
           </div>
 
           <div class="fields-stack">
-            <div class="field">
-              <span class="field-label">
-                34. Which statement describes you best?{' '}
-                <mark class="req">*</mark>
-              </span>
-              <span class="field-desc">
-                Target utama recruitment adalah kandidat di kategori{' '}
-                <strong>B, C, dan D</strong>.
-              </span>
-              <div class="statement-cards-grid">
-                {BEST_DESCRIPTION_OPTIONS.map((desc) => (
-                  <label class="statement-card-label">
-                    <input
-                      type="radio"
-                      name="best_description"
-                      value={desc.id}
-                      required
-                    />
-                    <div class="statement-card-content">
-                      <span class="statement-letter">{desc.id}</span>
-                      <span class="statement-text">{desc.text}</span>
-                    </div>
-                  </label>
-                ))}
-              </div>
-              <span class="field-error" aria-live="polite"></span>
-            </div>
-
-            <div class="field">
-              <span class="field-label">
-                35. Are you ready to learn independently and contribute to real
-                projects? <mark class="req">*</mark>
-              </span>
-              <div class="pills-grid">
-                {INDEPENDENT_LEARNING_OPTIONS.map((opt) => (
-                  <label class="pill-radio-label">
-                    <input
-                      type="radio"
-                      name="independent_learning"
-                      value={opt}
-                      required
-                    />
-                    <span class="pill-content">{opt}</span>
-                  </label>
-                ))}
-              </div>
-              <span class="field-error" aria-live="polite"></span>
-            </div>
-
             <div class="field agreement-field">
               <span class="field-label">
-                36. Community Agreement <mark class="req">*</mark>
+                Community Agreement <mark class="req">*</mark>
               </span>
               <div class="agreement-box">
                 {AGREEMENT_STATEMENTS.map((stmt, idx) => (
@@ -2166,8 +2046,8 @@ import {
   }
   button:focus-visible,
   a:focus-visible,
-  :global(input:focus-visible + span),
-  :global(input:focus-visible + div) {
+  :global(input:is([type='radio'], [type='checkbox']):focus-visible + span),
+  :global(input:is([type='radio'], [type='checkbox']):focus-visible + div) {
     outline: 2px solid #9b7bff;
     outline-offset: 4px;
   }

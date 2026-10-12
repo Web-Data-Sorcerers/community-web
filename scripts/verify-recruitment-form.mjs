@@ -116,6 +116,22 @@ try {
       await page.locator('[name="primary_hods"]:checked').inputValue(),
       'data',
     );
+    for (const name of [
+      'best_description',
+      'independent_learning',
+      'team_comfort',
+      'team_roles',
+      'team_story',
+    ])
+      assert.equal(await page.locator(`[name="${name}"]`).count(), 0);
+    assert.equal(
+      await page.locator('.agreement-field .field-label').innerText(),
+      'Community Agreement *',
+    );
+    assert.equal(
+      await page.locator('.agreement-field input[required]').count(),
+      3,
+    );
     await page.locator('[data-step="4"]').click();
     assert.equal(
       await page

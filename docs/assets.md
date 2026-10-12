@@ -1,5 +1,25 @@
 # Asset provenance
 
+## Applicant detail/form/shared session — local, 12 Oct 2026
+
+Owner-approved custom admin refinement, no supplied Figma node/new artwork.
+Existing Bluu Next700/Manrope and Dark Arcane tokens retained. Detail shell
+max1440, desktop gutters32/mobile16, sidebar320/gap32, cards24/mobile16, answer
+spacing16/24. Long answers wrap without truncation; short fields at most2columns.
+Form removes teamwork/old34–35, retains required unnumbered Community Agreement.
+Shared session changes only client orchestration, no asset/token change. Evidence:
+recruitment-simplification-detail-plan.md and admin-shared-session-local.md.
+
+## Latest Home artwork — local, 12 Oct 2026
+
+Owner source: assets/background/terbaru.png,1586×992,1925593bytes. Home only;
+other heroes unchanged. scripts/generate-home-latest-art.mjs uses Sharp WebP
+quality96/effort6 with withoutEnlargement: latest-1586.webp1586×992/282480bytes
+and latest-1440.webp1440×901/249550bytes. Original retained; no synthetic4K.
+Native RGB mean absolute compression error1.223/255. Responsive asset decoding
+and screenshots PASS. See home-art-contact-form-followup.md for local evidence.
+
+
 Status handoff 11 Oktober 2026: On Development dan kontrol Pages & Sections
 sudah diimplementasikan lokal, commit `51ce198` belum dipush/live. Pernyataan
 “visibility future work” pada checkpoint lama di bawah adalah historis.
