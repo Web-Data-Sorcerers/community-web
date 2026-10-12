@@ -1,5 +1,18 @@
 # AGENTS.md — instructions for AI agents
 
+## Home refresh splash — RELEASE AUTHORIZED, 12 Oct 2026
+
+Owner chose “Munculkan ulang hanya saat refresh Home”. BaseLayout now allows
+Home reload to replay splash even with prior ds:splash; non-Home loads/reloads
+and Astro swaps skip it. Document-run guard prevents stale reload timing from
+rearming after a client swap. Swaps retain splash-done/nav-warm. Reduced motion
+bypasses splash; original visuals/durations and hash/scroll handling preserved.
+Node22 build0errors/0warnings, spacing40,4browser width/motion combinations and
+VT/sound PASS; errors0. Owner now authorized “commit dan push” for this scope;
+new release acceptance pending. Baseline production2d17446. Record: [implementation and evidence](docs/home-refresh-splash-local.md). Existing dirty work preserved.
+
+
+
 ## Recruitment/Home/admin release authorized — 12 Oct 2026
 
 Owner explicitly said “commit and push” for remaining nine-point checklist work:

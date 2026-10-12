@@ -157,7 +157,14 @@ const allStructuredData = [...baseStructuredData, ...extraStructuredData];
           var reduce = window.matchMedia(
             '(prefers-reduced-motion: reduce)',
           ).matches;
-          if (!seen && !reduce) {
+          var firstDocumentRun = !window.__dsSplashBootstrapped;
+          window.__dsSplashBootstrapped = true;
+          var navigation = performance.getEntriesByType('navigation')[0];
+          var home = location.pathname === '/';
+          var reload = navigation && navigation.type === 'reload';
+          // Navigation timing belongs to the original document even after an
+          // Astro swap. Only a real Home document load can arm the splash.
+          if (firstDocumentRun && home && (!seen || reload) && !reduce) {
             root.classList.add('splash-armed');
             if ('scrollRestoration' in history) {
               history.scrollRestoration = 'manual';
@@ -167,7 +174,7 @@ const allStructuredData = [...baseStructuredData, ...extraStructuredData];
             // Warm, in-session navigation (the splash already played): tell the
             // hero to present itself settled instead of replaying its entrance
             // blur/sweep on every Home <-> Recruitment switch.
-            if (seen) root.classList.add('nav-warm');
+            if (seen || !firstDocumentRun) root.classList.add('nav-warm');
           }
         } catch (e) {
           root.classList.add('splash-done');
@@ -178,17 +185,8 @@ const allStructuredData = [...baseStructuredData, ...extraStructuredData];
         // component init), so the splash never reappears and the hero stays
         // "warm" instead of replaying its entrance on every page switch.
         document.addEventListener('astro:after-swap', function () {
-          try {
-            var seen = sessionStorage.getItem('ds:splash') === '1';
-            var reduce = window.matchMedia(
-              '(prefers-reduced-motion: reduce)',
-            ).matches;
-            root.classList.remove('splash-armed');
-            if (seen || reduce) root.classList.add('splash-done');
-            if (seen) root.classList.add('nav-warm');
-          } catch (e) {
-            root.classList.add('splash-done');
-          }
+          root.classList.remove('splash-armed');
+          root.classList.add('splash-done', 'nav-warm');
         });
       })();
     </script>

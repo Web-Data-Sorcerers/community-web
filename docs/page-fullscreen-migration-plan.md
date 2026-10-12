@@ -1,5 +1,11 @@
 # Page Full-Screen Migration Plan — Hero Gambar + Section 100svh
 
+Home splash local trigger update12 Oct2026: Home reload replays existing splash;
+other pages/client swaps bypass it. No artwork/geometry/spacing/font/duration
+changes. Reduced motion and settled nav state preserved. Evidence:
+home-refresh-splash-local.md. Owner authorized scoped commit/push; release acceptance pending (baseline2d17446).
+
+
 12 Oct2026 local follow-up complete: wider applicant detail/shorter application
 form/shared admin login. Public full-screen heroes unchanged from latest local
 Home artwork override; no new Figma frame/artwork. Required agreement remains,

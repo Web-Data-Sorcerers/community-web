@@ -1,5 +1,11 @@
 # Asset provenance
 
+Home splash local trigger update12 Oct2026: Home reload replays existing splash;
+other pages/client swaps bypass it. No artwork/geometry/spacing/font/duration
+changes. Reduced motion and settled nav state preserved. Evidence:
+home-refresh-splash-local.md. Owner authorized scoped commit/push; release acceptance pending (baseline2d17446).
+
+
 ## Applicant detail/form/shared session — local, 12 Oct 2026
 
 Owner-approved custom admin refinement, no supplied Figma node/new artwork.
