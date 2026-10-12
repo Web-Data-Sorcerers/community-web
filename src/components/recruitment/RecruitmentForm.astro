@@ -908,15 +908,21 @@ import {
       tabindex="-1"
       hidden
     >
-      <h2 class="success-title">Application received</h2>
-      <p>
-        Terima kasih. Pendaftaran Anda sudah tersimpan untuk ditinjau tim Data
-        Sorcerers.
-      </p>
-      <p id="application-receipt"></p>
-      <a href="/recruitment" class="btn-action-outline" data-sfx="click">
-        Explore Roles
-      </a>
+      <div class="success-card">
+        <h2 class="success-title">Application received</h2>
+        <div class="success-body">
+          <p>
+            Terima kasih. Pendaftaran Anda sudah tersimpan untuk ditinjau tim
+            Data Sorcerers.
+          </p>
+          <p id="application-receipt"></p>
+        </div>
+        <div class="success-actions">
+          <a href="/recruitment" class="btn-action-outline" data-sfx="click">
+            Explore Roles
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -1796,6 +1802,7 @@ import {
     display: none;
     justify-content: center;
     padding: 40px 0;
+    scroll-margin-top: 112px;
   }
 
   .success-screen:not([hidden]) {
@@ -1809,8 +1816,11 @@ import {
     text-align: center;
     gap: 24px;
     max-width: 680px;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
     padding: 56px 48px;
-    border-radius: 28px;
+    border-radius: 24px;
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(155, 123, 255, 0.3);
     box-shadow: 0 0 60px rgba(108, 59, 255, 0.2);
@@ -1848,7 +1858,10 @@ import {
   .success-title {
     margin: 0;
     font-family: var(--font-display);
-    font-size: 36px;
+    font-size: clamp(24px, 5vw, 36px);
+    line-height: 1.2;
+    max-width: 100%;
+    overflow-wrap: anywhere;
     font-weight: 700;
     background: linear-gradient(181deg, #fff 15%, #9b7bff 75%);
     -webkit-background-clip: text;
@@ -1863,6 +1876,17 @@ import {
     color: #c4c4c4;
     font-size: 16px;
     line-height: 26px;
+    width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  #application-receipt {
+    padding: 16px;
+    border-radius: 16px;
+    background: rgba(155, 123, 255, 0.08);
+    font-size: 14px;
+    line-height: 24px;
   }
 
   .success-body p {

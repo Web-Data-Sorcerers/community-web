@@ -561,4 +561,20 @@ const pillars = [
       font-size: 15px;
     }
   }
+  @media (max-width: 767px), (pointer: coarse) {
+    .what-we-do::before,
+    .what-we-do::after,
+    .pillars-layout::after {
+      animation: none;
+    }
+    .what-we-do:not(.is-idle)::before,
+    .what-we-do:not(.is-idle)::after,
+    .what-we-do:not(.is-idle) .pillars-layout::after {
+      will-change: auto;
+    }
+    .what-we-do::after,
+    .pillars-layout::after {
+      inset: 0;
+    }
+  }
 </style>

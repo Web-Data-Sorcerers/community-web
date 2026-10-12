@@ -4,13 +4,16 @@ export function animateSplash(canvas: HTMLCanvasElement) {
   if (!ctx) return () => {};
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
   if (reduce.matches) return () => {};
-  canvas.width = 1008;
-  canvas.height = 568;
+  const mobile = matchMedia('(max-width: 767px), (pointer: coarse)').matches;
+  canvas.width = mobile ? 504 : 1008;
+  canvas.height = mobile ? 284 : 568;
+  // Keep the same logical scene; the fog is soft, so mobile needs fewer pixels.
+  ctx.scale(canvas.width / 1008, canvas.height / 568);
   const fog = document.createElement('canvas');
-  fog.width = 256;
-  fog.height = 192;
+  fog.width = mobile ? 64 : 256;
+  fog.height = mobile ? 48 : 192;
   const fogCtx = fog.getContext('2d')!;
-  const pixels = fogCtx.createImageData(256, 192);
+  const pixels = fogCtx.createImageData(fog.width, fog.height);
   const hash = (x: number, y: number) => {
     const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
     return n - Math.floor(n);
@@ -28,20 +31,20 @@ export function animateSplash(canvas: HTMLCanvasElement) {
       d = hash(ix + 1, iy + 1);
     return (a + (b - a) * fx) * (1 - fy) + (c + (d - c) * fx) * fy;
   };
-  for (let y = 0; y < 192; y++)
-    for (let x = 0; x < 256; x++) {
-      const nx = x / 256,
-        ny = y / 192;
+  for (let y = 0; y < fog.height; y++)
+    for (let x = 0; x < fog.width; x++) {
+      const nx = x / fog.width,
+        ny = y / fog.height;
       const warp = noise(nx * 6, ny * 6) * 2;
       let density = 0;
-      for (let octave = 0; octave < 5; octave++) {
+      for (let octave = 0; octave < (mobile ? 3 : 5); octave++) {
         const frequency = 4 * 2 ** octave;
         density +=
           noise(nx * frequency + warp, ny * frequency + warp) /
           2 ** (octave + 1);
       }
       const edge = Math.max(0, 1 - Math.hypot((nx - 0.5) * 2, (ny - 0.5) * 2));
-      const i = (y * 256 + x) * 4;
+      const i = (y * fog.width + x) * 4;
       pixels.data[i] = 142;
       pixels.data[i + 1] = 77;
       pixels.data[i + 2] = 211;
@@ -54,15 +57,17 @@ export function animateSplash(canvas: HTMLCanvasElement) {
   const start = performance.now();
   function draw(now: number) {
     if (stopped || !canvas.isConnected) return;
-    frame = requestAnimationFrame(draw);
-    if (now - last < 32 || document.hidden) return;
+    // Mobile keeps the mist as a static texture; the lightweight HTML seal arc
+    // supplies motion without repainting a full-screen canvas every frame.
+    frame = mobile ? 0 : requestAnimationFrame(draw);
+    if (now - last < (mobile ? 60 : 32) || document.hidden) return;
     last = now;
     const t = (now - start) / 1000;
     const c = ctx!;
     c.clearRect(0, 0, 1008, 568);
     c.globalCompositeOperation = 'screen';
     // Banks of mist drift inward, leaving the title region unobscured.
-    for (let j = 0; j < 12; j++) {
+    for (let j = 0; j < (mobile ? 6 : 12); j++) {
       const side = j % 2 ? 1 : -1;
       const x = 504 + side * (195 + (j % 3) * 93) + Math.sin(t * 0.19 + j) * 23;
       const y = 325 + Math.sin(j * 2.1 + t * 0.15) * 77;
@@ -74,10 +79,11 @@ export function animateSplash(canvas: HTMLCanvasElement) {
       c.restore();
     }
     // Fine curved strands of energy around the seal, each evolving independently.
-    for (let j = 0; j < 16; j++) {
+    for (let j = 0; j < (mobile ? 4 : 16); j++) {
       c.beginPath();
-      for (let k = 0; k <= 96; k++) {
-        const angle = (k / 96) * Math.PI * 2;
+      const steps = mobile ? 48 : 96;
+      for (let k = 0; k <= steps; k++) {
+        const angle = (k / steps) * Math.PI * 2;
         const r =
           166 +
           Math.sin(angle * 5 + t * 0.6 + j) * 8 +
@@ -93,7 +99,7 @@ export function animateSplash(canvas: HTMLCanvasElement) {
       c.lineWidth = j % 3 ? 1 : 0.5;
       c.stroke();
     }
-    for (let i = 0; i < 68; i++) {
+    for (let i = 0; i < (mobile ? 20 : 68); i++) {
       const x =
         504 + Math.sin(i * 137.5) * (185 + i * 3) + Math.sin(t * 0.3 + i) * 4;
       const y = (((i * 73.7 - t * (3 + (i % 4))) % 500) + 500) % 500;
@@ -110,8 +116,16 @@ export function animateSplash(canvas: HTMLCanvasElement) {
     cancelAnimationFrame(frame);
     reduce.removeEventListener('change', stop);
     window.removeEventListener('ds:splash-done', stop);
+    document.removeEventListener('astro:before-swap', stop);
+    document.removeEventListener('visibilitychange', onVisible);
+  };
+  const onVisible = () => {
+    if (mobile && !last && !stopped && !document.hidden)
+      frame = requestAnimationFrame(draw);
   };
   window.addEventListener('ds:splash-done', stop, { once: true });
+  document.addEventListener('astro:before-swap', stop, { once: true });
+  if (mobile) document.addEventListener('visibilitychange', onVisible);
   reduce.addEventListener('change', stop, { once: true });
   frame = requestAnimationFrame(draw);
   return stop;

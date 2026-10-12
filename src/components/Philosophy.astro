@@ -805,4 +805,17 @@ const principles = [
       font-size: 13px;
     }
   }
+  @media (max-width: 767px), (pointer: coarse) {
+    .aura,
+    .pulse,
+    .spark,
+    .illustration picture,
+    .illustration .fx {
+      animation: none;
+    }
+    .philosophy:not(.is-idle) .illustration picture,
+    .philosophy:not(.is-idle) .illustration .fx {
+      will-change: auto;
+    }
+  }
 </style>

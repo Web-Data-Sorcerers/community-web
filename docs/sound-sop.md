@@ -1,5 +1,16 @@
 # SOP — Sound system (Data Sorcerers)
 
+Mobile performance local refinement12 Oct2026 (not released): instrument waves
+reused per OfflineAudioContext, graph/impulse setup yields in4ms batches. Current
+Waltz renders12s preroll +54s loop, not two54s cycles; all present envelope/reverb
+tails fit that window. Repeat PCM/seam verification if extending note tails.
+Three presets match release PCM within7.2e-7. Live reverb prepares asynchronously;
+very early cues play directly while its impulse is preparing. Hidden tabs suspend
+the existing AudioContext and resume that same source; autoplay blocks still need
+the normal gesture fallback. No audio files/dependencies/orb/storage preference
+introduced. [Implementation/QA](mobile-performance-local.md). Previous release
+and historical architecture descriptions below remain contextual evidence.
+
 Current release candidate12 Oct2026: Enchanted Castle Waltz selected by owner,
 54-second original3/4 score at80BPM. Library/Castle remain lab comparisons.
 No public speaker control; audio default on, stored ds:sound ignored by explicit

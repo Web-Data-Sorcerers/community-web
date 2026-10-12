@@ -57,7 +57,8 @@ const polygon = (n: number, r: number, offset: number) =>
     container-type: inline-size;
   }
   .splash-atmosphere,
-  .splash-seal {
+  .splash-seal,
+  .splash-progress-shell {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -249,6 +250,37 @@ const polygon = (n: number, r: number, offset: number) =>
       transition: none !important;
     }
   }
+  @media (prefers-reduced-motion: no-preference) {
+    @media (max-width: 767px), (pointer: coarse) {
+      /* Mobile rotates one HTML arc while the detailed SVG stays static. */
+      .seal-turn,
+      .seal-counter,
+      .seal-geometry,
+      .seal-arcs,
+      .seal-rune,
+      .seal-core,
+      .seal-floor {
+        animation: none;
+      }
+      .seal-halo::after {
+        content: '';
+        position: absolute;
+        inset: 13%;
+        border-radius: 50%;
+        background: conic-gradient(transparent 320deg, #bd81ff 345deg, #f4ddbb);
+        mask-image: radial-gradient(
+          farthest-side,
+          transparent calc(100% - 2px),
+          #000 calc(100% - 1px)
+        );
+        animation: seal-orbit 12s linear infinite reverse;
+        will-change: transform;
+      }
+      .splash-progress {
+        filter: none;
+      }
+    }
+  }
   @keyframes seal-orbit {
     to {
       transform: rotate(360deg);
@@ -352,13 +384,7 @@ const polygon = (n: number, r: number, offset: number) =>
           </g>
         ))}
       </g>
-      <circle
-        class="splash-progress"
-        cx="836"
-        cy="348"
-        r="251"
-        pathLength="100"
-      />
+
       <g class="seal-floor" transform="translate(836 826) scale(1 .13)">
         {[180, 220, 280, 360, 430].map((r) => (
           <circle r={r} />
@@ -375,6 +401,15 @@ const polygon = (n: number, r: number, offset: number) =>
       <g class="seal-cardinal" transform="translate(836 742)">
         <path d="M0 -10 L6 0 L0 10 L-6 0 Z M-68 0 H-12 M12 0 H68" />
       </g>
+    </svg>
+    <svg class="splash-progress-shell" viewBox="0 0 1672 941">
+      <circle
+        class="splash-progress"
+        cx="836"
+        cy="348"
+        r="251"
+        pathLength="100"
+      />
     </svg>
     <img
       class="splash-logo"
@@ -440,6 +475,10 @@ const polygon = (n: number, r: number, offset: number) =>
     root.style.overflow = 'hidden';
 
     var bar = el.querySelector('.splash-progress');
+    var compactMotion = window.matchMedia(
+      '(max-width: 767px), (pointer: coarse)',
+    ).matches;
+    var lastProgressPaint = 0;
     var shown = 0;
 
     // The splash acts as a real loading screen: it stays until the page has
@@ -483,7 +522,10 @@ const polygon = (n: number, r: number, offset: number) =>
     // assets stream it fills across MAX; once everything is ready it closes on
     // MIN, so the fill always completes right as the overlay lifts.
     function render(force) {
-      var elapsed = performance.now() - start;
+      var now = performance.now();
+      if (compactMotion && !force && now - lastProgressPaint < 60) return;
+      lastProgressPaint = now;
+      var elapsed = now - start;
       var ready = loadFired && assetsReady;
       var denom = ready || skipRequested ? MIN : MAX;
       var target = force ? 1 : Math.min(elapsed / denom, 0.985);

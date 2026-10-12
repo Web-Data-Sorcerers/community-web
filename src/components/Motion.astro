@@ -1,26 +1,42 @@
 <script>
-  import { initMotion, destroyMotion } from '../scripts/motion';
-
-  // Hold every entrance until the splash has revealed the page, so the hero
-  // intro plays once, in view, instead of finishing unseen behind the overlay.
-  // If there is no splash (repeat visit / reduced motion) the class is already
-  // on <html> and motion starts immediately. `initMotion` is guarded internally,
-  // so calling it again is a no-op.
-  const start = () => {
-    if (document.documentElement.classList.contains('splash-done')) {
-      initMotion();
+  const mobile = matchMedia('(max-width: 767px), (pointer: coarse)');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  let cleanup: (() => void) | undefined;
+  let generation = 0;
+  let fallback: number | undefined;
+  const stop = () => {
+    generation++;
+    window.clearTimeout(fallback);
+    fallback = undefined;
+    cleanup?.();
+    cleanup = undefined;
+  };
+  const start = async () => {
+    stop();
+    if (reduce.matches) return;
+    if (!document.documentElement.classList.contains('splash-done')) {
+      fallback = window.setTimeout(load, 7000);
+      return;
+    }
+    await load();
+  };
+  const load = async () => {
+    const current = generation;
+    if (mobile.matches) {
+      const { initMobileMotion } = await import('../scripts/motion-mobile');
+      if (current === generation) cleanup = initMobileMotion();
     } else {
-      window.addEventListener('ds:splash-done', () => initMotion(), {
-        once: true,
-      });
-      window.setTimeout(() => initMotion(), 7000);
+      const { initMotion, destroyMotion } = await import('../scripts/motion');
+      if (current === generation) {
+        initMotion();
+        cleanup = destroyMotion;
+      }
     }
   };
 
-  // Runs on the first load and after every client-side navigation (the old
-  // document listeners persist because the ClientRouter keeps one document).
   document.addEventListener('astro:page-load', start);
-  // Tear down the previous page's ScrollTriggers/tweens before its nodes are
-  // swapped out, then the next `astro:page-load` builds the new page's motion.
-  document.addEventListener('astro:before-swap', () => destroyMotion());
+  window.addEventListener('ds:splash-done', start);
+  document.addEventListener('astro:before-swap', stop);
+  mobile.addEventListener('change', start);
+  reduce.addEventListener('change', start);
 </script>

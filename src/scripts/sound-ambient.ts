@@ -4,6 +4,11 @@ const cache = new Map<AmbientProfile, Promise<AudioBuffer>>();
 const SAMPLE_RATE = 24000;
 const hz = (midi: number) => 440 * 2 ** ((midi - 69) / 12);
 
+// Yield between small setup batches; OfflineAudioContext construction is still
+// main-thread work even though rendering itself is asynchronous.
+export const yieldAudioSetup = () =>
+  new Promise<void>((resolve) => window.setTimeout(resolve, 0));
+
 export function renderAmbient(profile: AmbientProfile): Promise<AudioBuffer> {
   const existing = cache.get(profile);
   if (existing) return existing;
@@ -13,13 +18,18 @@ export function renderAmbient(profile: AmbientProfile): Promise<AudioBuffer> {
 }
 
 async function render(profile: AmbientProfile): Promise<AudioBuffer> {
+  await yieldAudioSetup();
   const beat =
     60 / (profile === 'waltz' ? 80 : profile === 'library' ? 68 : 64);
   const frames = Math.round(
     (profile === 'waltz' ? 72 : 32) * beat * SAMPLE_RATE,
   );
   const cycle = frames / SAMPLE_RATE;
-  const ctx = new OfflineAudioContext(2, frames * 2, SAMPLE_RATE);
+  // Every note/envelope + the 2s impulse ends within 12s. Render that tail of
+  // the previous cycle, rather than another complete 54s score, before the loop.
+  const preRollFrames = Math.min(frames, 12 * SAMPLE_RATE);
+  const trim = (frames - preRollFrames) / SAMPLE_RATE;
+  const ctx = new OfflineAudioContext(2, frames + preRollFrames, SAMPLE_RATE);
   const bus = ctx.createGain();
   // Headroom remains below 0.5 peak; engine gain keeps the music quiet.
   bus.gain.value = 4;
@@ -27,11 +37,16 @@ async function render(profile: AmbientProfile): Promise<AudioBuffer> {
   // Fixed-seed impulse: repeatable auditions, airy tail without sharp highs.
   const impulse = ctx.createBuffer(2, SAMPLE_RATE * 2, SAMPLE_RATE);
   let seed = 1436;
+  let batchStart = performance.now();
   for (let channel = 0; channel < 2; channel++) {
     const data = impulse.getChannelData(channel);
     for (let i = 0; i < data.length; i++) {
       seed = (Math.imul(seed, 1664525) + 1013904223) | 0;
       data[i] = (seed / 2147483648) * (1 - i / data.length) ** 3;
+      if (i % 2048 === 2047 && performance.now() - batchStart >= 4) {
+        await yieldAudioSetup();
+        batchStart = performance.now();
+      }
     }
   }
   const reverb = ctx.createConvolver();
@@ -45,7 +60,9 @@ async function render(profile: AmbientProfile): Promise<AudioBuffer> {
   lowpass.connect(wet);
   wet.connect(bus);
 
-  const voice = (
+  const waves = new Map<string, PeriodicWave>();
+  const voices: (() => void)[] = [];
+  const addVoice = (
     midi: number,
     start: number,
     attack: number,
@@ -60,12 +77,16 @@ async function render(profile: AmbientProfile): Promise<AudioBuffer> {
     const panner = ctx.createStereoPanner();
     osc.type = type;
     if (harmonics) {
-      osc.setPeriodicWave(
-        ctx.createPeriodicWave(
+      const key = harmonics.join(',');
+      let wave = waves.get(key);
+      if (!wave) {
+        wave = ctx.createPeriodicWave(
           new Float32Array(harmonics.length),
           new Float32Array(harmonics),
-        ),
-      );
+        );
+        waves.set(key, wave);
+      }
+      osc.setPeriodicWave(wave);
     }
     osc.frequency.value = hz(midi);
     panner.pan.value = pan;
@@ -83,6 +104,13 @@ async function render(profile: AmbientProfile): Promise<AudioBuffer> {
       gain.disconnect();
       panner.disconnect();
     };
+  };
+  // The score stays identical; enqueue its recipes cheaply before building the
+  // graph in bounded batches, all scheduled on the offline audio clock.
+  const voice = (...args: Parameters<typeof addVoice>) => {
+    if (args[1] < trim) return;
+    args[1] -= trim;
+    voices.push(() => addVoice(...args));
   };
   const chords =
     profile === 'library'
@@ -124,8 +152,8 @@ async function render(profile: AmbientProfile): Promise<AudioBuffer> {
           [22, 76],
           [27, 71],
         ];
-  // Render two cycles and keep the second: its opening includes the previous
-  // cycle's pad/reverb tails, giving a continuous boundary at the loop point.
+  // Keep the complete second cycle plus enough prior notes for its opening
+  // pad/reverb tails, giving a continuous boundary at the loop point.
   for (let repeat = 0; repeat < 2; repeat++) {
     const offset = repeat * cycle;
     if (profile === 'waltz') {
@@ -283,6 +311,15 @@ async function render(profile: AmbientProfile): Promise<AudioBuffer> {
       voice(midi + 12, start, 0.012, 0.9, 0.008, pan);
     });
   }
+  await yieldAudioSetup();
+  batchStart = performance.now();
+  for (const add of voices) {
+    add();
+    if (performance.now() - batchStart >= 4) {
+      await yieldAudioSetup();
+      batchStart = performance.now();
+    }
+  }
   const rendered = await ctx.startRendering();
   const loop = new AudioBuffer({
     numberOfChannels: 2,
@@ -291,7 +328,7 @@ async function render(profile: AmbientProfile): Promise<AudioBuffer> {
   });
   for (let channel = 0; channel < 2; channel++) {
     loop.copyToChannel(
-      rendered.getChannelData(channel).subarray(frames),
+      rendered.getChannelData(channel).subarray(preRollFrames),
       channel,
     );
   }

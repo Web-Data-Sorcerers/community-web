@@ -120,9 +120,17 @@ try {
           document.dispatchEvent(new Event('visibilitychange'));
         });
         await p.waitForFunction(
-          () => window.__dsSound.ambientGain.gain.value < 0.004,
+          () => window.__dsSound.ctx.state === 'suspended',
           null,
           { timeout: 10000 },
+        );
+        const pausedAt = await p.evaluate(
+          () => window.__dsSound.ctx.currentTime,
+        );
+        await p.waitForTimeout(120);
+        assert.equal(
+          await p.evaluate(() => window.__dsSound.ctx.currentTime),
+          pausedAt,
         );
         await p.evaluate(() => {
           Object.defineProperty(document, 'hidden', {
@@ -132,7 +140,16 @@ try {
           document.dispatchEvent(new Event('visibilitychange'));
         });
         await p.waitForFunction(
-          () => window.__dsSound.ambientGain.gain.value > 0.05,
+          () =>
+            window.__dsSound.ctx.state === 'running' &&
+            window.__dsSound.ambientGain.gain.value > 0.05,
+        );
+        assert(
+          await p.evaluate(
+            () =>
+              window.__dsSound.ctx === window.__audioContextToken &&
+              window.__dsSound.ambientSource === window.__ambientSourceToken,
+          ),
         );
       }
       // Internal mute gate remains testable, but no public control or stored

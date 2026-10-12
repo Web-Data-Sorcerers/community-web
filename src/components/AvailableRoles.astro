@@ -319,6 +319,14 @@ const domainTitle = Object.fromEntries(domains.map((d) => [d.id, d.title]));
       gap: 16px;
     }
   }
+  @media (max-width: 767px), (pointer: coarse) {
+    .role-glow {
+      animation: none;
+    }
+    .available-roles:not(.is-idle) .role-glow {
+      will-change: auto;
+    }
+  }
 </style>
 <script>
   // Pointer-only, motion-on: the card's ember leans toward the cursor by

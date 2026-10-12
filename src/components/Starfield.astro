@@ -74,4 +74,12 @@
       transform: translate3d(-520px, -400px, 0);
     }
   }
+  @media (max-width: 767px), (pointer: coarse) {
+    .starfield::before,
+    .starfield::after {
+      inset: 0;
+      animation: none;
+      will-change: auto;
+    }
+  }
 </style>

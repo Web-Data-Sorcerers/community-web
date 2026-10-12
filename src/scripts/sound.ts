@@ -1,4 +1,8 @@
-import { renderAmbient, type AmbientProfile } from './sound-ambient';
+import {
+  renderAmbient,
+  yieldAudioSetup,
+  type AmbientProfile,
+} from './sound-ambient';
 
 // Procedural "arcane" sound palette. Every cue is synthesised on demand with
 // the Web Audio API, so there are no audio assets to download and nothing to
@@ -43,6 +47,7 @@ class SoundEngine {
   private ambientProfile: AmbientProfile = 'waltz';
   private ambientSource: AudioBufferSourceNode | null = null;
   private ambientGeneration = 0;
+  private visibilitySuspended = false;
 
   private splashActive = false;
   private splashGain: GainNode | null = null;
@@ -189,6 +194,7 @@ class SoundEngine {
   // Create/resume the context from a user gesture so later hover cues (which
   // are not gestures) can play.
   unlock(): void {
+    if (document.hidden) return;
     const ctx = this.ensure();
     if (ctx && ctx.state === 'suspended') void ctx.resume().catch(() => {});
     this.syncAmbient();
@@ -196,7 +202,7 @@ class SoundEngine {
   }
 
   play(cue: Cue): void {
-    if (this.muted) return;
+    if (this.muted || document.hidden) return;
     const ctx = this.ensure();
     if (!ctx || !this.master) return;
     if (ctx.state === 'suspended') {
@@ -383,11 +389,16 @@ class SoundEngine {
       this.ctx.onstatechange = () => {
         this.syncAmbient();
         this.syncSplash();
+        if (document.hidden && this.ctx?.state === 'running')
+          this.syncVisibility();
       };
+      document.addEventListener('visibilitychange', () =>
+        this.syncVisibility(),
+      );
     }
     if (!this.reverbBuilt) {
       this.reverbBuilt = true;
-      this.buildReverb(this.ctx);
+      void this.buildReverb(this.ctx).catch(() => {});
     }
     return this.ctx;
   }
@@ -416,23 +427,40 @@ class SoundEngine {
         // Ambient failure must leave navigation and the existing cues usable.
         // Do not retry on every gesture if offline rendering is unavailable.
       });
-    document.addEventListener(
-      'visibilitychange',
-      () => {
-        this.syncAmbient();
-        this.syncSplash();
-      },
-      {
-        signal: this.ambientVisibilitySignal(),
-      },
-    );
   }
 
-  private ambientVisibilityController: AbortController | null = null;
-  private ambientVisibilitySignal(): AbortSignal {
-    this.ambientVisibilityController?.abort();
-    this.ambientVisibilityController = new AbortController();
-    return this.ambientVisibilityController.signal;
+  private syncVisibility(): void {
+    const ctx = this.ctx;
+    if (!ctx) return;
+    this.syncAmbient();
+    this.syncSplash();
+    if (document.hidden) {
+      if (this.ambientGain) {
+        this.ambientGain.gain.cancelScheduledValues(ctx.currentTime);
+        this.ambientGain.gain.setValueAtTime(0, ctx.currentTime);
+      }
+      if (ctx.state === 'running') {
+        this.visibilitySuspended = true;
+        void ctx
+          .suspend()
+          .then(() => {
+            if (!document.hidden) this.syncVisibility();
+          })
+          .catch(() => {});
+      }
+    } else if (this.visibilitySuspended && ctx.state === 'suspended') {
+      // Only resume a context suspended by our visibility handler. An autoplay
+      // block still needs the existing browser-approved unlock path.
+      void ctx
+        .resume()
+        .then(() => {
+          this.visibilitySuspended = false;
+          this.syncAmbient();
+          this.syncSplash();
+          if (document.hidden) this.syncVisibility();
+        })
+        .catch(() => {});
+    }
   }
 
   // Target the pad only while sound is on, the context runs and the tab is
@@ -466,13 +494,19 @@ class SoundEngine {
   // A procedurally-generated impulse response gives the cues a long, airy
   // "cathedral" tail that reads as magic without shipping a file. A high-pass
   // keeps the wet signal bright so the tail shimmers instead of muddying.
-  private buildReverb(ctx: AudioContext): void {
+  private async buildReverb(ctx: AudioContext): Promise<void> {
+    await yieldAudioSetup();
     const length = Math.floor(ctx.sampleRate * 1.5);
     const impulse = ctx.createBuffer(2, length, ctx.sampleRate);
+    let batchStart = performance.now();
     for (let channel = 0; channel < 2; channel++) {
       const data = impulse.getChannelData(channel);
       for (let i = 0; i < length; i++) {
         data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 2.2);
+        if (i % 2048 === 2047 && performance.now() - batchStart >= 4) {
+          await yieldAudioSetup();
+          batchStart = performance.now();
+        }
       }
     }
     const convolver = ctx.createConvolver();
