@@ -7,13 +7,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import HoDSDetail from '../../components/HoDSDetail.astro';
 import { hods } from '../../data/hods';
 
+import { getSiteOrigin, canonicalUrl } from '../../data/site-url.mjs';
 const hod = hods.find((item) => item.id === Astro.params.id);
 if (!hod) return new Response('Not found', { status: 404 });
 const pageId = 'hods-' + hod.id;
 const enabled = getPageState(Astro.locals.visibility!, pageId);
-const site =
-  Astro.site ?? new URL('https://data-sorcerers-community-sigma.vercel.app');
-const hodUrl = new URL(`/hods/${hod.id}`, site).href;
+const site = Astro.site ?? new URL(getSiteOrigin());
+const hodUrl = canonicalUrl(`/hods/${hod.id}/`, site);
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
@@ -22,7 +22,7 @@ const breadcrumbSchema = {
       '@type': 'ListItem',
       position: 1,
       name: 'Home',
-      item: site.href,
+      item: canonicalUrl('/', site),
     },
     {
       '@type': 'ListItem',

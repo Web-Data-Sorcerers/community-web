@@ -1,16 +1,17 @@
 import type { APIRoute } from 'astro';
+import { getSiteOrigin, canonicalUrl } from '../data/site-url.mjs';
 
 export const prerender = true;
 
 export const GET: APIRoute = ({ site }) => {
-  const origin =
-    site ?? new URL('https://data-sorcerers-community-sigma.vercel.app');
+  const origin = site ?? new URL(getSiteOrigin());
   const body = [
     'User-agent: *',
     'Allow: /',
     'Disallow: /admin/',
     '',
-    `Sitemap: ${new URL('/sitemap-index.xml', origin).href}`,
+    `Sitemap: ${canonicalUrl('/sitemap.xml', origin)}`,
+    `Sitemap: ${canonicalUrl('/sitemap-index.xml', origin)}`,
     '',
   ].join('\n');
   return new Response(body, {

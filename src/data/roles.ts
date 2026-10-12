@@ -1,4 +1,5 @@
-import snapshot from './cms-snapshot.json';
+import snapshot from './cms-snapshot.json' with { type: 'json' };
+import { RECRUITMENT_CAMPAIGN } from './recruitment-campaign.mjs';
 
 export interface RoleDetail {
   id: string;
@@ -34,6 +35,7 @@ const roleDesign: Record<string, Pick<RoleDetail, 'centered' | 'tight'>> = {
 
 export const roles: RoleDetail[] = snapshot.roles.map((role) => ({
   ...role,
+  deadline: RECRUITMENT_CAMPAIGN.deadlineText,
   cardImage: cardImage(role.id),
   ...roleDesign[role.id],
 }));

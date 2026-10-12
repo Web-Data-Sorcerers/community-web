@@ -2,6 +2,8 @@
 // Figma node 1436:3637 ("TIMELINE", 1440 × 812px). The table is 1280 wide: a header row then a body with
 // six phase rows separated by 1px gradient rules. Registration dates follow
 // the owner-supplied October 2026 poster; subsequent phases are not announced.
+import { RECRUITMENT_CAMPAIGN } from '../data/recruitment-campaign';
+
 const phases = [
   'OPEN RECRUITMENT',
   'APPLICATION',
@@ -10,7 +12,10 @@ const phases = [
   'TRIAL / CHALLENGE',
   'MEMBER',
 ];
-const registration = { start: '2026-10-12', end: '2026-11-12' };
+const registration = {
+  start: RECRUITMENT_CAMPAIGN.startDate,
+  end: RECRUITMENT_CAMPAIGN.endDate,
+};
 ---
 
 <section

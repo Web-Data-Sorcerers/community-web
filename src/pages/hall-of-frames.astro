@@ -13,12 +13,12 @@ import HallOfFramesHero from '../components/HallOfFramesHero.astro';
 import HallOfFramesFeatured from '../components/HallOfFramesFeatured.astro';
 import HallOfFramesProjects from '../components/HallOfFramesProjects.astro';
 import HallOfFramesMilestone from '../components/HallOfFramesMilestone.astro';
+import { getSiteOrigin, canonicalUrl } from '../data/site-url.mjs';
 const enabled = getPageState(Astro.locals.visibility!, 'hall-of-frames');
 const visible = (section: string) =>
   getSectionState(Astro.locals.visibility!, 'hall-of-frames', section);
 
-const site =
-  Astro.site ?? new URL('https://data-sorcerers-community-sigma.vercel.app');
+const site = Astro.site ?? new URL(getSiteOrigin());
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
@@ -27,13 +27,13 @@ const breadcrumbSchema = {
       '@type': 'ListItem',
       position: 1,
       name: 'Home',
-      item: site.href,
+      item: canonicalUrl('/', site),
     },
     {
       '@type': 'ListItem',
       position: 2,
       name: 'Hall of Frames',
-      item: new URL('/hall-of-frames', site).href,
+      item: canonicalUrl('/hall-of-frames/', site),
     },
   ],
 };

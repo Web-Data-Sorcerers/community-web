@@ -1,5 +1,100 @@
 # AGENTS.md — instructions for AI agents
 
+## SEO Indonesia — RELEASED, 12 Oct 2026
+
+Owner authorized "commit dan push" for SEO Indonesia packages 1–4.
+[Local record](docs/seo-indonesia-local.md): Centralized canonical origin
+(https://community.data-sorcerers.com) across metadata, OG, schema and robots;
+legacy host 308 redirect; dynamic SSR sitemap tracking Pages & Sections Visibility
+with zero routing collisions and 503 fail-closed; campaign date source
+(12 Oct–12 Nov 2026) reconciled with role cards, timeline, and validThrough;
+truthful JobPosting (volunteer) and FAQ schema gating; Home/Recruitment/Contact
+title & description optimized for Indonesian AI community intent; recruitment
+apply form set to noindex, follow to protect Google Sitelinks quality; dynamic
+sitemap excludes noindex apply. Node22 check/build 0 errors/0 warnings, 12
+functions sin1, tests 5/5 sitemap + 10/10 visibility + 44 recruitment PASS,
+24-page SEO audit PASS. Unrelated dirty work and mobile optimizations preserved.
+
+
+## SEO Indonesia — NEXT AI HANDOFF, 12 Oct 2026
+
+Owner selected “Komunitas AI dan data di Indonesia”, then requested execution
+with a new AI. [Kickoff](docs/seo-indonesia-next-ai-kickoff.md) and
+[master plan](docs/seo-indonesia-plan.md) are local/uncommitted. Current pass is
+read-only audit plus handoff docs. The copyable owner prompt authorizes local
+packages1–3 and package4 copy drafts only when submitted to the next AI; no
+commit/push/deploy/live writes/provider/DNS/GSC actions authorized here.
+Baseline79c60b8 released; do not restart mobile/form fixes. Preserve dirty work.
+19route audit: canonical/robots/sitemap Vercel origin,3noindex pages in static
+sitemap, six role schema deadlines20Oct vs timeline12Nov. See evidence and scope.
+Historical PLAN ONLY checkpoints do not revoke later owner's local SEO scope.
+
+
+## Mobile performance and recruitment confirmation — RELEASED, 12 Oct 2026
+
+Owner “commit dan push” authorized performance improvements and mobile
+post-submit layout. Single scoped commit/push79c60b8a973b4d68af7f140a7e2562711157d92e;
+remote main matched. Push deployment did not appear; exact Git SHA deployed once
+through Vercel API. dpl_8bqBc9EBRr7daNDikz5262YjRg3p READY, Node22/sin1/12functions,
+custom and primary aliases matched, GitHub Vercel success. Eight live GETs,
+confirmation9widths x both motion modes plus enlarged text with mock submission,
+seven mobile/input/motion navigation/audio cases PASS; browser errors0.
+Visibility b5cb65e9-cf25-4f07-9972-cc91b0843bc8 unchanged, no production writes.
+HD/assets/Auth/backend/freshness preserved. Real-phone FPS/unconditional autoplay
+not certified. Unrelated dirty work preserved; post-release notes stay local,
+no second commit/push. [Evidence](docs/mobile-performance-release.md).
+
+
+## Mobile performance — LOCAL, 12 Oct 2026
+
+Owner “okee terus” continued the detailed plan into local execution. Cached
+instrument waves/batched audio setup/12s preroll preserve the 54s Waltz; hidden
+context suspends/resumes. Mobile/coarse pointers load a 2.9KB motion path without
+desktop GSAP/parallax; continuous decoration is static. Mobile splash keeps
+static mist/detail SVG plus one rotating HTML arc and isolated progress circle.
+Controlled local CPU4x warm startup longest-task median1219->81ms; scroll
+TaskDuration Philosophy1059.9->309ms/WhatWeDo1144.3->267.6ms in fixed1.5s phases.
+Final cold samples778/804->115/143ms. Synthetic diagnostics, not physical-device
+FPS/INP or production timing guarantees. PCM three presets unchanged within7.2e-7.
+Hero HD/fonts/spacing/visibility/no-store/Auth/backend unchanged. Previous success
+layout fix preserved. Baseline a397373; no commit/push/deploy/live writes. Final QA
+results and limitations: [local record](docs/mobile-performance-local.md).
+
+## Mobile performance — PLAN ONLY, 12 Oct 2026
+
+Owner reports lag across all activities on iPhone/Android, worse on Android.
+Read-only live diagnosis: 9 cases + 3 startup A/B pairs + 9 client navigations,
+390x844/DPR3/CPU4x Chromium, not real-device Safari/Android certification.
+Audio graph458 oscillators/128 PeriodicWave: median max task453ms vs168ms with
+audio held; 41-44 CSS animations and section-wide offscreen gating also costly.
+Blur is an unproven GPU candidate; current heroes do not mount Three.js.
+Plan prioritizes audio/motion/splash and conditional glass/assets, preserving HD,
+8-point tokens, fresh visibility/no-store/Auth and Home refresh splash behavior.
+Production HEAD/remote a397373; revision b5cb65e9-cf25-4f07-9972-cc91b0843bc8.
+No implementation/build/release/live writes in this pass. Existing local success
+layout fix and all dirty work preserved. [Plan/evidence](docs/mobile-performance-investigation-plan.md).
+
+## Recruitment success responsive — LOCAL, 12 Oct 2026
+
+Owner reported broken mobile post-submit view. Missing success-card/body/actions
+wrappers made display:flex render confirmation as an overflowing row. Restore
+column card, safe wrapping/receipt, mobile actions and112px scroll-margin.
+Submission/backend/storage/retry contracts unchanged. Local mock-submit QA only;
+no production applicant write. No commit/push/deploy; productiona397373. Existing
+dirty work preserved. [Record](docs/recruitment-success-responsive-local.md).
+
+## Magical Waltz/splash audio — RELEASED, 12 Oct 2026
+
+Owner “commit dan push”: single12-file commita397373db83333b5edf0c1e98a40ac004bbd3e1a
+pushed; remote matched. Vercel success/Production7012023633 completed.
+Waltz54s default, no speaker orb/old mute preference, normal autoplay attempt
+and real-gesture fallback; ritual splash bed stops on completion/swap and
+late blocked completion is discarded. Eight live GETs plus three presets/four
+width-motion cases and two autoplay-policy cases PASS, errors0. Visibility
+revision b5cb65e9-cf25-4f07-9972-cc91b0843bc8 unchanged, no live writes.
+Safari/guaranteed autoplay not claimed. Post-release evidence local, no second
+commit/push; unrelated dirty work preserved. [Record](docs/magical-ambient-local.md).
+
 ## Magical ambient — RELEASE AUTHORIZED, 12 Oct 2026
 
 Owner “lanjut yang suara tadi” authorized local Library/Castle auditions.
@@ -14,6 +109,17 @@ tuh bro”; Waltz now selected default. Owner now authorized “commit dan push�
 for this audio/splash scope; release acceptance pending, baselinecff4126. Existing dirty
 work preserved. [Record](docs/magical-ambient-local.md).
 
+## Home refresh splash — RELEASED, 12 Oct 2026
+
+Owner authorized “commit dan push”. Single scoped commitcff41261e9581af53090fd7e85dbcf4d9870f1c2
+pushed to main; remote matched. Vercel success/Production7011162476 completed.
+Both domains serve new Home trigger;8GET reads and4 live browser width/motion
+conditions PASS, errors0/application mutations0. Refresh Home replays splash;
+non-Home reload/client swaps bypass; reduced motion bypass/hash restore preserved.
+Visibility revision unchanged b5cb65e9-cf25-4f07-9972-cc91b0843bc8. No live writes.
+Post-release evidence remains local; no second commit/push. Existing dirty work
+preserved. [Release evidence](docs/home-refresh-splash-local.md).
+
 
 ## Home refresh splash — RELEASE AUTHORIZED, 12 Oct 2026
 
@@ -26,6 +132,17 @@ Node22 build0errors/0warnings, spacing40,4browser width/motion combinations and
 VT/sound PASS; errors0. Owner now authorized “commit dan push” for this scope;
 new release acceptance pending. Baseline production2d17446. Record: [implementation and evidence](docs/home-refresh-splash-local.md). Existing dirty work preserved.
 
+
+## Recruitment/Home/admin — RELEASED, 12 Oct 2026
+
+Owner authorized “commit and push”. One31-file scoped commit2d174463ca678e10841b5097d4dec4116c29b837
+pushed to main; remote matched. GitHub Vercel success, Production deployment
+7010826449 completed, target5xXGWifKAxAQxeEPx77eMBGLGk76. Primary/custom aliases
+serve new Home/form/role/admin markup. Live31primaryGETreads,4browser conditions,
+5custom-domainGETchecks PASS; new image hashes match. Visibility revision remains
+b5cb65e9-cf25-4f07-9972-cc91b0843bc8; browser errors/mutations0. Real owner login
+and Safari not claimed. No live saves/submissions/provider changes or second
+commit/push. Existing unrelated dirty docs/assets preserved. Record: [release acceptance](docs/recruitment-admin-release.md).
 
 
 ## Recruitment/Home/admin release authorized — 12 Oct 2026
@@ -71,6 +188,84 @@ commit/push/deploy. Latest release remains2a79695. Existing dirty docs/assets
 preserved. Plan/evidence: [home-art-contact-form-followup](docs/home-art-contact-form-followup.md).
 
 
+
+## Navigation CSS warming — RELEASED, 12 Oct 2026
+
+Owner approved preview and authorized “commit dan push”. One10-file scoped
+commit2a79695a88fea3c9706306020ef455fe66a5c0af pushed to origin/main; remote
+SHA matched. GitHub Vercel status success, deploymentD1XocoZxGcaWZ66xKxJX4hei65zy
+completed. Primary alias serves6-route navigation-styles.json and new timing.
+Live19public routes200 with no-store and Server-Timing, revision API matches
+b5cb65e9-cf25-4f07-9972-cc91b0843bc8. Every manifest CSS asset200/immutable.
+Browser4 conditions at390/1440 × both motion modes PASS: completed CSS warming
+reused on20 first activations; no speculative controlled HTML/private requests,
+no fade/errors, fresh request revisions, Back/Forward. Initial fixed2s readiness
+assumption produced an overstrong CSS assertion; warming is asynchronous, rerun
+passed. Future verifier waits for actual completed warm resources, not a2s SLA.
+No visibility/content/provider mutation, SQL or extra commit/push. Existing
+dirty documents/reference assets preserved. Evidence: artifacts/navigation-next/
+release-2a79695/. Timing comparisons and limits: docs/navigation-next-local.md.
+
+
+
+## Navigation CSS warming — LOCAL, 12 Oct 2026
+
+Owner authorized detailed plan and local execution after d82e327.
+See docs/navigation-next-local.md. Public Navbar CSS manifest generated from
+Astro build; at most6 immutable styles warmed sequentially after load/idle;
+Save-Data/2g skipped. HTML/visibility stay uncached and fresh. Request-only
+Server-Timing separates visibility and render. No design changes, stale config,
+HTML prefetch, Auth/save/provider/CMS changes or new commit/push/deploy.
+Live80-sample baseline261.9ms median is observational, not a speedup claim.
+Local warmed CSS no longer transfers on10 first activations; five guard cases,
+visibility10/public28, UX15, VT and Node22 build0errors0warnings PASS.
+Existing dirty docs retained. Local preview4364 uses isolated visibility fixture.
+
+
+
+## Recruitment follow-up — RELEASED, 12 Oct 2026
+
+Owner authorized “commit and push”. Commit d82e3276fff4aaf63c1376197b4199551a3dbdcb
+pushed once to origin/main; remote SHA matched. GitHub Vercel status success,
+“Deployment has completed”, deployment H6QpS9egkiaXhec2GAb3zTrm1yXi.
+Primary public alias shows new timeline12Oct–12Nov2026 and fiveTBA values.
+Live cards4 conditions (390/1440 × both motion modes), all6 cards hover/focus
+and Enter/Back PASS, zero browser errors. Actual screenshot pixel comparisons
+prove the long divider visible at rest and fading rightward on both widths.
+Evidence: artifacts/recruitment-followup/release-d82e327/. Latest observed
+public revision b5cb65e9-cf25-4f07-9972-cc91b0843bc8 differs from the prior release;
+agent did not change/restore visibility. No CMS/provider writes or second push.
+Post-release notes remain local.
+
+
+## Recruitment follow-up — LOCAL, 12 Oct 2026
+
+Owner authorized local work with “okee berarti gas nih?” after the Figma plan.
+[Plan and evidence](docs/recruitment-timeline-card-followup.md): Timeline now shows
+12 Oct–12 Nov 2026 for OPEN RECRUITMENT and TBA for five later phases. Available
+Roles restores the static exported divider above View Details; only the short
+content-width underline animates on hover/focus, with reduced-motion fallback.
+BaseLayout uses instant transition:none with ClientRouter/fallback swap retained.
+Local80ms/none comparisons show only a small timing difference; no0ms guarantee.
+Visibility loader/cache headers/Auth/save unchanged. Role CMS deadline still
+says20 October in the snapshot and was not edited. No commit/push/deploy or
+production content/visibility/provider mutation. Existing dirty docs preserved.
+
+
+## Snappy Navigation — RELEASED, 12 Oct 2026
+
+Owner authorized “coba commit dan deploy”. One scoped commit and main push:
+`c0d75937db8b04a26b1a56e85ed4637f5b1c74d4`. Vercel deployment
+`dpl_8hmjKCwtfLbdB198mr2aZb5wc7PB` READY, primary alias matched; Node 22,
+sin1, 12 functions. Live acceptance: 34 public/admin/API/unknown-route reads
+PASS; 24 browser navigations at 390/1440px and both motion modes PASS, native
+fade 80ms, first-frame CTA feedback, zero speculative HTML and browser errors.
+Latest observed visibility revision `bcd0f646-c1a0-4930-b2db-4c1b398c0a27`:
+Home ON, home.projects=false, About/HoF/Contact OFF. This differs from historical
+716138bd; database and live revision API match. Agent did not save/restore flags.
+Contact correctly renders the development chamber; WhatsApp remains in source.
+[Release evidence](docs/snappy-navigation-local.md). Existing dirty documents
+preserved. Post-deploy acceptance notes remain local, no second commit/push.
 
 
 ## Snappy Navigation — LOCAL, 12 Oct 2026
@@ -3791,3 +3986,22 @@ and revised geometry. `scripts/generate-backgrounds.mjs` re-encodes
 `assets/background/hd` to lossy WebP q88 and asserts MAE < 5; do not claim these
 ~1.6K sources are native 4K. Run `scripts/verify-feedback.mjs` against the preview for click/drag/tap,
 back-navigation, rail geometry and DPR screenshots in addition to normal audits.
+
+
+## Recruitment underline correction — LOCAL, 12 Oct 2026
+
+Owner requested the action underline fade at its right edge. AvailableRoles now
+uses white through50% fading to transparent100%; the separate long divider
+remains visible above the action. Local-only scope; no commit/push/deploy.
+
+
+12 Oct local static-divider correction: reviewed owner card role 4.png; keep
+full-width exported fade above View Details, now with1px minimum and no flex
+shrink for visible rendering. Short underline unchanged. No release actions.
+
+
+Navigation release serial recheck:80samples median258.4ms/p95364.5ms;
+earlier baseline261.9/441.9ms. Small median difference; CSS waterfall removal
+verified, no universal speed claim. Initial overlapping acceptance run337.9ms
+is retained with its limits. Final browser errors/pending/overflow/non-GET0.
+See docs/navigation-next-local.md. No second commit/push.

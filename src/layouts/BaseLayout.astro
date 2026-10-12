@@ -4,12 +4,14 @@ import { getPageState, PAGE_BY_ID } from '../data/site-visibility-registry.mjs';
 import { ClientRouter } from 'astro:transitions';
 import Splash from '../components/Splash.astro';
 import Sound from '../components/Sound.astro';
+import { getSiteOrigin, canonicalUrl } from '../data/site-url.mjs';
 interface Props {
   title?: string;
   description?: string;
   image?: string;
   type?: 'website' | 'article';
   noindex?: boolean;
+  robots?: string;
   structuredData?: Record<string, any>[];
 }
 const {
@@ -18,19 +20,19 @@ const {
   image = '/og/og-default.jpg',
   type = 'website',
   noindex = false,
+  robots,
   structuredData: extraStructuredData = [],
 } = Astro.props;
 
 const visibility = Astro.locals.visibility;
 const inactive =
   visibility && !getPageState(visibility, Astro.locals.visibilityPageId);
-const site =
-  Astro.site ?? new URL('https://data-sorcerers-community-sigma.vercel.app');
+const site = Astro.site ?? new URL(getSiteOrigin());
 const canonicalPath = visibility
   ? (PAGE_BY_ID[Astro.locals.visibilityPageId ?? '']?.path ??
     Astro.url.pathname)
   : Astro.url.pathname;
-const pageUrl = new URL(canonicalPath, site).href;
+const pageUrl = canonicalUrl(canonicalPath, site);
 const imageUrl = new URL(image, site).href;
 const imageAlt = 'Data Sorcerers — Sorcery in Data, Magic in AI';
 
@@ -38,16 +40,25 @@ const baseStructuredData = [
   {
     '@context': 'https://schema.org',
     '@type': 'Organization',
+    '@id': canonicalUrl('/#organization', site),
     name: 'Data Sorcerers',
     url: site.href,
     logo: new URL('/icon-512.png', site).href,
     description,
+    sameAs: [
+      'https://www.instagram.com/datasorcerers',
+      'https://www.linkedin.com/company/data-sorcerers',
+    ],
   },
   {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
+    '@id': canonicalUrl('/#website', site),
     name: 'Data Sorcerers',
     url: site.href,
+    publisher: {
+      '@id': canonicalUrl('/#organization', site),
+    },
   },
 ];
 const allStructuredData = [...baseStructuredData, ...extraStructuredData];
@@ -68,9 +79,11 @@ const allStructuredData = [...baseStructuredData, ...extraStructuredData];
       content={
         inactive
           ? 'noindex, follow'
-          : noindex
-            ? 'noindex, nofollow'
-            : 'index, follow'
+          : robots
+            ? robots
+            : noindex
+              ? 'noindex, nofollow'
+              : 'index, follow'
       }
     />
     <link rel="canonical" href={pageUrl} />
