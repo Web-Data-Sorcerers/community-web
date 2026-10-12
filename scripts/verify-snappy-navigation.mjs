@@ -6,6 +6,9 @@ import { chromium } from '@playwright/test';
 const base = new URL(process.env.PREVIEW_URL || 'http://127.0.0.1:4362');
 assert.ok(['127.0.0.1', 'localhost'].includes(base.hostname));
 const phase = process.env.SNAPPY_PHASE || 'after';
+const verifyFinal =
+  phase === 'after' || process.env.SNAPPY_VERIFY_FINAL === '1';
+const expectedFade = process.env.SNAPPY_ANIMATION === '80ms' ? 80 : 0;
 const dir = `artifacts/snappy-navigation/${phase}`;
 await fs.mkdir(dir, { recursive: true });
 const browser = await chromium.launch({
@@ -122,9 +125,14 @@ try {
         }));
         assert.equal(sample.pending, false);
         assert.equal(sample.overflow, false);
-        if (phase === 'after' && motion === 'no-preference') {
-          assert.ok(sample.animations.length >= 2);
-          assert.ok(sample.animations.every((a) => a.duration === 80));
+        if (verifyFinal && motion === 'no-preference') {
+          if (expectedFade === 0) assert.equal(sample.animations.length, 0);
+          else {
+            assert.ok(sample.animations.length >= 2);
+            assert.ok(
+              sample.animations.every((a) => a.duration === expectedFade),
+            );
+          }
         }
         rows.push({ width, motion, target, ...sample });
       }
@@ -132,7 +140,7 @@ try {
         .slice(start)
         .filter((r) => r.path === '/partners');
       console.log(JSON.stringify({ width, motion, prefetch, clickRequests }));
-      if (phase === 'after') {
+      if (verifyFinal) {
         assert.equal(prefetch.length, 0);
         assert.equal(clickRequests.length, 1);
       }
@@ -176,14 +184,14 @@ try {
         await page.mouse.move(0, 0);
         await page.mouse.up();
       }
-      if (phase === 'after') {
+      if (verifyFinal) {
         assert.equal(pressed.opacity, '0.88');
         assert.equal(pressed.scale, motion === 'reduce' ? 'none' : '0.98');
       }
       console.log(JSON.stringify({ width, motion, pressed }));
       experiments.push({ width, motion, prefetch, clickRequests, pressed });
       assert.equal(await page.locator('[data-pressed]').count(), 0);
-      if (phase === 'after') {
+      if (verifyFinal) {
         assert.equal(
           await cta.evaluate((el) => getComputedStyle(el).opacity),
           '1',

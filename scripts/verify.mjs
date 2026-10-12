@@ -1690,26 +1690,54 @@ try {
     ),
     'Available Roles rows must link to the role detail pages',
   );
-  const roleDividerScale = () =>
+  const roleUnderlineScale = () =>
     page
-      .locator('.available-roles .role-divider')
-      .evaluateAll((dividers) =>
-        dividers.map(
-          (divider) => getComputedStyle(divider, '::after').transform,
-        ),
+      .locator('.available-roles .role-link')
+      .evaluateAll((links) =>
+        links.map((link) => getComputedStyle(link, '::after').transform),
       );
   assert.deepEqual(
-    await roleDividerScale(),
+    await roleUnderlineScale(),
     Array(6).fill('matrix(0, 0, 0, 1, 0, 0)'),
-    'All Available Roles dividers must be hidden at rest',
+    'All Available Roles action underlines must be hidden at rest',
+  );
+  const dividerGeometry = () =>
+    page.locator('.available-roles .role-row').evaluateAll((rows) =>
+      rows.map((row) => {
+        const divider = row.querySelector('.role-divider');
+        const link = row.querySelector('.role-link');
+        const d = divider.getBoundingClientRect();
+        const l = link.getBoundingClientRect();
+        const r = row.getBoundingClientRect();
+        const style = getComputedStyle(divider);
+        return {
+          x: d.x - r.x,
+          y: d.y - r.y,
+          width: d.width,
+          height: d.height,
+          beforeLink: d.bottom < l.top,
+          actionFits: l.width < d.width,
+          visible: style.backgroundImage.includes('role-divider.svg'),
+          transform: style.transform,
+        };
+      }),
+    );
+  const staticDividers = await dividerGeometry();
+  assert.ok(
+    staticDividers.every(
+      (d) =>
+        d.beforeLink && d.actionFits && d.visible && d.transform === 'none',
+    ),
+    'Static dividers must precede content-width actions on all six cards',
   );
   for (const index of [0, 3]) {
     await page.locator('.available-roles .role-row').nth(index).hover();
     assert.equal(
-      (await roleDividerScale())[index],
+      (await roleUnderlineScale())[index],
       'matrix(1, 0, 0, 1, 0, 0)',
-      `Available Roles row ${index + 1} must show its divider on hover`,
+      `Available Roles row ${index + 1} must show its action underline on hover`,
     );
+    assert.deepEqual(await dividerGeometry(), staticDividers);
   }
   await page.mouse.move(0, 0);
   await page.locator('.available-roles').scrollIntoViewIfNeeded();

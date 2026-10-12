@@ -419,3 +419,19 @@ Projects status copy tested first at4widths; Team status copy follows the same
 response target count. Custom admin surfaces have no Figma node. Existing logo,
 Bluu Next700/Manrope, palette,8pt spacing and editor layout remain. Public section
 geometry/reference/artwork/fullscreen unchanged. Master plan: cms-testing-retirement-plan.md.
+
+## Recruitment follow-up — local, 12 October 2026
+
+Timeline dates and Available Roles footers corrected under the owner-authorized
+[follow-up plan](recruitment-timeline-card-followup.md). Existing fullscreen
+section composition and typography remain; Timeline mobile body grows naturally
+for real dates/enlarged text. Static long divider and short hover underline are
+separate. No production mutation or release.
+
+12 Oct local recruitment correction: fading short action underline requested by
+owner; long static separator remains above View Details. Fullscreen composition
+and spacing unchanged. See recruitment-timeline-card-followup.md.
+
+12 Oct local static-divider correction: reviewed owner card role 4.png; keep
+full-width exported fade above View Details, now with1px minimum and no flex
+shrink for visible rendering. Short underline unchanged. No release actions.

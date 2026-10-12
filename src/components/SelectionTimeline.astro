@@ -1,8 +1,7 @@
 ---
 // Figma node 1436:3637 ("TIMELINE", 1440 × 812px). The table is 1280 wide: a header row then a body with
-// six phase rows separated by 1px gradient rules. The date cells hold the
-// Figma placeholder text ("Date") in the supplied reference; replace with the
-// real dates when they are available.
+// six phase rows separated by 1px gradient rules. Registration dates follow
+// the owner-supplied October 2026 poster; subsequent phases are not announced.
 const phases = [
   'OPEN RECRUITMENT',
   'APPLICATION',
@@ -11,7 +10,7 @@ const phases = [
   'TRIAL / CHALLENGE',
   'MEMBER',
 ];
-const date = 'Date';
+const registration = { start: '2026-10-12', end: '2026-11-12' };
 ---
 
 <section
@@ -26,13 +25,23 @@ const date = 'Date';
   <div class="timeline">
     <div class="tl-head">
       <span class="phase head">Phase</span>
-      <span class="date-col head">{date}</span>
+      <span class="date-col head">Date</span>
     </div>
     <div class="tl-body">
-      {phases.map((phase) => (
+      {phases.map((phase, index) => (
         <div class="tl-row">
           <span class="phase">{phase}</span>
-          <span class="date-col">{date}</span>
+          <span class="date-col">
+            {index === 0 ? (
+              <>
+                <time datetime={registration.start}>12 Oct</time>
+                {' – '}
+                <time datetime={registration.end}>12 Nov 2026</time>
+              </>
+            ) : (
+              'TBA'
+            )}
+          </span>
         </div>
       ))}
     </div>
@@ -164,6 +173,11 @@ const date = 'Date';
     }
     .tl-body {
       gap: 24px;
+      height: auto;
+      min-height: 451px;
+    }
+    .tl-row {
+      gap: 16px;
     }
     .phase,
     .date-col {
@@ -172,6 +186,11 @@ const date = 'Date';
     }
     .date-col {
       width: 40%;
+    }
+    .phase,
+    .date-col {
+      min-width: 0;
+      overflow-wrap: anywhere;
     }
     .tl-row + .tl-row::before {
       top: -12.5px;
