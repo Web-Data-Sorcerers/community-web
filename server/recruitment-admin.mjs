@@ -2,6 +2,8 @@ import { createCmsAuth } from './cms-auth.mjs';
 import {
   filters,
   mutation,
+  deleteInput,
+  editInput,
   receipt,
   page,
   queryInput,
@@ -147,6 +149,9 @@ export function createRecruitmentAdminHandler({
         'history',
         'status',
         'note',
+        'delete',
+        'edit',
+        'export',
       ].includes(route)
     )
       return error('NOT_FOUND', 404);
@@ -154,7 +159,7 @@ export function createRecruitmentAdminHandler({
       !(
         ['list', 'stats'].includes(route)
           ? ['GET', 'POST']
-          : ['status', 'note'].includes(route)
+          : ['status', 'note', 'delete', 'edit'].includes(route)
             ? ['POST']
             : ['GET']
       ).includes(request.method)
@@ -211,6 +216,66 @@ export function createRecruitmentAdminHandler({
               INVALID_TRANSITION: 409,
             }[result.error.code],
           );
+        return finish({ ok: true, data: result });
+      }
+      if (route === 'export') {
+        result = project(
+          await callRpc('admin_export_applications', { ...actorParams }),
+          'export',
+        );
+        await audit('admin_export', actor, null, { total: result.total });
+        return finish({ ok: true, data: result });
+      }
+      if (['delete', 'edit'].includes(route)) {
+        if (
+          !request.headers.get('content-type')?.startsWith('application/json')
+        )
+          return finish({ ok: false, error: { code: 'INVALID_INPUT' } }, 400);
+        input =
+          route === 'delete'
+            ? deleteInput(await boundedJson(request, 32768))
+            : editInput(await boundedJson(request, 32768));
+        const rpcName =
+          route === 'delete'
+            ? 'admin_delete_application'
+            : 'admin_edit_application';
+        let rawResult;
+        try {
+          if (env.SUPABASE_ACCESS_TOKEN) {
+            rawResult = await writeRpc(rpcName, actor.id, input);
+          } else {
+            rawResult = await callRpc(rpcName, {
+              ...actorParams,
+              p_request: input,
+            });
+          }
+        } catch (e) {
+          if (['FORBIDDEN', 'NOT_FOUND', 'INVALID_INPUT'].includes(e.code)) {
+            return finish(
+              { ok: false, error: { code: e.code } },
+              { FORBIDDEN: 403, NOT_FOUND: 404, INVALID_INPUT: 400 }[e.code],
+            );
+          }
+          throw e;
+        }
+        result = project(rawResult, route);
+        if (!result.ok)
+          return finish(
+            result,
+            {
+              FORBIDDEN: 403,
+              NOT_FOUND: 404,
+              INVALID_INPUT: 400,
+            }[result.error?.code] || 400,
+          );
+        await audit(
+          route === 'delete' ? 'admin_delete' : 'admin_edit',
+          actor,
+          input.receipt,
+          route === 'delete'
+            ? { reason: input.reason || '' }
+            : { fields: Object.keys(input.fields) },
+        );
         return finish({ ok: true, data: result });
       }
       if (['list', 'stats'].includes(route)) {

@@ -184,6 +184,9 @@
         <button id="reload-list" type="button">
           Muat ulang daftar
         </button>
+        <button id="btn-backup-database" class="btn-backup" type="button" title="Unduh seluruh database pendaftar dalam format JSON">
+          Backup Database (JSON)
+        </button>
       </div>
     </form>
     <p id="stats-scope">
@@ -225,6 +228,14 @@
         <button id="back-list-top" class="btn-back-top" type="button">
           &larr; Kembali ke daftar
         </button>
+        <div class="detail-header-actions">
+          <button id="btn-edit-applicant" class="btn-edit" type="button">
+            Edit Data Pendaftar
+          </button>
+          <button id="btn-delete-applicant" class="btn-delete-danger" type="button">
+            Hapus Pendaftar
+          </button>
+        </div>
         <h2 id="detail-heading" tabindex="-1">
           Detail pendaftar
         </h2>
@@ -334,6 +345,190 @@
       <button id="back-list" type="button">
         Kembali ke daftar
       </button>
+    </div>
+  </div>
+
+  <!-- Modal Edit Data Pendaftar -->
+  <div id="modal-edit-applicant" class="admin-modal-backdrop" hidden>
+    <div
+      class="admin-modal-card"
+      role="dialog"
+      aria-labelledby="modal-edit-title"
+      aria-modal="true"
+    >
+      <header class="admin-modal-header">
+        <h3 id="modal-edit-title">Edit Data Pendaftar</h3>
+        <button
+          type="button"
+          class="admin-modal-close"
+          id="modal-edit-close"
+          aria-label="Tutup"
+        >&times;</button>
+      </header>
+      <form id="form-edit-applicant" class="admin-modal-form">
+        <div class="admin-modal-body">
+          <div class="form-grid">
+            <label>
+              <span>Nama Lengkap *</span>
+              <input type="text" id="edit-full-name" required maxlength="200" />
+            </label>
+            <label>
+              <span>Nama Panggilan</span>
+              <input type="text" id="edit-preferred-name" maxlength="100" />
+            </label>
+            <label>
+              <span>Email *</span>
+              <input type="email" id="edit-email" required maxlength="200" />
+            </label>
+            <label>
+              <span>WhatsApp *</span>
+              <input type="text" id="edit-whatsapp" required maxlength="50" />
+            </label>
+            <label>
+              <span>Institusi / Universitas</span>
+              <input type="text" id="edit-institution" maxlength="200" />
+            </label>
+            <label>
+              <span>Kota / Wilayah</span>
+              <input type="text" id="edit-city" maxlength="100" />
+            </label>
+            <label>
+              <span>Domain HoDS Utama *</span>
+              <select id="edit-primary-hods" required>
+                <option value="data">Data Intelligence</option>
+                <option value="core">Core AI & Engineering</option>
+                <option value="language">Language & Reasoning</option>
+                <option value="vision">Vision & Multimodal</option>
+                <option value="product">Product & Software</option>
+                <option value="growth">Growth & Community</option>
+              </select>
+            </label>
+            <label>
+              <span>Sub-Area Spesifik</span>
+              <input type="text" id="edit-specific-area" maxlength="200" />
+            </label>
+            <label class="col-span-2">
+              <span>Tautan Portofolio / CV / GitHub</span>
+              <input type="url" id="edit-portfolio-link" maxlength="500" />
+            </label>
+          </div>
+          <p
+            id="edit-feedback"
+            class="admin-modal-feedback"
+            role="status"
+            aria-live="polite"
+          ></p>
+        </div>
+        <footer class="admin-modal-footer">
+          <button type="button" id="modal-edit-cancel" class="btn-secondary">
+            Batal
+          </button>
+          <button type="submit" id="modal-edit-submit" class="primary">
+            Simpan Perubahan
+          </button>
+        </footer>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Konfirmasi Hapus dengan Backup Safety -->
+  <div id="modal-delete-applicant" class="admin-modal-backdrop" hidden>
+    <div
+      class="admin-modal-card modal-card-danger"
+      role="dialog"
+      aria-labelledby="modal-delete-title"
+      aria-modal="true"
+    >
+      <header class="admin-modal-header">
+        <h3 id="modal-delete-title">Hapus Data Pendaftar</h3>
+        <button
+          type="button"
+          class="admin-modal-close"
+          id="modal-delete-close"
+          aria-label="Tutup"
+        >&times;</button>
+      </header>
+      <div class="admin-modal-body">
+        <div class="danger-warning-banner">
+          <svg
+            class="danger-icon"
+            viewBox="0 0 24 24"
+            width="24"
+            height="24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <path
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+            ></path>
+          </svg>
+          <div>
+            <strong>Tindakan ini akan menghapus data pendaftar dari tabel aktif.</strong>
+            <p>
+              Sistem akan otomatis menyimpan cadangan lengkap (arsip) di database sebelum penghapusan.
+            </p>
+          </div>
+        </div>
+        <div class="applicant-delete-summary">
+          <p>
+            <strong>Nama:</strong> <span id="delete-applicant-name">—</span>
+          </p>
+          <p>
+            <strong>Email:</strong> <span id="delete-applicant-email">—</span>
+          </p>
+          <p>
+            <strong>Resi:</strong> <code id="delete-applicant-receipt">—</code>
+          </p>
+        </div>
+        <div class="safety-download-action">
+          <p>
+            Anda juga dapat mengunduh salinan berkas cadangan langsung ke komputer Anda:
+          </p>
+          <button
+            type="button"
+            id="btn-download-single-backup"
+            class="btn-secondary btn-download-backup"
+          >
+            Unduh Cadangan Pendaftar Ini (.json)
+          </button>
+        </div>
+        <label class="reason-label">
+          <span>Alasan penghapusan (opsional):</span>
+          <input
+            type="text"
+            id="delete-reason"
+            placeholder="Contoh: Data uji coba / Spam / Permintaan pendaftar"
+            maxlength="200"
+          />
+        </label>
+        <label class="confirm-checkbox-label">
+          <input type="checkbox" id="delete-confirm-check" />
+          <span>
+            Saya memahami bahwa pendaftar ini akan dihapus dari tabel pendaftaran aktif.
+          </span>
+        </label>
+        <p
+          id="delete-feedback"
+          class="admin-modal-feedback"
+          role="status"
+          aria-live="polite"
+        ></p>
+      </div>
+      <footer class="admin-modal-footer">
+        <button type="button" id="modal-delete-cancel" class="btn-secondary">
+          Batal
+        </button>
+        <button
+          type="button"
+          id="btn-confirm-delete"
+          class="btn-danger"
+          disabled
+        >
+          Hapus Pendaftar
+        </button>
+      </footer>
     </div>
   </div>
 </section>
@@ -1650,5 +1845,297 @@
     border: 1px solid rgba(16, 185, 129, 0.25);
     border-radius: 6px;
     font-size: 13px;
+  }
+
+  /* --- CRUD Actions & Backup Styles --- */
+  .btn-backup {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #6ee7b7;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+  .btn-backup:hover:not(:disabled) {
+    background: rgba(16, 185, 129, 0.28);
+    border-color: #34d399;
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.35);
+  }
+
+  .detail-header-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+    flex-wrap: wrap;
+  }
+  .btn-edit {
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 8px;
+    padding: 8px 14px;
+    color: #7dd3fc;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-edit:hover:not(:disabled) {
+    background: rgba(56, 189, 248, 0.28);
+    border-color: #38bdf8;
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+  }
+  .btn-delete-danger {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    border-radius: 8px;
+    padding: 8px 14px;
+    color: #fca5a5;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-delete-danger:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.28);
+    border-color: #ef4444;
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.35);
+  }
+  .btn-danger {
+    background: #dc2626;
+    color: #ffffff;
+    border: 1px solid #ef4444;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-danger:hover:not(:disabled) {
+    background: #b91c1c;
+    box-shadow: 0 0 14px rgba(239, 68, 68, 0.45);
+  }
+  .btn-danger:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* --- Admin Modals --- */
+  .admin-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(5, 5, 12, 0.78);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    box-sizing: border-box;
+  }
+  .admin-modal-backdrop[hidden] {
+    display: none;
+  }
+  .admin-modal-card {
+    background: #141126;
+    border: 1px solid rgba(155, 123, 255, 0.25);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 680px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.65);
+    overflow: hidden;
+  }
+  .modal-card-danger {
+    border-color: rgba(239, 68, 68, 0.45);
+    max-width: 560px;
+  }
+  .admin-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .admin-modal-header h3 {
+    margin: 0;
+    font: 700 18px/1.3 var(--font-display);
+    color: #ffffff;
+  }
+  .admin-modal-close {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+  .admin-modal-close:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .admin-modal-form {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1;
+  }
+  .admin-modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .admin-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.25);
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  @media (min-width: 600px) {
+    .form-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .col-span-2 {
+      grid-column: span 2;
+    }
+  }
+  .form-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    color: #cbd5e1;
+  }
+  .form-grid input,
+  .form-grid select {
+    background: rgba(15, 12, 28, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: #ffffff;
+    font-size: 14px;
+    box-sizing: border-box;
+    width: 100%;
+  }
+  .form-grid input:focus,
+  .form-grid select:focus {
+    outline: none;
+    border-color: #9b7bff;
+    box-shadow: 0 0 0 2px rgba(155, 123, 255, 0.25);
+  }
+  .danger-warning-banner {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    align-items: flex-start;
+  }
+  .danger-icon {
+    color: #f87171;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .danger-warning-banner strong {
+    color: #fca5a5;
+    font-size: 14px;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .danger-warning-banner p {
+    margin: 0;
+    font-size: 13px;
+    color: #fecaca;
+    line-height: 1.4;
+  }
+  .applicant-delete-summary {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+  }
+  .applicant-delete-summary p {
+    margin: 0;
+    color: #cbd5e1;
+  }
+  .applicant-delete-summary code {
+    color: #c4b5fd;
+    font-family: monospace;
+  }
+  .safety-download-action {
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 20px;
+  }
+  .safety-download-action p {
+    margin: 0 0 10px;
+    font-size: 13px;
+    color: #a7f3d0;
+  }
+  .btn-download-backup {
+    width: 100%;
+    justify-content: center;
+  }
+  .reason-label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    color: #cbd5e1;
+    margin-bottom: 16px;
+  }
+  .reason-label input {
+    background: rgba(15, 12, 28, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: #ffffff;
+    font-size: 14px;
+    box-sizing: border-box;
+    width: 100%;
+  }
+  .confirm-checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    color: #f1f5f9;
+    cursor: pointer;
+    margin-bottom: 16px;
+  }
+  .confirm-checkbox-label input {
+    margin-top: 3px;
+  }
+  .admin-modal-feedback {
+    margin-top: 12px;
+    font-size: 13px;
+    min-height: 18px;
+  }
+  .admin-modal-feedback.success {
+    color: #34d399;
+  }
+  .admin-modal-feedback.error {
+    color: #f87171;
   }
 </style>

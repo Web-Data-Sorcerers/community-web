@@ -1,7 +1,6 @@
 import { APPLICATION_FIELDS } from './recruitment-contract.mjs';
 import {
   STATUSES,
-  TRANSITIONS,
   TERMINAL,
   UUID,
 } from './recruitment-review-status.mjs';
@@ -148,6 +147,48 @@ export function mutation(input, action) {
   } else r.body = text(input.body, 1, 4000);
   return r;
 }
+export function deleteInput(input) {
+  keys(input, ['receipt', 'reason', 'request_id']);
+  return {
+    receipt: receipt(input.receipt),
+    reason: text(input.reason === undefined ? '' : input.reason, 0, 500),
+    request_id: input.request_id ? receipt(input.request_id) : undefined,
+  };
+}
+export function editInput(input) {
+  keys(input, ['receipt', 'fields', 'request_id']);
+  const r = {
+    receipt: receipt(input.receipt),
+    request_id: input.request_id ? receipt(input.request_id) : undefined,
+  };
+  object(input.fields);
+  const EDITABLE = [
+    'full_name',
+    'preferred_name',
+    'email',
+    'whatsapp',
+    'institution',
+    'city_region',
+    'primary_hods',
+    'specific_area',
+    'portfolio_link',
+    'project_experience',
+    'currently_exploring',
+    'current_status',
+    'current_level',
+    'best_description',
+  ];
+  keys(input.fields, EDITABLE);
+  const fields = {};
+  for (const [k, v] of Object.entries(input.fields)) {
+    if (typeof v !== 'string' || v.length > 2000) invalid();
+    if (k === 'email' && !/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(v)) invalid();
+    if (k === 'primary_hods' && !['data', 'core', 'language', 'vision', 'product', 'growth'].includes(v)) invalid();
+    fields[k] = text(v, 0, 2000);
+  }
+  r.fields = fields;
+  return r;
+}
 // Strict projections keep upstream diagnostic/PII fields outside the selected contract.
 function projectData(result, route, f = {}) {
   object(result);
@@ -198,6 +239,43 @@ function projectData(result, route, f = {}) {
       'event_id',
       'note_id',
       'replayed',
+    ]);
+  }
+  if (route === 'delete') {
+    if (result.ok !== true) {
+      if (
+        !['FORBIDDEN', 'NOT_FOUND', 'INVALID_INPUT'].includes(result.error?.code)
+      )
+        invalid();
+      return { ok: false, error: { code: result.error.code } };
+    }
+    receipt(result.receipt);
+    return pick(result, ['ok', 'receipt', 'deleted_at', 'backup_saved']);
+  }
+  if (route === 'edit') {
+    if (result.ok !== true) {
+      if (
+        !['FORBIDDEN', 'NOT_FOUND', 'INVALID_INPUT'].includes(result.error?.code)
+      )
+        invalid();
+      return { ok: false, error: { code: result.error.code } };
+    }
+    receipt(result.receipt);
+    object(result.fields);
+    return pick(result, ['ok', 'receipt', 'updated_at', 'fields']);
+  }
+  if (route === 'export') {
+    if (result.ok !== true) {
+      if (!['FORBIDDEN'].includes(result.error?.code)) invalid();
+      return { ok: false, error: { code: result.error.code } };
+    }
+    if (!Array.isArray(result.applications)) invalid();
+    return pick(result, [
+      'ok',
+      'exported_at',
+      'exported_by',
+      'total',
+      'applications',
     ]);
   }
   if (route === 'detail') {

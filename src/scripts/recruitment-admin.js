@@ -202,8 +202,11 @@ export function mount(root, opts = {}) {
     byId('confirm-label').textContent = '';
     byId('decision-confirm').hidden = true;
     byId('retry-mutation').hidden = true;
-    byId('review-feedback').textContent = '';
     byId('review-meta').textContent = '';
+    const em = byId('modal-edit-applicant');
+    if (em) em.hidden = true;
+    const dm = byId('modal-delete-applicant');
+    if (dm) dm.hidden = true;
     byId('detail-area').hidden = true;
     for (const id of [
       'filter-form',
@@ -1206,6 +1209,8 @@ export function mount(root, opts = {}) {
     byId('retry-mutation').hidden = !mutationPending;
     byId('back-list').disabled = locked;
     if (byId('back-list-top')) byId('back-list-top').disabled = locked;
+    if (byId('btn-edit-applicant')) byId('btn-edit-applicant').disabled = locked;
+    if (byId('btn-delete-applicant')) byId('btn-delete-applicant').disabled = locked;
     byId('reload-detail').disabled = saving || revisionPending;
 
     if (saving) {
@@ -1543,6 +1548,280 @@ export function mount(root, opts = {}) {
             if (btn) btn.classList.remove('is-loading');
           }
         });
+
+    // --- Backup & CRUD Handlers ---
+    async function backupDatabase() {
+      const btn = byId('btn-backup-database');
+      setBtnLoading(btn, true, 'Mencadangkan…', 'Backup Database (JSON)');
+      showToast(
+        'info',
+        'Menyiapkan Cadangan',
+        'Mengunduh seluruh data pendaftar dari server…',
+      );
+      try {
+        const res = await request('export');
+        if (res?.ok && res.data) {
+          const payload = res.data;
+          const count = payload.total ?? payload.applications?.length ?? 0;
+          const blob = new Blob([JSON.stringify(payload, null, 2)], {
+            type: 'application/json',
+          });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          const now = new Date();
+          const dateStr = now.toISOString().slice(0, 10);
+          a.href = url;
+          a.download = `recruitment-database-backup-${dateStr}.json`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+          showToast(
+            'success',
+            'Cadangan Berhasil',
+            `Berhasil mengunduh berkas cadangan (${count} pendaftar).`,
+          );
+        } else {
+          const errCode = res?.error?.code || 'SERVER_ERROR';
+          showToast(
+            'error',
+            'Gagal Mencadangkan',
+            errors[errCode] || 'Gagal mengekspor data.',
+          );
+        }
+      } catch {
+        showToast(
+          'error',
+          'Koneksi Terputus',
+          'Gagal mengunduh berkas cadangan database.',
+        );
+      } finally {
+        setBtnLoading(btn, false, '', 'Backup Database (JSON)');
+      }
+    }
+
+    function openEditModal() {
+      if (!current) return;
+      const f = current.fields || {};
+      byId('edit-full-name').value = f.full_name || '';
+      byId('edit-preferred-name').value = f.preferred_name || '';
+      byId('edit-email').value = f.email || '';
+      byId('edit-whatsapp').value = f.whatsapp || '';
+      byId('edit-institution').value = f.institution || '';
+      byId('edit-city').value = f.city_region || '';
+      byId('edit-primary-hods').value = f.primary_hods || 'data';
+      byId('edit-specific-area').value = f.specific_area || '';
+      byId('edit-portfolio-link').value = f.portfolio_link || '';
+      const fb = byId('edit-feedback');
+      fb.textContent = '';
+      fb.className = 'admin-modal-feedback';
+      byId('modal-edit-applicant').hidden = false;
+      byId('edit-full-name').focus();
+    }
+
+    function closeEditModal() {
+      const modal = byId('modal-edit-applicant');
+      if (modal) modal.hidden = true;
+    }
+
+    async function submitEditApplicant(e) {
+      e.preventDefault();
+      if (!current) return;
+      const submitBtn = byId('modal-edit-submit');
+      const fb = byId('edit-feedback');
+      fb.textContent = '';
+      fb.className = 'admin-modal-feedback';
+
+      const updatedFields = {
+        full_name: byId('edit-full-name').value.trim(),
+        preferred_name: byId('edit-preferred-name').value.trim(),
+        email: byId('edit-email').value.trim(),
+        whatsapp: byId('edit-whatsapp').value.trim(),
+        institution: byId('edit-institution').value.trim(),
+        city_region: byId('edit-city').value.trim(),
+        primary_hods: byId('edit-primary-hods').value,
+        specific_area: byId('edit-specific-area').value.trim(),
+        portfolio_link: byId('edit-portfolio-link').value.trim(),
+      };
+
+      if (
+        !updatedFields.full_name ||
+        !updatedFields.email ||
+        !updatedFields.whatsapp ||
+        !updatedFields.primary_hods
+      ) {
+        fb.textContent = 'Harap isi semua kolom wajib (*).';
+        fb.className = 'admin-modal-feedback error';
+        return;
+      }
+
+      setBtnLoading(submitBtn, true, 'Menyimpan…', 'Simpan Perubahan');
+      try {
+        const res = await request(
+          'edit',
+          { receipt: current.receipt, fields: updatedFields },
+          true,
+        );
+        if (res?.ok) {
+          Object.assign(current.fields, updatedFields);
+          if (detailCache.has(current.receipt)) {
+            detailCache.set(current.receipt, current);
+          }
+          renderDetail(current, true);
+          const row = byId('applications-body').querySelector(
+            `tr[data-receipt="${current.receipt}"]`,
+          );
+          if (row) {
+            const nameEl = row.querySelector('.col-name strong');
+            if (nameEl) nameEl.textContent = updatedFields.full_name;
+            const emailEl = row.querySelector('.col-name span');
+            if (emailEl) emailEl.textContent = updatedFields.email;
+            const hodsEl = row.querySelector('.col-hods');
+            if (hodsEl) hodsEl.textContent = updatedFields.primary_hods;
+          }
+          closeEditModal();
+          showToast(
+            'success',
+            'Data Disimpan',
+            'Perubahan data pendaftar berhasil diperbarui.',
+          );
+        } else {
+          const errCode = res?.error?.code || 'INVALID_INPUT';
+          fb.textContent = errors[errCode] || 'Gagal menyimpan perubahan.';
+          fb.className = 'admin-modal-feedback error';
+        }
+      } catch {
+        fb.textContent = 'Koneksi terputus. Gagal menyimpan perubahan.';
+        fb.className = 'admin-modal-feedback error';
+      } finally {
+        setBtnLoading(submitBtn, false, '', 'Simpan Perubahan');
+      }
+    }
+
+    function openDeleteModal() {
+      if (!current) return;
+      byId('delete-applicant-name').textContent =
+        current.fields?.full_name || '—';
+      byId('delete-applicant-email').textContent =
+        current.fields?.email || '—';
+      byId('delete-applicant-receipt').textContent = current.receipt;
+      byId('delete-reason').value = '';
+      byId('delete-confirm-check').checked = false;
+      byId('btn-confirm-delete').disabled = true;
+      const fb = byId('delete-feedback');
+      fb.textContent = '';
+      fb.className = 'admin-modal-feedback';
+      byId('modal-delete-applicant').hidden = false;
+    }
+
+    function closeDeleteModal() {
+      const modal = byId('modal-delete-applicant');
+      if (modal) modal.hidden = true;
+    }
+
+    function downloadSingleApplicantBackup() {
+      if (!current) return;
+      const backupData = {
+        exported_at: new Date().toISOString(),
+        receipt: current.receipt,
+        received_at: current.received_at,
+        fields: current.fields,
+        review: current.review,
+      };
+      const blob = new Blob([JSON.stringify(backupData, null, 2)], {
+        type: 'application/json',
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `applicant-${current.receipt}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showToast(
+        'info',
+        'Cadangan Diunduh',
+        `Salinan data untuk resi ${current.receipt} telah diunduh ke komputer Anda.`,
+      );
+    }
+
+    async function confirmDeleteApplicant() {
+      if (!current) return;
+      const confirmBtn = byId('btn-confirm-delete');
+      const fb = byId('delete-feedback');
+      fb.textContent = '';
+      fb.className = 'admin-modal-feedback';
+
+      const receipt = current.receipt;
+      const reason = byId('delete-reason').value.trim();
+
+      setBtnLoading(confirmBtn, true, 'Menghapus…', 'Hapus Pendaftar');
+      try {
+        const res = await request('delete', { receipt, reason }, true);
+        if (res?.ok) {
+          showToast(
+            'success',
+            'Pendaftar Dihapus',
+            `Data resi ${receipt} berhasil diarsipkan ke database backup dan dihapus dari tabel aktif.`,
+          );
+          closeDeleteModal();
+          const row = byId('applications-body').querySelector(
+            `tr[data-receipt="${receipt}"]`,
+          );
+          if (row) row.remove();
+          detailCache.delete(receipt);
+          clearDetail();
+          loadList(true);
+        } else {
+          const errCode = res?.error?.code || 'SERVER_ERROR';
+          fb.textContent = errors[errCode] || 'Gagal menghapus data pendaftar.';
+          fb.className = 'admin-modal-feedback error';
+          confirmBtn.disabled = !byId('delete-confirm-check').checked;
+        }
+      } catch {
+        fb.textContent = 'Koneksi terputus. Gagal menghapus pendaftar.';
+        fb.className = 'admin-modal-feedback error';
+        confirmBtn.disabled = !byId('delete-confirm-check').checked;
+      } finally {
+        setBtnLoading(confirmBtn, false, '', 'Hapus Pendaftar');
+      }
+    }
+
+    byId('btn-backup-database')?.addEventListener('click', backupDatabase);
+    byId('btn-edit-applicant')?.addEventListener('click', openEditModal);
+    byId('modal-edit-close')?.addEventListener('click', closeEditModal);
+    byId('modal-edit-cancel')?.addEventListener('click', closeEditModal);
+    byId('form-edit-applicant')?.addEventListener('submit', submitEditApplicant);
+
+    byId('btn-delete-applicant')?.addEventListener('click', openDeleteModal);
+    byId('modal-delete-close')?.addEventListener('click', closeDeleteModal);
+    byId('modal-delete-cancel')?.addEventListener('click', closeDeleteModal);
+    byId('btn-download-single-backup')?.addEventListener(
+      'click',
+      downloadSingleApplicantBackup,
+    );
+    byId('delete-confirm-check')?.addEventListener('change', () => {
+      byId('btn-confirm-delete').disabled =
+        !byId('delete-confirm-check').checked;
+    });
+    byId('btn-confirm-delete')?.addEventListener('click', confirmDeleteApplicant);
+
+    byId('modal-edit-applicant')?.addEventListener('click', (e) => {
+      if (e.target === byId('modal-edit-applicant')) closeEditModal();
+    });
+    byId('modal-delete-applicant')?.addEventListener('click', (e) => {
+      if (e.target === byId('modal-delete-applicant')) closeDeleteModal();
+    });
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const em = byId('modal-edit-applicant');
+        if (em && !em.hidden) closeEditModal();
+        const dm = byId('modal-delete-applicant');
+        if (dm && !dm.hidden) closeDeleteModal();
+      }
+    });
+
     window.addEventListener('beforeunload', (e) => {
       if (current && dirty()) {
         e.preventDefault();

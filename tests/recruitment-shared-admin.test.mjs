@@ -83,6 +83,32 @@ function harness() {
       if (state.oversized) return new Response('x'.repeat(1024 * 1024 + 1));
       if (state.malformed) return new Response('not-json');
       assert(body.query.startsWith('select public.'));
+      if (body.query.includes('admin_delete_application')) {
+        return Response.json([
+          {
+            result: {
+              ok: true,
+              receipt,
+              deleted_at: '2026-01-01T00:00:00Z',
+              backup_saved: true,
+            },
+          },
+        ]);
+      }
+      if (body.query.includes('admin_edit_application')) {
+        return Response.json([
+          {
+            result: {
+              ok: true,
+              receipt,
+              fields: {
+                full_name: 'Updated Name',
+                email: 'updated@example.invalid',
+              },
+            },
+          },
+        ]);
+      }
       return Response.json([
         {
           result: {
@@ -96,6 +122,37 @@ function harness() {
         },
       ]);
     }
+    if (path.includes('admin_delete_application'))
+      return Response.json({
+        ok: true,
+        receipt,
+        deleted_at: '2026-01-01T00:00:00Z',
+        backup_saved: true,
+      });
+    if (path.includes('admin_edit_application'))
+      return Response.json({
+        ok: true,
+        receipt,
+        fields: {
+          full_name: 'Updated Name',
+          email: 'updated@example.invalid',
+        },
+      });
+    if (path.includes('admin_export_applications'))
+      return Response.json({
+        ok: true,
+        exported_at: '2026-01-01T00:00:00Z',
+        total: 1,
+        applications: [
+          {
+            receipt,
+            full_name: 'Test',
+            email: 'test@example.invalid',
+            review: { status: 'new' },
+            fields: { full_name: 'Test' },
+          },
+        ],
+      });
     if (path.includes('admin_list_review_'))
       return Response.json({
         items: [],
@@ -716,3 +773,152 @@ test('all new data routes deny anonymous; revoked grants never enter write', asy
     ),
   );
 });
+
+test('export route returns full backup snapshot for authenticated admin and records audit', async () => {
+  const h = harness();
+  assert.equal((await h.read('export')).status, 401);
+
+  await h.login();
+  h.calls.length = 0;
+  const res = await h.read('export');
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.equal(body.ok, true);
+  assert.equal(body.data.total, 1);
+  assert.equal(body.data.applications.length, 1);
+  assert.equal(body.data.applications[0].receipt, receipt);
+
+  const audit = h.calls.find((c) => c.path.includes('admin_audit_write'));
+  assert.equal(audit.body.p_action, 'admin_export');
+  assert.equal(audit.body.p_actor_id, uid);
+});
+
+test('edit route updates applicant data and returns sanitized updated fields', async () => {
+  const h = harness();
+  const editPayload = {
+    receipt,
+    fields: {
+      full_name: 'Updated Name',
+      email: 'updated@example.invalid',
+      whatsapp: '081234567890',
+      primary_hods: 'data',
+    },
+  };
+
+  const unauthRes = await h.handle(
+    req('edit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editPayload),
+    }),
+    'edit',
+  );
+  assert.equal(unauthRes.status, 401);
+
+  await h.login();
+  h.calls.length = 0;
+
+  const invalidRes = await h.handle(
+    req('edit', {
+      method: 'POST',
+      headers: {
+        Cookie: h.cookie,
+        Origin: origin,
+        'X-CSRF-Token': h.csrf,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ fields: { full_name: 'Name' } }),
+    }),
+    'edit',
+  );
+  assert.equal(invalidRes.status, 400);
+
+  const res = await h.handle(
+    req('edit', {
+      method: 'POST',
+      headers: {
+        Cookie: h.cookie,
+        Origin: origin,
+        'X-CSRF-Token': h.csrf,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(editPayload),
+    }),
+    'edit',
+  );
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.equal(body.ok, true);
+  assert.equal(body.data.receipt, receipt);
+
+  const audit = h.calls.find(
+    (c) =>
+      c.path.includes('admin_audit_write') && c.body.p_action === 'admin_edit',
+  );
+  assert(audit);
+  assert.equal(audit.body.p_target_id, receipt);
+});
+
+test('delete route archives applicant to backup table and returns archived status', async () => {
+  const h = harness();
+  const deletePayload = {
+    receipt,
+    reason: 'Data pendaftar uji coba',
+  };
+
+  const unauthRes = await h.handle(
+    req('delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(deletePayload),
+    }),
+    'delete',
+  );
+  assert.equal(unauthRes.status, 401);
+
+  await h.login();
+  h.calls.length = 0;
+
+  const invalidRes = await h.handle(
+    req('delete', {
+      method: 'POST',
+      headers: {
+        Cookie: h.cookie,
+        Origin: origin,
+        'X-CSRF-Token': h.csrf,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ receipt: 'not-uuid' }),
+    }),
+    'delete',
+  );
+  assert.equal(invalidRes.status, 400);
+
+  const res = await h.handle(
+    req('delete', {
+      method: 'POST',
+      headers: {
+        Cookie: h.cookie,
+        Origin: origin,
+        'X-CSRF-Token': h.csrf,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(deletePayload),
+    }),
+    'delete',
+  );
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.equal(body.ok, true);
+  assert.equal(body.data.receipt, receipt);
+  assert.equal(body.data.backup_saved, true);
+
+  const audit = h.calls.find(
+    (c) =>
+      c.path.includes('admin_audit_write') && c.body.p_action === 'admin_delete',
+  );
+  assert(audit);
+  assert.equal(audit.body.p_target_id, receipt);
+  assert.equal(audit.body.p_details.reason, 'Data pendaftar uji coba');
+});
+
