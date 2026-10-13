@@ -219,10 +219,25 @@ export function createRecruitmentAdminHandler({
         return finish({ ok: true, data: result });
       }
       if (route === 'export') {
-        result = project(
-          await callRpc('admin_export_applications', { ...actorParams }),
-          'export',
-        );
+        let exportData;
+        if (env.SUPABASE_ACCESS_TOKEN) {
+          try {
+            exportData = await writeRpc(
+              'admin_export_applications',
+              actor.id,
+              {},
+            );
+          } catch {
+            exportData = await callRpc('admin_export_applications', {
+              ...actorParams,
+            });
+          }
+        } else {
+          exportData = await callRpc('admin_export_applications', {
+            ...actorParams,
+          });
+        }
+        result = project(exportData, 'export');
         await audit('admin_export', actor, null, { total: result.total });
         return finish({ ok: true, data: result });
       }

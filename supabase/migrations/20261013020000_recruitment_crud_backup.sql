@@ -33,6 +33,7 @@ create index if not exists recruitment_archive_deleted_at_idx
 
 alter table private.recruitment_applications_archive enable row level security;
 revoke all on private.recruitment_applications_archive from public, anon, authenticated, service_role;
+drop policy if exists recruitment_archive_deny on private.recruitment_applications_archive;
 create policy recruitment_archive_deny on private.recruitment_applications_archive for all using (false) with check (false);
 
 -- Update audit log check constraint if exists
@@ -262,8 +263,11 @@ $$;
 -- ========================================================
 -- 4. Export / Full Backup Function
 -- ========================================================
+drop function if exists private.recruitment_admin_export(text);
+drop function if exists private.recruitment_admin_export(text, jsonb);
 create or replace function private.recruitment_admin_export(
-  p_actor_id text
+  p_actor_id text,
+  p_request  jsonb default '{}'::jsonb
 ) returns jsonb
 language plpgsql
 security definer
@@ -344,17 +348,22 @@ $$;
 revoke all on function public.admin_edit_application(text, jsonb) from public, anon, authenticated;
 grant execute on function public.admin_edit_application(text, jsonb) to service_role;
 
+drop function if exists public.admin_export_applications(text);
+drop function if exists public.admin_export_applications(text, jsonb);
 create or replace function public.admin_export_applications(
-  p_actor_id text
+  p_actor_id text,
+  p_request  jsonb default '{}'::jsonb
 ) returns jsonb
 language sql
 security definer
 set search_path = pg_catalog
 as $$
-  select private.recruitment_admin_export(p_actor_id);
+  select private.recruitment_admin_export(p_actor_id, p_request);
 $$;
 
-revoke all on function public.admin_export_applications(text) from public, anon, authenticated;
-grant execute on function public.admin_export_applications(text) to service_role;
+revoke all on function public.admin_export_applications(text, jsonb) from public, anon, authenticated;
+grant execute on function public.admin_export_applications(text, jsonb) to service_role;
+
+notify pgrst, 'reload schema';
 
 commit;

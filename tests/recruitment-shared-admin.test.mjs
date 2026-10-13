@@ -109,6 +109,26 @@ function harness() {
           },
         ]);
       }
+      if (body.query.includes('admin_export_applications')) {
+        return Response.json([
+          {
+            result: {
+              ok: true,
+              exported_at: '2026-01-01T00:00:00Z',
+              total: 1,
+              applications: [
+                {
+                  receipt,
+                  full_name: 'Test',
+                  email: 'test@example.invalid',
+                  review: { status: 'new' },
+                  fields: { full_name: 'Test' },
+                },
+              ],
+            },
+          },
+        ]);
+      }
       return Response.json([
         {
           result: {
