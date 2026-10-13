@@ -1552,7 +1552,7 @@ export function mount(root, opts = {}) {
     // --- Backup & CRUD Handlers ---
     async function backupDatabase() {
       const btn = byId('btn-backup-database');
-      setBtnLoading(btn, true, 'Mencadangkan…', 'Backup Database (JSON)');
+      setBtnLoading(btn, true, 'Mencadangkan…', 'Backup JSON');
       showToast(
         'info',
         'Menyiapkan Cadangan',
@@ -1596,7 +1596,139 @@ export function mount(root, opts = {}) {
           'Gagal mengunduh berkas cadangan database.',
         );
       } finally {
-        setBtnLoading(btn, false, '', 'Backup Database (JSON)');
+        setBtnLoading(btn, false, '', 'Backup JSON');
+      }
+    }
+
+    async function exportExcel() {
+      const btn = byId('btn-export-excel');
+      setBtnLoading(btn, true, 'Mengekspor…', 'Export Excel (CSV)');
+      showToast(
+        'info',
+        'Menyiapkan Berkas Excel',
+        'Mengunduh dan menyusun seluruh data pendaftar…',
+      );
+      try {
+        const res = await request('export');
+        if (res?.ok && res.data) {
+          const apps = res.data.applications || [];
+          const columns = [
+            { id: 'receipt', title: 'Resi Pendaftaran (ID)' },
+            { id: 'received_at', title: 'Tanggal Masuk (WIB)' },
+            { id: 'review_status', title: 'Status Seleksi' },
+            { id: 'review_reviewer', title: 'Peninjau Terakhir' },
+            { id: 'review_updated', title: 'Tanggal Update Review (WIB)' },
+            // Identitas Pribadi
+            { id: 'full_name', title: 'Nama Lengkap' },
+            { id: 'preferred_name', title: 'Nama Panggilan' },
+            { id: 'email', title: 'Email' },
+            { id: 'whatsapp', title: 'WhatsApp' },
+            { id: 'institution', title: 'Institusi / Kampus' },
+            { id: 'city_region', title: 'Kota / Wilayah' },
+            // Domain & Keahlian
+            { id: 'primary_hods', title: 'Domain HoDS Utama' },
+            { id: 'specific_area', title: 'Sub-Area Spesifik' },
+            { id: 'foundation_skills', title: 'Kemampuan Dasar' },
+            { id: 'currently_exploring', title: 'Sedang Dipelajari' },
+            { id: 'secondary_interest', title: 'Peminatan Lain' },
+            // Profil & Pengalaman
+            { id: 'current_status', title: 'Status Saat Ini' },
+            { id: 'current_level', title: 'Tingkat Pengalaman' },
+            { id: 'best_description', title: 'Deskripsi Diri' },
+            // Bukti Karya & Portofolio
+            { id: 'portfolio_link', title: 'Tautan Portofolio / GitHub / CV' },
+            { id: 'most_relevant_work', title: 'Karya Paling Relevan' },
+            { id: 'alternative_evidence', title: 'Bukti Karya Alternatif' },
+            { id: 'project_experience', title: 'Pengalaman Proyek' },
+            // Riset & Gagasan
+            { id: 'real_world_problem', title: 'Masalah yang Ingin Diselesaikan' },
+            { id: 'technology_approach', title: 'Pendekatan Teknologi' },
+            { id: 'explore_or_build', title: 'Eksplorasi atau Membangun' },
+            { id: 'skill_to_improve', title: 'Kemampuan Ingin Ditingkatkan' },
+            { id: 'six_months_goal', title: 'Target 6 Bulan' },
+            { id: 'what_to_contribute', title: 'Kontribusi yang Ditawarkan' },
+            { id: 'what_to_build_together', title: 'Yang Ingin Dibangun Bersama' },
+            { id: 'desired_output', title: 'Hasil yang Diinginkan' },
+            // Tim & Kolaborasi
+            { id: 'team_comfort', title: 'Kenyamanan Tim (1-5)' },
+            { id: 'team_roles', title: 'Peran dalam Tim' },
+            { id: 'team_story', title: 'Pengalaman Bekerja dalam Tim' },
+            { id: 'cross_hods_willingness', title: 'Kolaborasi Lintas Domain' },
+            // Komitmen & Belajar
+            { id: 'time_commitment', title: 'Komitmen Waktu' },
+            { id: 'contribution_types', title: 'Jenis Kontribusi' },
+            { id: 'why_join', title: 'Alasan Bergabung' },
+            { id: 'learning_methods', title: 'Cara Belajar' },
+            { id: 'independent_learning', title: 'Belajar Mandiri' },
+            // Persetujuan
+            { id: 'agreement_1', title: 'Persetujuan Komitmen' },
+            { id: 'agreement_2', title: 'Persetujuan Keterbukaan' },
+            { id: 'agreement_3', title: 'Persetujuan Komunitas' },
+          ];
+
+          const headerRow = columns
+            .map((c) => `"${c.title.replace(/"/g, '""')}"`)
+            .join(',');
+
+          const dataRows = apps.map((app) => {
+            const f = app.fields || {};
+            const rev = app.review || {};
+            return columns
+              .map((c) => {
+                let val = '';
+                if (c.id === 'receipt') val = app.receipt || '';
+                else if (c.id === 'received_at') val = date(app.received_at);
+                else if (c.id === 'review_status')
+                  val = STATUSES[rev.status] || rev.status || 'Baru';
+                else if (c.id === 'review_reviewer')
+                  val = rev.reviewer_label || '—';
+                else if (c.id === 'review_updated') val = date(rev.updated_at);
+                else {
+                  val = f[c.id];
+                  if (Array.isArray(val)) val = val.join(', ');
+                  else if (val === null || val === undefined) val = '';
+                }
+                const str = String(val).replace(/"/g, '""');
+                return `"${str}"`;
+              })
+              .join(',');
+          });
+
+          // UTF-8 BOM (\uFEFF) ensures Excel (Windows & Mac) recognizes UTF-8 correctly
+          const BOM = '\uFEFF';
+          const csvText = BOM + [headerRow, ...dataRows].join('\r\n');
+          const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          const now = new Date();
+          const dateStr = now.toISOString().slice(0, 10);
+          a.href = url;
+          a.download = `recruitment-data-pendaftar-${dateStr}.csv`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+          showToast(
+            'success',
+            'Ekspor Excel Berhasil',
+            `Berhasil mengekspor ${apps.length} data pendaftar lengkap ke format Excel (.csv).`,
+          );
+        } else {
+          const errCode = res?.error?.code || 'SERVER_ERROR';
+          showToast(
+            'error',
+            'Gagal Mengekspor',
+            errors[errCode] || 'Gagal mengekspor data ke Excel.',
+          );
+        }
+      } catch {
+        showToast(
+          'error',
+          'Koneksi Terputus',
+          'Gagal mengunduh berkas ekspor Excel.',
+        );
+      } finally {
+        setBtnLoading(btn, false, '', 'Export Excel (CSV)');
       }
     }
 
@@ -1789,6 +1921,7 @@ export function mount(root, opts = {}) {
     }
 
     byId('btn-backup-database')?.addEventListener('click', backupDatabase);
+    byId('btn-export-excel')?.addEventListener('click', exportExcel);
     byId('btn-edit-applicant')?.addEventListener('click', openEditModal);
     byId('modal-edit-close')?.addEventListener('click', closeEditModal);
     byId('modal-edit-cancel')?.addEventListener('click', closeEditModal);
