@@ -442,8 +442,20 @@
       aria-labelledby="modal-delete-title"
       aria-modal="true"
     >
-      <header class="admin-modal-header">
-        <h3 id="modal-delete-title">Hapus Data Pendaftar</h3>
+      <header class="admin-modal-header danger-header">
+        <div class="danger-header-title">
+          <div class="danger-header-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              <line x1="10" y1="11" x2="10" y2="17"></line>
+              <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+          </div>
+          <div>
+            <h3 id="modal-delete-title">Hapus Data Pendaftar</h3>
+            <p class="danger-header-subtitle">Konfirmasi penghapusan data pendaftar dari sistem seleksi aktif.</p>
+          </div>
+        </div>
         <button
           type="button"
           class="admin-modal-close"
@@ -451,67 +463,107 @@
           aria-label="Tutup"
         >&times;</button>
       </header>
+
       <div class="admin-modal-body">
+        <!-- Banner Peringatan -->
         <div class="danger-warning-banner">
-          <svg
-            class="danger-icon"
-            viewBox="0 0 24 24"
-            width="24"
-            height="24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            aria-hidden="true"
-          >
-            <path
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-            ></path>
-          </svg>
-          <div>
-            <strong>Tindakan ini akan menghapus data pendaftar dari tabel aktif.</strong>
+          <div class="danger-banner-icon-badge" aria-hidden="true">
+            <svg
+              viewBox="0 0 24 24"
+              width="20"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </div>
+          <div class="danger-banner-content">
+            <strong>Tindakan ini akan menghapus data dari tabel aktif</strong>
             <p>
-              Sistem akan otomatis menyimpan cadangan lengkap (arsip) di database sebelum penghapusan.
+              Sistem akan otomatis mengarsipkan snapshot lengkap pendaftar ke tabel cadangan permanen sebelum penghapusan.
             </p>
           </div>
         </div>
-        <div class="applicant-delete-summary">
-          <p>
-            <strong>Nama:</strong> <span id="delete-applicant-name">—</span>
-          </p>
-          <p>
-            <strong>Email:</strong> <span id="delete-applicant-email">—</span>
-          </p>
-          <p>
-            <strong>Resi:</strong> <code id="delete-applicant-receipt">—</code>
-          </p>
+
+        <!-- Kartu Identitas Pendaftar yang Akan Dihapus -->
+        <div class="applicant-delete-card">
+          <div class="delete-card-header">
+            <span class="delete-card-badge">Data Pendaftar</span>
+          </div>
+          <div class="delete-card-grid">
+            <div class="delete-card-row">
+              <span class="delete-card-label">Nama Lengkap</span>
+              <span id="delete-applicant-name" class="delete-card-val highlight">—</span>
+            </div>
+            <div class="delete-card-row">
+              <span class="delete-card-label">Email</span>
+              <span id="delete-applicant-email" class="delete-card-val">—</span>
+            </div>
+            <div class="delete-card-row">
+              <span class="delete-card-label">ID Resi</span>
+              <code id="delete-applicant-receipt" class="delete-card-code">—</code>
+            </div>
+          </div>
         </div>
-        <div class="safety-download-action">
-          <p>
-            Anda juga dapat mengunduh salinan berkas cadangan langsung ke komputer Anda:
-          </p>
+
+        <!-- Kartu Unduh Cadangan JSON Lokal -->
+        <div class="safety-download-card">
+          <div class="safety-card-info">
+            <div class="safety-icon-badge" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+            </div>
+            <div class="safety-card-texts">
+              <strong>Unduh Cadangan Lokal</strong>
+              <p>Simpan salinan data pendaftar ini (.json) ke perangkat Anda sebelum dihapus.</p>
+            </div>
+          </div>
           <button
             type="button"
             id="btn-download-single-backup"
-            class="btn-secondary btn-download-backup"
+            class="btn-download-backup"
           >
-            Unduh Cadangan Pendaftar Ini (.json)
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Unduh Cadangan (.json)</span>
           </button>
         </div>
-        <label class="reason-label">
-          <span>Alasan penghapusan (opsional):</span>
+
+        <!-- Input Alasan Opsional -->
+        <div class="reason-group">
+          <label for="delete-reason" class="reason-title">
+            <span>Alasan penghapusan (opsional):</span>
+          </label>
           <input
             type="text"
             id="delete-reason"
+            class="reason-input"
             placeholder="Contoh: Data uji coba / Spam / Permintaan pendaftar"
             maxlength="200"
           />
-        </label>
-        <label class="confirm-checkbox-label">
-          <input type="checkbox" id="delete-confirm-check" />
-          <span>
+        </div>
+
+        <!-- Checkbox Konfirmasi Interaktif -->
+        <label class="confirm-checkbox-card" for="delete-confirm-check">
+          <input type="checkbox" id="delete-confirm-check" class="delete-checkbox-input" />
+          <span class="confirm-checkbox-text">
             Saya memahami bahwa pendaftar ini akan dihapus dari tabel pendaftaran aktif.
           </span>
         </label>
+
+        <!-- Pesan Status / Feedback -->
         <p
           id="delete-feedback"
           class="admin-modal-feedback"
@@ -519,17 +571,21 @@
           aria-live="polite"
         ></p>
       </div>
+
       <footer class="admin-modal-footer">
-        <button type="button" id="modal-delete-cancel" class="btn-secondary">
+        <button type="button" id="modal-delete-cancel" class="btn-cancel">
           Batal
         </button>
         <button
           type="button"
           id="btn-confirm-delete"
-          class="btn-danger"
+          class="btn-danger-confirm"
           disabled
         >
-          Hapus Pendaftar
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          <span>Hapus Pendaftar</span>
         </button>
       </footer>
     </div>
@@ -2053,106 +2109,352 @@
     border-color: #9b7bff;
     box-shadow: 0 0 0 2px rgba(155, 123, 255, 0.25);
   }
+  /* --- Delete Modal Refined Styles --- */
+  .danger-header {
+    background: linear-gradient(180deg, rgba(239, 68, 68, 0.1) 0%, rgba(20, 17, 38, 0) 100%);
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .danger-header-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .danger-header-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(239, 68, 68, 0.16);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #f87171;
+    display: grid;
+    place-content: center;
+    flex-shrink: 0;
+  }
+  .danger-header-subtitle {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.35;
+  }
   .danger-warning-banner {
     display: flex;
-    gap: 16px;
-    padding: 16px;
-    background: rgba(239, 68, 68, 0.12);
+    gap: 14px;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(185, 28, 28, 0.06) 100%);
     border: 1px solid rgba(239, 68, 68, 0.3);
     border-radius: 12px;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     align-items: flex-start;
   }
-  .danger-icon {
+  .danger-banner-icon-badge {
     color: #f87171;
     flex-shrink: 0;
-    margin-top: 2px;
+    margin-top: 1px;
   }
-  .danger-warning-banner strong {
+  .danger-banner-content strong {
     color: #fca5a5;
-    font-size: 14px;
+    font-size: 13.5px;
+    font-weight: 700;
     display: block;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
-  .danger-warning-banner p {
+  .danger-banner-content p {
     margin: 0;
-    font-size: 13px;
+    font-size: 12.5px;
     color: #fecaca;
-    line-height: 1.4;
+    line-height: 1.45;
+    opacity: 0.92;
   }
-  .applicant-delete-summary {
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 8px;
-    padding: 12px 16px;
-    margin-bottom: 20px;
+  .applicant-delete-card {
+    background: rgba(8, 6, 15, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    font-size: 13px;
+    gap: 10px;
   }
-  .applicant-delete-summary p {
-    margin: 0;
-    color: #cbd5e1;
+  .delete-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2px;
   }
-  .applicant-delete-summary code {
+  .delete-card-badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
     color: #c4b5fd;
-    font-family: monospace;
+    background: rgba(167, 139, 250, 0.12);
+    border: 1px solid rgba(167, 139, 250, 0.24);
+    padding: 3px 10px;
+    border-radius: 6px;
   }
-  .safety-download-action {
-    background: rgba(16, 185, 129, 0.08);
-    border: 1px solid rgba(16, 185, 129, 0.2);
-    border-radius: 8px;
-    padding: 14px;
-    margin-bottom: 20px;
+  .delete-card-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
-  .safety-download-action p {
-    margin: 0 0 10px;
+  .delete-card-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
     font-size: 13px;
+  }
+  .delete-card-label {
+    color: #94a3b8;
+    font-weight: 500;
+    font-size: 12.5px;
+    flex-shrink: 0;
+  }
+  .delete-card-val {
+    color: #f1f5f9;
+    font-weight: 600;
+    text-align: right;
+    word-break: break-all;
+  }
+  .delete-card-val.highlight {
+    color: #ffffff;
+    font-size: 14.5px;
+    font-weight: 700;
+  }
+  .delete-card-code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 12px;
+    color: #c4b5fd;
+    background: rgba(155, 123, 255, 0.12);
+    border: 1px solid rgba(155, 123, 255, 0.25);
+    padding: 3px 8px;
+    border-radius: 6px;
+    word-break: break-all;
+    text-align: right;
+  }
+  .safety-download-card {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.03) 100%);
+    border: 1px solid rgba(16, 185, 129, 0.22);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .safety-card-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 220px;
+  }
+  .safety-icon-badge {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #34d399;
+    display: grid;
+    place-content: center;
+    flex-shrink: 0;
+  }
+  .safety-card-texts strong {
+    display: block;
+    font-size: 13px;
+    color: #6ee7b7;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .safety-card-texts p {
+    font-size: 12px;
     color: #a7f3d0;
+    margin: 0;
+    line-height: 1.35;
+    opacity: 0.88;
   }
   .btn-download-backup {
-    width: 100%;
-    justify-content: center;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 15px;
+    background: rgba(16, 185, 129, 0.14);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    border-radius: 8px;
+    color: #a7f3d0;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
   }
-  .reason-label {
+  .btn-download-backup:hover {
+    background: rgba(16, 185, 129, 0.25);
+    border-color: rgba(16, 185, 129, 0.55);
+    color: #ffffff;
+    box-shadow: 0 0 14px rgba(16, 185, 129, 0.25);
+    transform: translateY(-1px);
+  }
+  .reason-group {
     display: flex;
     flex-direction: column;
     gap: 6px;
-    font-size: 13px;
-    color: #cbd5e1;
     margin-bottom: 16px;
   }
-  .reason-label input {
-    background: rgba(15, 12, 28, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 8px;
-    padding: 10px 12px;
-    color: #ffffff;
-    font-size: 14px;
-    box-sizing: border-box;
-    width: 100%;
+  .reason-title {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #cbd5e1;
   }
-  .confirm-checkbox-label {
+  .reason-input {
+    width: 100% !important;
+    background: rgba(10, 8, 18, 0.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    border-radius: 10px !important;
+    padding: 11px 14px !important;
+    color: #ffffff !important;
+    font-size: 13.5px !important;
+    box-sizing: border-box !important;
+    transition: all 0.2s ease !important;
+  }
+  .reason-input:focus {
+    border-color: #ef4444 !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.22) !important;
+  }
+  .confirm-checkbox-card {
     display: flex;
     align-items: flex-start;
-    gap: 10px;
-    font-size: 13px;
-    color: #f1f5f9;
+    gap: 12px;
+    padding: 13px 15px;
+    background: rgba(239, 68, 68, 0.05);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 10px;
     cursor: pointer;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
+    transition: all 0.2s ease;
+    user-select: none;
+    box-sizing: border-box;
   }
-  .confirm-checkbox-label input {
-    margin-top: 3px;
+  .confirm-checkbox-card:hover {
+    background: rgba(239, 68, 68, 0.09);
+    border-color: rgba(239, 68, 68, 0.35);
+  }
+  .confirm-checkbox-card:has(input:checked) {
+    background: rgba(239, 68, 68, 0.12);
+    border-color: rgba(239, 68, 68, 0.45);
+    box-shadow: 0 0 16px rgba(239, 68, 68, 0.15);
+  }
+  .delete-checkbox-input {
+    all: unset !important;
+    width: 18px !important;
+    min-width: 18px !important;
+    max-width: 18px !important;
+    height: 18px !important;
+    min-height: 18px !important;
+    max-height: 18px !important;
+    border: 2px solid rgba(239, 68, 68, 0.6) !important;
+    border-radius: 5px !important;
+    background: rgba(15, 12, 28, 0.9) !important;
+    padding: 0 !important;
+    margin: 2px 0 0 0 !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+    display: inline-grid !important;
+    place-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+  }
+  .delete-checkbox-input::before {
+    content: "" !important;
+    width: 9px !important;
+    height: 9px !important;
+    transform: scale(0) !important;
+    transition: 120ms transform ease-in-out !important;
+    box-shadow: inset 1em 1em #ef4444 !important;
+    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%) !important;
+  }
+  .delete-checkbox-input:checked {
+    background: rgba(239, 68, 68, 0.25) !important;
+    border-color: #ef4444 !important;
+  }
+  .delete-checkbox-input:checked::before {
+    transform: scale(1) !important;
+  }
+  .delete-checkbox-input:focus-visible {
+    outline: 2px solid #ef4444 !important;
+    outline-offset: 2px !important;
+  }
+  .confirm-checkbox-text {
+    font-size: 13px;
+    line-height: 1.45;
+    color: #f1f5f9;
+    font-weight: 500;
+  }
+  .btn-cancel {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: #cbd5e1;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 13.5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .btn-cancel:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.22);
+  }
+  .btn-danger-confirm {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #ffffff;
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 13.5px;
+    cursor: pointer;
+    box-shadow: 0 4px 18px rgba(239, 68, 68, 0.35);
+    transition: all 0.2s ease;
+  }
+  .btn-danger-confirm:hover:not(:disabled) {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 22px rgba(239, 68, 68, 0.45);
+  }
+  .btn-danger-confirm:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: none;
+    filter: grayscale(0.5);
+    transform: none;
   }
   .admin-modal-feedback {
-    margin-top: 12px;
-    font-size: 13px;
+    margin-top: 8px;
+    font-size: 12.5px;
     min-height: 18px;
+    border-radius: 8px;
+    box-sizing: border-box;
   }
   .admin-modal-feedback.success {
     color: #34d399;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    padding: 8px 12px;
   }
   .admin-modal-feedback.error {
     color: #f87171;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    padding: 8px 12px;
   }
 </style>
